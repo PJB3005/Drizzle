@@ -10,10 +10,10 @@
     <ProjectReference Include="../Drizzle.Lingo/Drizzle.Lingo.csproj" />
   </ItemGroup>
 
-
+<!--
   <ItemGroup>
     <Reference Include="Pidgin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cf8803ee5be21175">
       <HintPath>..\..\Pidgin\Pidgin\bin\Debug\net5.0\Pidgin.dll</HintPath>
     </Reference>
-  </ItemGroup>
+  </ItemGroup>-->
 </Project>

@@ -13,7 +13,7 @@ namespace Drizzle.ConsoleApp
             if (true)
             {
                 var text = File.ReadAllText(
-                    @"C:\Users\Pieter-Jan Briers\Projects\DrizzleEdit\LingoSource\levelRendering.ls");
+                    @"C:\Users\Pieter-Jan Briers\Projects\DrizzleEdit\LingoSource\spelrelarat.ls");
                 var sw = Stopwatch.StartNew();
                 var parsed = LingoParser.Script.ParseOrThrow(text);
                 Console.WriteLine(DebugPrint.PrintAstNode(parsed));

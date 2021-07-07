@@ -21,7 +21,8 @@ namespace Drizzle.Lingo.Ast
             "repeat",
             "next",
             "else",
-            "otherwise"
+            "otherwise",
+            "after"
         };
 
         private static string PrintPos(SourcePos pos) => $"{pos.Line}:{pos.Col}";
@@ -35,22 +36,24 @@ namespace Drizzle.Lingo.Ast
         private static Parser<char, T> TracePos<T>(this Parser<char, T> parser, string msg) =>
             parser.Before(CurrentPos.Trace(p => $"[{PrintPos(p)}] {msg}"));
 
+        private static Parser<char, T> TracePos<T>(this Parser<char, T> parser, Func<T, string> msgFunc) =>
+            parser.Bind(t => CurrentPos.Trace(p => $"[{PrintPos(p)}] {msgFunc(t)}").ThenReturn(t));
+
 #else
         private static Parser<char, T> TraceBegin<T>(this Parser<char, T> parser, string msg) => parser;
 
         private static Parser<char, T> TracePos<T>(this Parser<char, T> parser, string msg) => parser;
 #endif
-
-        private static readonly Parser<char, Unit> Comment =
-            String("--")
-                .Then(AnyCharExcept('\n').SkipMany())
-                .Labelled("comment");
-
         private static readonly Parser<char, char> NnlWhiteSpace =
             OneOf(' ', '\t', '\r').Labelled("non-newline white space");
 
         public static readonly Parser<char, Unit> SkipNnlWhiteSpace =
             NnlWhiteSpace.SkipMany();
+
+        private static readonly Parser<char, Unit> Comment =
+            String("--")
+                .Then(OneOf(Try(Char('\\').Then(SkipNnlWhiteSpace).Then(Char('\n'))), AnyCharExcept('\n')).SkipMany())
+                .Labelled("comment");
 
         private static readonly Parser<char, Unit> EndLine =
             SkipNnlWhiteSpace
@@ -82,16 +85,25 @@ namespace Drizzle.Lingo.Ast
         private static Parser<char, char> Tok(char token)
             => Tok(Char(token));
 
+        private static readonly Parser<char, string> IdentifierUnchecked =
+            Tok(OneOf(Letter, Char('_')).Then(OneOf(LetterOrDigit, Char('_')).ManyString(), (a, b) => a + b));
+
         private static readonly Parser<char, string> Identifier =
-            Tok(OneOf(Letter, Char('_')).Then(OneOf(LetterOrDigit, Char('_')).ManyString(), (a, b) => a + b))
+            IdentifierUnchecked
                 .Assert(val => !Keywords.Contains(val), v => $"Expected identifier, found keyword {v}")
                 .Labelled("identifier");
 
-        private static readonly Parser<char, AstNode.Global> KeywordGlobal =
+        private static readonly Parser<char, AstNode.Global> Global =
             Tok("global")
                 .Then(Identifier.SeparatedAtLeastOnce(Tok(',')))
                 .Select(s => new AstNode.Global(s.ToArray()))
                 .Labelled("global keyword");
+
+        private static readonly Parser<char, AstNode.Base> PropertyDecl =
+            Try(Tok("property"))
+                .Then(Identifier.SeparatedAtLeastOnce(Tok(',')))
+                .Select(s => (AstNode.Base) new AstNode.Property(s.ToArray()))
+                .Labelled("property declarations");
 
         private static readonly Parser<char, Unit> EmptyLine =
             SkipNnlWhiteSpace
@@ -106,6 +118,9 @@ namespace Drizzle.Lingo.Ast
 
         private static readonly Parser<char, Unit> SkipWhiteSpaceAndLines =
             SkipEmptyOrComments.Then(SkipNnlWhiteSpace);
+
+        private static readonly Parser<char, Unit> ThisShouldBeAProperBound =
+            NnlWhiteSpace.SkipAtLeastOnce();
 
         private static readonly Parser<char, AstNode.Base> Decimal =
             Tok(
@@ -157,12 +172,12 @@ namespace Drizzle.Lingo.Ast
         private static readonly Parser<char, AstNode.Base> VariableName =
             Identifier.Select(i => (AstNode.Base) new AstNode.VariableName(i));
 
-        private static Parser<char, T> Parenthesized<T>(Parser<char, T> parser) =>
+        private static Parser<char, T> Parenthesized<T>(this Parser<char, T> parser) =>
             parser.Between(Tok('('), Tok(')'));
 
         private static Parser<char, AstNode.Base> GlobalCall(Parser<char, AstNode.Base> subExpr) =>
             Identifier
-                .Then(Parenthesized(subExpr/*.Trace(arg => $"arg: {arg}")*/.Separated(Tok(','))),
+                .Then(Parenthesized(subExpr /*.Trace(arg => $"arg: {arg}")*/.Separated(Tok(','))),
                     (ident, args) => (AstNode.Base) new AstNode.GlobalCall(ident, args.ToArray()));
 
         private static Parser<char, AstNode.Base> List(Parser<char, AstNode.Base> subExpr) =>
@@ -172,16 +187,16 @@ namespace Drizzle.Lingo.Ast
                 .Select(v => (AstNode.Base) new AstNode.List(v.ToArray()));
 
         private static Parser<char, AstNode.Base> PropertyList(Parser<char, AstNode.Base> subExpr) =>
-            subExpr.Before(Tok(':'))
-                .Then(subExpr, KeyValuePair.Create)
-                .Separated(Tok(','))
-                .Select(v => (AstNode.Base) new AstNode.PropertyList(v.ToArray()))
+            OneOf(
                 // Empty list clause.
-                .Or(Tok(':')
-                    .ThenReturn(
-                        (AstNode.Base) new AstNode.PropertyList(
-                            Array.Empty<KeyValuePair<AstNode.Base, AstNode.Base>>())))
-                .Between(Tok('['), Tok(']'));
+                Tok(':').ThenReturn(
+                    (AstNode.Base) new AstNode.PropertyList(
+                        Array.Empty<KeyValuePair<AstNode.Base, AstNode.Base>>())),
+                subExpr.Before(Tok(':'))
+                    .Then(subExpr, KeyValuePair.Create)
+                    .Separated(Tok(','))
+                    .Select(v => (AstNode.Base) new AstNode.PropertyList(v.ToArray()))
+            ).Between(Tok('['), Tok(']'));
 
         private static Parser<char, AstNode.Base> ParameterList(Parser<char, AstNode.Base> subExpr) =>
             subExpr
@@ -201,6 +216,13 @@ namespace Drizzle.Lingo.Ast
             subExpr.Between(Tok('['), Tok(']'))
                 .Select<Func<AstNode.Base, AstNode.Base>>(
                     expr => func => new AstNode.MemberIndex(func, expr));
+
+        private static Parser<char, Func<AstNode.Base, AstNode.Base>> Slice(Parser<char, AstNode.Base> subExpr) =>
+            subExpr.Before(Tok(".."))
+                .Then<AstNode.Base, Func<AstNode.Base, AstNode.Base>>(
+                    subExpr, (start, end) => @base => new AstNode.MemberSlice(@base, start, end))
+                .Between(Tok('['), Tok(']'));
+
 
         private static readonly Parser<char, Func<AstNode.Base, AstNode.Base>> MemberProp =
             Tok('.').Then(Identifier)
@@ -276,7 +298,9 @@ namespace Drizzle.Lingo.Ast
 
         private static readonly string[] KeywordFunctionNames =
         {
-            "put"
+            "put",
+            "go",
+            "new"
         };
 
         private static Parser<char, AstNode.Base> KeywordFunction(Parser<char, AstNode.Base> expr) =>
@@ -286,10 +310,54 @@ namespace Drizzle.Lingo.Ast
                     expr,
                     (name, arg) => (AstNode.Base) new AstNode.GlobalCall(name, new[] {arg}));
 
-        private static readonly Parser<char, AstNode.Base> The =
-            Tok("the")
-                .Then(Identifier)
-                .Select(i => (AstNode.Base) new AstNode.The(i));
+        private static Parser<char, AstNode.Base> The(Parser<char, AstNode.Base> subExpr) =>
+            Try(Tok("the"))
+                .Then(OneOf(
+                    Tok("number").Then(Tok("of")).Then(
+                        OneOf(
+                            Try(Tok("lines"))
+                                .Then(Tok("in"))
+                                .Then(subExpr).Select(n => (AstNode.Base) new AstNode.TheNumberOfLines(n)),
+                            subExpr.Select(n => (AstNode.Base) new AstNode.TheNumberOf(n))
+                        )
+                    ),
+                    Identifier.Select(i => (AstNode.Base) new AstNode.The(i)))
+                );
+
+        private static Parser<char, AstNode.Base> NewCastLib(Parser<char, AstNode.Base> subExpr) =>
+            Try(Tok("new").Then(
+                subExpr.Before(Tok(',')).Before(Tok("castLib"))
+                    .Then(subExpr, (type, castLib) => (AstNode.Base) new AstNode.NewCastLib(type, castLib))
+                    .Parenthesized()
+            ));
+
+        private static Parser<char, AstNode.Base> NewScript(Parser<char, AstNode.Base> subExpr) =>
+            Try(Tok("new").Then(
+                Tok("script")
+                .Then(subExpr)
+                .Then(Tok(',').Then(subExpr.Separated(Tok(','))),
+                    (type, castLib) => (AstNode.Base) new AstNode.NewScript(type, castLib.ToArray()))
+                .Parenthesized()
+            ));
+
+        private static Parser<char, AstNode.Base> ThingOf(Parser<char, AstNode.Base> subExpr) =>
+            Map(
+                (type, index, collection) => (AstNode.Base) new AstNode.ThingOf(type, index, collection),
+                Try(OneOf(
+                    String("item").Before(ThisShouldBeAProperBound).ThenReturn(AstNode.ThingOfType.Item),
+                    String("line").Before(ThisShouldBeAProperBound).ThenReturn(AstNode.ThingOfType.Line),
+                    String("char").Before(ThisShouldBeAProperBound).ThenReturn(AstNode.ThingOfType.Char)
+                )),
+                subExpr.Before(Tok("of")),
+                subExpr);
+
+        private static Parser<char, AstNode.Base> MemberOfCastLib(Parser<char, AstNode.Base> subExpr) =>
+            Try(Tok("member")
+                .Then(subExpr)
+                .Before(Tok("of")).Before(Tok("castLib"))
+                .Then(subExpr,
+                    (member, castLib) => (AstNode.Base) new AstNode.GlobalCall("member", new[] {member, castLib})));
+
 
         public static readonly Parser<char, AstNode.Base> Expression = ExpressionFunc(true);
         private static readonly Parser<char, AstNode.Base> ExpressionNoEquals = ExpressionFunc(false);
@@ -316,7 +384,9 @@ namespace Drizzle.Lingo.Ast
                         Operator.PostfixChainable(
                             Try(MemberCall(expr).TraceBegin("member call postfix")),
                             Try(MemberProp).TraceBegin("member prop postfix"),
-                            Index(expr).TraceBegin("member index")),
+                            Try(Slice(expr)).TraceBegin("member slice"),
+                            Index(expr).TraceBegin("member index")
+                        ),
 
                         // TODO: are these associativity rules correct?
                         // Precedence 5
@@ -324,11 +394,11 @@ namespace Drizzle.Lingo.Ast
                             .And(Operator.Prefix(Not)),
                         // Precedence 4
                         Operator.InfixL(Add)
-                            .And(Operator.InfixL(Multiply.TraceBegin("Multiply")))
-                            .And(Operator.InfixL(Divide.TraceBegin("Divide")))
-                            .And(Operator.InfixL(And.TraceBegin("And")))
-                            .And(Operator.InfixL(Or.TraceBegin("Or")))
-                            .And(Operator.InfixL(Mod.TraceBegin("Mod"))),
+                            .And(Operator.InfixL(Multiply /*.TraceBegin("Multiply")*/))
+                            .And(Operator.InfixL(Divide /*.TraceBegin("Divide")*/))
+                            .And(Operator.InfixL(And /*.TraceBegin("And")*/))
+                            .And(Operator.InfixL(Or /*.TraceBegin("Or")*/))
+                            .And(Operator.InfixL(Mod /*.TraceBegin("Mod")*/)),
                         // Precedence 3
                         Operator.InfixL(Subtract),
                         // Precedence 2
@@ -339,18 +409,22 @@ namespace Drizzle.Lingo.Ast
                     };
                     return (
                         OneOf(
-                            Try(KeywordFunction(expr)).TraceBegin("TRYING KEYWORD")
+                            NewCastLib(expr),
+                            NewScript(expr),
+                            MemberOfCastLib(expr),
+                            Try(KeywordFunction(expr)) /*.TraceBegin("TRYING KEYWORD")*/
                             /*.Trace(g => $"found keyword: {DebugPrint.PrintAstNode(g)}")*/,
-                            Try(GlobalCall(expr)).TraceBegin("TRYING GLOBAL CALL")
+                            Try(GlobalCall(expr)) /*.TraceBegin("TRYING GLOBAL CALL")*/
                             /*.Trace(g => $"Global call: {DebugPrint.PrintAstNode(g)}")*/,
-                            Literal.TraceBegin("TRYING LITERAL"),
-                            Try(The).TraceBegin("TRYING THE"),
-                            VariableName.TraceBegin("TRYING VAR"),
-                            Parenthesized(expr).TraceBegin("TRYING PARENS"),
-                            Try(PropertyList(expr)).TraceBegin("TRYING PROPERTY LIST"),
-                            List(expr).TraceBegin("TRYING LIST"),
-                            ParameterList(expr).TraceBegin("TRYING PARAMETER LIST")
-                        ).TraceBegin("TRYING TERM") /*.Trace(n => $"term: {DebugPrint.PrintAstNode(n)}")*/,
+                            ThingOf(expr),
+                            Literal /*.TraceBegin("TRYING LITERAL")*/,
+                            The(expr) /*.TraceBegin("TRYING THE")*/,
+                            VariableName /*.TraceBegin("TRYING VAR")*/,
+                            Parenthesized(expr) /*.TraceBegin("TRYING PARENS")*/,
+                            Try(PropertyList(expr)) /*.TraceBegin("TRYING PROPERTY LIST")*/,
+                            List(expr) /*.TraceBegin("TRYING LIST")*/,
+                            ParameterList(expr) /*.TraceBegin("TRYING PARAMETER LIST")*/
+                        ).TraceBegin("TRYING TERM").TracePos(n => $"term: {DebugPrint.PrintAstNode(n)}"),
                         operatorTable
                     );
                 }).TraceBegin("Trying expr") /*.Trace(expr => $"expr: {expr}")*/;
@@ -359,11 +433,13 @@ namespace Drizzle.Lingo.Ast
                 Try(SkipWhiteSpaceAndLines
                         .Then(
                             Rec(() => Statement).TraceBegin("Statementblock -> statement")
+                                .TracePos(v => $"Statement: {v}")
                                 //.Trace(DebugPrint.PrintAstNode)
                                 .Before(EndLine)))
                     .Many()
                     .Before(SkipWhiteSpaceAndLines)
                     .Select(b => new AstNode.StatementBlock(b.ToArray()))
+                    .TracePos(b => $"Statement block: {b}")
             /*.Trace(b => $"Statement block: {DebugPrint.PrintAstNode(b)}")*/;
 
         private static readonly Parser<char, AstNode.Base> RepeatWhile =
@@ -394,39 +470,119 @@ namespace Drizzle.Lingo.Ast
                 )).Before(Tok("end")).Before(Tok("repeat"));
 
         private static readonly Parser<char, AstNode.Base> Repeat =
-            Try(Tok("repeat"))
+            Try(Tok(String("repeat").Before(ThisShouldBeAProperBound)))
                 .Then(OneOf(RepeatWhile, RepeatWith));
 
-        private static readonly Parser<char, AstNode.Base> If =
+        private static readonly Parser<char, AstNode.Base> IfHeader =
             Try(Tok("if"))
+                .TracePos("Entering if statement")
+                .Then(Expression)
+                .Before(Tok("then"));
+
+        private static Parser<char, AstNode.Base> IfSingleLine(AstNode.Base cond, AstNode.Base imm) =>
+            Map((elseIfs, @else) => (AstNode.Base) new AstNode.If(
+                    cond,
+                    SingleStatementBlock(imm),
+                    // Fold else ifs into nested if else statements.
+                    elseIfs.Reverse().Aggregate(
+                        @else.GetValueOrDefault(),
+                        (aggElse, tuple) => SingleStatementBlock(
+                            new AstNode.If(tuple.cond, tuple.block, aggElse)
+                        ))),
+                // Else if clauses.
+                Try(SkipWhiteSpaceAndLines.Then(Tok("else").Then(Tok("if"))))
+                    .Then(Expression)
+                    .Before(Tok("then"))
+                    .Before(WhiteSpaceOrWrap)
+                    .Then(Statement, (expr, statement) => (cond: expr, block: SingleStatementBlock(statement)))
+                    .Many(),
+                // Else clause.
+                Try(SkipWhiteSpaceAndLines.Then(Tok("else")))
+                    .Before(WhiteSpaceOrWrap)
+                    .Then(Statement)
+                    .Select(SingleStatementBlock)
+                    .Optional()
+            );
+        //Return((AstNode.Base) new AstNode.If(cond, new AstNode.StatementBlock(new[] {imm}), null));
+
+        private static Parser<char, AstNode.Base> IfBlock(AstNode.Base cond) =>
+            Map((body, elseIfs, @else) =>
+                        (AstNode.Base) new AstNode.If(
+                            cond,
+                            body,
+                            // Fold else ifs into nested if else statements.
+                            elseIfs.Reverse().Aggregate(
+                                @else.GetValueOrDefault(),
+                                (aggElse, tuple) => SingleStatementBlock(
+                                    new AstNode.If(tuple.cond, tuple.block, aggElse)
+                                ))),
+                    // Code block
+                    StatementBlock.TraceBegin("Entering if body"),
+                    // Else if clauses.
+                    Try(Tok("else").Then(Tok("if"))) /*.Trace("Entering else if")*/
+                        .Then(Expression)
+                        .Before(Tok("then"))
+                        .Then(StatementBlock, (expr, block) => (cond: expr, block))
+                        .Many(),
+                    // Else clause.
+                    Try(Tok("else")
+                            .Then(StatementBlock))
+                        .Optional())
+                .Before(Tok("end").Before(Tok("if")));
+
+
+        private static readonly Parser<char, AstNode.Base> If =
+            IfHeader.Before(WhiteSpaceOrWrap)
                 .Then(
-                    Map((condition, body, elseIfs, @else) =>
-                            (AstNode.Base) new AstNode.If(
-                                condition,
-                                body,
-                                // Fold else ifs into nested if else statements.
-                                elseIfs.Reverse().Aggregate(
-                                    @else.GetValueOrDefault(),
-                                    (aggElse, tuple) => new AstNode.StatementBlock(new AstNode.Base[]
-                                    {
-                                        new AstNode.If(tuple.cond, tuple.block, aggElse)
-                                    }))),
-                        // Condition
-                        Expression.Before(Tok("then")),
-                        // Code block
-                        StatementBlock.TraceBegin("Entering if block"),
-                        // Else if clauses.
-                        Try(Tok("else").Then(Tok("if"))) /*.Trace("Entering else if")*/
-                            .Then(Expression)
-                            .Before(Tok("then"))
-                            .Then(StatementBlock, (expr, block) => (cond: expr, block))
-                            .Many(),
-                        // Else clause.
-                        Try(Tok("else")
-                                .Then(StatementBlock))
-                            .Optional()
-                            .Before(Tok("end").Before(Tok("if"))))
-                ).TraceBegin("Trying if") /*.Trace(i => $"end if: {i}")*/;
+                    Try(Rec(() => Statement)).Optional(),
+                    (cond, imm) => (cond, imm))
+                .Bind(tuple => tuple.imm.HasValue ? IfSingleLine(tuple.cond, tuple.imm.Value) : IfBlock(tuple.cond))
+                .TracePos("End if").TraceBegin("Trying if");
+
+
+        /*
+        private static readonly Parser<char, AstNode.Base> If =
+            Map((condition, body, elseIfs, @else) =>
+                        (AstNode.Base) new AstNode.If(
+                            condition,
+                            body,
+                            // Fold else ifs into nested if else statements.
+                            elseIfs.Reverse().Aggregate(
+                                @else.GetValueOrDefault(),
+                                (aggElse, tuple) => new AstNode.StatementBlock(new AstNode.Base[]
+                                {
+                                    new AstNode.If(tuple.cond, tuple.block, aggElse)
+                                }))),
+                    // Condition
+                    IfHeader,
+                    // Code block
+                    StatementBlock.TraceBegin("Entering if body"),
+                    // Else if clauses.
+                    Try(Tok("else").Then(Tok("if"))) /*.Trace("Entering else if")#1#
+                        .Then(Expression)
+                        .Before(Tok("then"))
+                        .Then(StatementBlock, (expr, block) => (cond: expr, block))
+                        .Many(),
+                    // Else clause.
+                    Try(Tok("else")
+                            .Then(StatementBlock))
+                        .Optional())
+
+                .Before(Tok("end").Before(Tok("if")))
+                .TracePos("End if").TraceBegin("Trying if");
+                */
+
+        private static readonly Parser<char, AstNode.Base> PutInto =
+            Try(Tok("put")
+                .Then(Map(
+                    (expr, type, collection) => (AstNode.Base) new AstNode.PutInto(expr, type, collection),
+                    Expression,
+                    OneOf(
+                        Tok("after").ThenReturn(AstNode.PutType.After),
+                        Tok("before").ThenReturn(AstNode.PutType.Before),
+                        Tok("into").ThenReturn(AstNode.PutType.Into)),
+                    Expression
+                )));
 
         private static readonly Parser<char, IEnumerable<AstNode.Base>> CaseExpr =
             SkipWhiteSpaceAndLines
@@ -477,8 +633,8 @@ namespace Drizzle.Lingo.Ast
 
         private static readonly Parser<char, AstNode.Base> Return =
             Try(Tok("return"))
-                .Then(Expression,
-                    (_, expr) => (AstNode.Base) new AstNode.Return(expr));
+                .Then(Expression.Optional(),
+                    (_, expr) => expr.HasValue ? (AstNode.Base) new AstNode.Return(expr.Value) : new AstNode.Exit());
 
         private static readonly Parser<char, AstNode.Base> Exit =
             Try(Tok("exit"))
@@ -492,8 +648,9 @@ namespace Drizzle.Lingo.Ast
                     Case.TraceBegin("Statement -> case"),
                     Repeat.TraceBegin("Statement -> repeat"),
                     If.TraceBegin("Statement -> if"),
+                    PutInto.TraceBegin("Statement -> put into"),
                     Try(Assignment.Cast<AstNode.Base>()).TraceBegin("Statement -> assignment"),
-                    Try(KeywordGlobal.Cast<AstNode.Base>()).TraceBegin("Statement -> global"),
+                    Try(Global.Cast<AstNode.Base>()).TraceBegin("Statement -> global"),
                     Expression.TraceBegin("Statement -> expr"))
             /*.Trace(s => $"STATEMENT: {DebugPrint.PrintAstNode(s)}")*/;
 
@@ -516,20 +673,22 @@ namespace Drizzle.Lingo.Ast
                     StatementBlock
                 ))
                 .Before(Tok("end"))
+                .Before(IdentifierUnchecked.Optional())
                 //.Trace(h => $"HANDLER: {DebugPrint.PrintAstNode(h)}")
-                .Bind(h => Tok(h.Name).Optional().ThenReturn(h))
+                // .Bind(h => Tok(h.Name).Optional().ThenReturn(h))
                 .Labelled("handler definition");
 
         private static readonly Parser<char, AstNode.Base> TopKeyword =
             OneOf(
-                    KeywordGlobal.Cast<AstNode.Base>(),
+                    Global.Cast<AstNode.Base>(),
+                    PropertyDecl,
                     Handler.Cast<AstNode.Base>())
                 .Labelled("top-level keyword");
 
         public static readonly Parser<char, AstNode.Script> Script =
             Try(SkipEmptyOrComments
                     .Then(TopKeyword)
-                    .Before(EndLine))
+                    .Before(EndLine.Or(End)))
                 .Many()
                 .TracePos("B")
                 .Before(SkipWhiteSpaceAndLines)
@@ -537,5 +696,10 @@ namespace Drizzle.Lingo.Ast
                 .TracePos("A")
                 .Before(End)
                 .Labelled("script");
+
+        private static AstNode.StatementBlock SingleStatementBlock(AstNode.Base b)
+        {
+            return new AstNode.StatementBlock(new[] {b});
+        }
     }
 }

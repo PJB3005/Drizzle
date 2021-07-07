@@ -27,6 +27,7 @@ namespace Drizzle.Lingo.Ast
         ) : Base;
 
         public sealed record Exit : Base;
+
         public sealed record ExitRepeat : Base;
 
         public sealed record Global(
@@ -41,6 +42,21 @@ namespace Drizzle.Lingo.Ast
                 sb.Append(" }\n");
             }
         }
+
+
+        public sealed record Property(
+            string[] Identifiers
+        ) : Base
+        {
+            public override void DebugPrint(StringBuilder sb, int indentation)
+            {
+                sb.Append(Indent(indentation));
+                sb.Append("Property { ");
+                sb.Append(string.Join(", ", Identifiers));
+                sb.Append(" }\n");
+            }
+        }
+
 
         public sealed record Integer(
             int Value
@@ -68,6 +84,16 @@ namespace Drizzle.Lingo.Ast
 
         public sealed record ParameterList(
             KeyValuePair<Base, Base>[] Values
+        ) : Base;
+
+        public sealed record NewCastLib(
+            Base Type,
+            Base CastLib
+        ) : Base;
+
+        public sealed record NewScript(
+            Base Type,
+            Base[] Args
         ) : Base;
 
         public sealed record Handler(
@@ -100,6 +126,27 @@ namespace Drizzle.Lingo.Ast
             string Name
         ) : Base;
 
+        public sealed record TheNumberOf(
+            Base Expr
+        ) : Base;
+
+        public sealed record TheNumberOfLines(
+            Base Text
+        ) : Base;
+
+        public sealed record ThingOf(
+            ThingOfType Type,
+            Base Index,
+            Base Collection
+        ) : Base;
+
+        public enum ThingOfType
+        {
+            Item,
+            Line,
+            Char
+        }
+
         public sealed record Constant(
             string Name
         ) : Base;
@@ -113,6 +160,12 @@ namespace Drizzle.Lingo.Ast
         public sealed record MemberIndex(
             Base Expression,
             Base Index
+        ) : Base;
+
+        public sealed record MemberSlice(
+            Base Expression,
+            Base Start,
+            Base End
         ) : Base;
 
         public sealed record StatementBlock(
@@ -230,6 +283,19 @@ namespace Drizzle.Lingo.Ast
                 sb.Append(Indent(indentation));
                 sb.Append(")\n");
             }
+        }
+
+        public sealed record PutInto(
+            Base Expression,
+            PutType Type,
+            Base Collection
+        ) : Base;
+
+        public enum PutType
+        {
+            Before,
+            After,
+            Into
         }
 
         public sealed record Script(
