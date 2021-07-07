@@ -1,4 +1,4 @@
-startUp.lsglobal gSaveProps, gTEprops, gTiles, gLEProps, gFullRender, gEEprops, gEffects, gLightEProps, gBlurOptions
+global gSaveProps, gTEprops, gTiles, gLEProps, gFullRender, gEEprops, gEffects, gLightEProps, gBlurOptions
 global gLEVEL, gLOprops, gLoadedName, gSEProps, gViewRender, gMassRenderL, gCameraProps, gImgXtra, gEnvEditorProps, gPEprops
 
 global gProps, gLOADPATH, gTrashPropOptions, solidMtrx
