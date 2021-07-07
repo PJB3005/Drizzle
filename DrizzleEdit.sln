@@ -17,6 +17,8 @@ ProjectSection(SolutionItems) = preProject
 	LICENSE.txt = LICENSE.txt
 EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drizzle.Lingo.Tests", "Drizzle.Lingo.Tests\Drizzle.Lingo.Tests.csproj", "{3B36DF08-A34A-4BF1-9EE2-94E571FCF817}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -66,5 +68,17 @@ Global
 		{2FA8C509-BEF1-4CFB-A7E1-836426FECA26}.Release|x64.Build.0 = Release|Any CPU
 		{2FA8C509-BEF1-4CFB-A7E1-836426FECA26}.Release|x86.ActiveCfg = Release|Any CPU
 		{2FA8C509-BEF1-4CFB-A7E1-836426FECA26}.Release|x86.Build.0 = Release|Any CPU
+		{3B36DF08-A34A-4BF1-9EE2-94E571FCF817}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B36DF08-A34A-4BF1-9EE2-94E571FCF817}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B36DF08-A34A-4BF1-9EE2-94E571FCF817}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3B36DF08-A34A-4BF1-9EE2-94E571FCF817}.Debug|x64.Build.0 = Debug|Any CPU
+		{3B36DF08-A34A-4BF1-9EE2-94E571FCF817}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3B36DF08-A34A-4BF1-9EE2-94E571FCF817}.Debug|x86.Build.0 = Debug|Any CPU
+		{3B36DF08-A34A-4BF1-9EE2-94E571FCF817}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B36DF08-A34A-4BF1-9EE2-94E571FCF817}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B36DF08-A34A-4BF1-9EE2-94E571FCF817}.Release|x64.ActiveCfg = Release|Any CPU
+		{3B36DF08-A34A-4BF1-9EE2-94E571FCF817}.Release|x64.Build.0 = Release|Any CPU
+		{3B36DF08-A34A-4BF1-9EE2-94E571FCF817}.Release|x86.ActiveCfg = Release|Any CPU
+		{3B36DF08-A34A-4BF1-9EE2-94E571FCF817}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
