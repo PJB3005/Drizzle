@@ -26,8 +26,6 @@ namespace Drizzle.Lingo.Ast
             Base? Value
         ) : Base;
 
-        public sealed record Exit : Base;
-
         public sealed record ExitRepeat : Base;
 
         public sealed record Global(
@@ -254,7 +252,7 @@ namespace Drizzle.Lingo.Ast
             }
         }
 
-        public sealed record Prop(
+        public sealed record MemberProp(
             Base Expression,
             string Property
         ) : Base;

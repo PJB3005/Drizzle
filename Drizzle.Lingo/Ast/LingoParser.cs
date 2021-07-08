@@ -231,7 +231,7 @@ namespace Drizzle.Lingo.Ast
             Tok('.').Then(Identifier)
                 /*.Before(Lookahead(AnyCharExcept('(')))*/
                 //.Trace(i => $"member: .{i}")
-                .Select<Func<AstNode.Base, AstNode.Base>>(i => expr => new AstNode.Prop(expr, i));
+                .Select<Func<AstNode.Base, AstNode.Base>>(i => expr => new AstNode.MemberProp(expr, i));
 
         private static Parser<char, Func<AstNode.Base, AstNode.Base>>
             Unary(Parser<char, AstNode.UnaryOperatorType> op) =>
@@ -637,12 +637,12 @@ namespace Drizzle.Lingo.Ast
         private static readonly Parser<char, AstNode.Base> Return =
             Try(Tok("return"))
                 .Then(Expression.Optional(),
-                    (_, expr) => expr.HasValue ? (AstNode.Base) new AstNode.Return(expr.Value) : new AstNode.Exit());
+                    (_, expr) => expr.HasValue ? (AstNode.Base) new AstNode.Return(expr.Value) : new AstNode.Return(null));
 
         private static readonly Parser<char, AstNode.Base> Exit =
             Try(Tok("exit"))
                 .Then(Tok("repeat").Optional())
-                .Select(r => r.HasValue ? (AstNode.Base) new AstNode.ExitRepeat() : new AstNode.Exit());
+                .Select(r => r.HasValue ? (AstNode.Base) new AstNode.ExitRepeat() : new AstNode.Return(null));
 
         public static readonly Parser<char, AstNode.Base> Statement =
                 OneOf(
