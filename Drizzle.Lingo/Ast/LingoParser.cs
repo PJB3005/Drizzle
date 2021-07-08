@@ -29,7 +29,7 @@ namespace Drizzle.Lingo.Ast
 
         public static readonly Parser<char, Unit> Nop = Return(Unit.Value);
 
-#if true
+#if false
         private static Parser<char, T> TraceBegin<T>(this Parser<char, T> parser, string msg) =>
             CurrentPos.Trace(p => $"[{PrintPos(p)}] {msg}").Then(parser);
 
@@ -43,6 +43,9 @@ namespace Drizzle.Lingo.Ast
         private static Parser<char, T> TraceBegin<T>(this Parser<char, T> parser, string msg) => parser;
 
         private static Parser<char, T> TracePos<T>(this Parser<char, T> parser, string msg) => parser;
+
+        private static Parser<char, T> TracePos<T>(this Parser<char, T> parser, Func<T, string> msgFunc) => parser;
+
 #endif
         private static readonly Parser<char, char> NnlWhiteSpace =
             OneOf(' ', '\t', '\r').Labelled("non-newline white space");
