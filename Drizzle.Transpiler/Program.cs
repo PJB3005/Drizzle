@@ -463,7 +463,6 @@ namespace Drizzle.Transpiler
                 AstNode.MemberSlice memberSlice => WriteMemberSlice(memberSlice, ctx),
                 AstNode.NewCastLib newCastLib => WriteNewCastLib(newCastLib, ctx),
                 AstNode.NewScript newScript => WriteNewScript(newScript, ctx),
-                AstNode.ParameterList parameterList => WriteParameterList(parameterList, ctx),
                 AstNode.PropertyList propertyList => WritePropertyList(propertyList, ctx),
                 AstNode.String str => WriteString(str, ctx),
                 AstNode.Symbol symbol => WriteSymbol(symbol, ctx),
@@ -503,29 +502,6 @@ namespace Drizzle.Transpiler
         private static string WriteThe(AstNode.The node, HandlerContext ctx)
         {
             return $"_global.the_{node.Name}";
-        }
-
-        private static string WriteParameterList(AstNode.ParameterList node, HandlerContext ctx)
-        {
-            var sb = new StringBuilder();
-            sb.Append("new LingoParameterList{");
-            var first = true;
-            foreach (var (k, v) in node.Values)
-            {
-                if (!first)
-                    sb.Append(',');
-
-                first = false;
-                var vExpr = WriteExpression(v, ctx);
-                sb.Append("[\"");
-                sb.Append(k);
-                sb.Append("\"] = ");
-                sb.Append(vExpr);
-            }
-
-            sb.Append('}');
-
-            return sb.ToString();
         }
 
         private static string WritePropertyList(AstNode.PropertyList node, HandlerContext ctx)

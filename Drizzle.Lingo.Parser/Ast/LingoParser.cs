@@ -200,25 +200,25 @@ namespace Drizzle.Lingo.Parser.Ast
                 .Between(Tok('['), Tok(']'))
                 .Select(v => (AstNode.Base) new AstNode.List(v.ToArray()));
 
-        private static Parser<char, AstNode.Base> PropertyList(Parser<char, AstNode.Base> subExpr) =>
+        private static Parser<char, AstNode.Base> PropertyListCore(Parser<char, AstNode.Base> subExpr) =>
             OneOf(
                 // Empty list clause.
                 Tok(':').ThenReturn(
                     (AstNode.Base) new AstNode.PropertyList(
                         Array.Empty<KeyValuePair<AstNode.Base, AstNode.Base>>())),
-                subExpr.Before(Tok(':'))
+                OneOf(
+                        Try(Identifier).Select(i => (AstNode.Base) new AstNode.Symbol(i)),
+                        subExpr
+                    ).Before(Tok(':'))
                     .Then(subExpr, KeyValuePair.Create)
                     .Separated(Tok(','))
                     .Select(v => (AstNode.Base) new AstNode.PropertyList(v.ToArray()))
-            ).Between(Tok('['), Tok(']'));
+            );
 
-        private static Parser<char, AstNode.Base> ParameterList(Parser<char, AstNode.Base> subExpr) =>
-            Tok('#').Optional().Then(Identifier)
-                .Before(Tok(':'))
-                .Then(subExpr, KeyValuePair.Create)
-                .Separated(Tok(','))
-                .Between(Tok('{'), Tok('}'))
-                .Select(pairs => (AstNode.Base) new AstNode.ParameterList(pairs.ToArray()));
+        private static Parser<char, AstNode.Base> PropertyList(Parser<char, AstNode.Base> subExpr) =>
+            OneOf(
+                PropertyListCore(subExpr).Between(Tok('['), Tok(']')),
+                PropertyListCore(subExpr).Between(Tok('{'), Tok('}')));
 
         private static Parser<char, Func<AstNode.Base, AstNode.Base>> MemberCall(Parser<char, AstNode.Base> subExpr) =>
             Tok('.').Then(Identifier)
@@ -437,8 +437,7 @@ namespace Drizzle.Lingo.Parser.Ast
                             VariableName /*.TraceBegin("TRYING VAR")*/,
                             Parenthesized(expr) /*.TraceBegin("TRYING PARENS")*/,
                             Try(PropertyList(expr)) /*.TraceBegin("TRYING PROPERTY LIST")*/,
-                            List(expr) /*.TraceBegin("TRYING LIST")*/,
-                            ParameterList(expr) /*.TraceBegin("TRYING PARAMETER LIST")*/
+                            List(expr) /*.TraceBegin("TRYING LIST")*/
                         ).TraceBegin("TRYING TERM").TracePos(n => $"term: {DebugPrint.PrintAstNode(n)}"),
                         operatorTable
                     );
