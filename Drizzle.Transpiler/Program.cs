@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -297,8 +298,13 @@ namespace Drizzle.Transpiler
 
         private static void WriteIf(AstNode.If node, HandlerContext ctx)
         {
-            var cond = WriteExpression(node.Condition, ctx);
-            ctx.Writer.WriteLine($"if (LingoGlobal.ToBool({cond})) {{");
+            var exprParams = new ExpressionParams {WantBool = true};
+            var cond = WriteExpression(node.Condition, ctx, exprParams);
+
+            ctx.Writer.WriteLine(exprParams.BoolGranted
+                ? $"if ({cond}) {{"
+                : $"if (LingoGlobal.ToBool({cond})) {{");
+
             WriteStatementBlock(node.Statements, ctx);
             ctx.Writer.WriteLine('}');
 
@@ -356,9 +362,12 @@ namespace Drizzle.Transpiler
 
         private static void WriteRepeatWhile(AstNode.RepeatWhile node, HandlerContext ctx)
         {
-            ctx.Writer.Write("while (LingoGlobal.ToBool(");
-            ctx.Writer.Write(WriteExpression(node.Condition, ctx));
-            ctx.Writer.WriteLine(")) {");
+            var exprParams = new ExpressionParams {WantBool = true};
+            var expr = WriteExpression(node.Condition, ctx);
+
+            ctx.Writer.WriteLine(exprParams.BoolGranted
+                ? $"while ({expr}) {{"
+                : $"while (LingoGlobal.ToBool({expr})) {{");
 
             WriteStatementBlock(node.Block, ctx);
 
@@ -447,11 +456,11 @@ namespace Drizzle.Transpiler
             ctx.Writer.WriteLine($"{lhs} = {rhs};");
         }
 
-        private static string WriteExpression(AstNode.Base node, HandlerContext ctx)
+        private static string WriteExpression(AstNode.Base node, HandlerContext ctx, ExpressionParams param = default)
         {
             return node switch
             {
-                AstNode.BinaryOperator binaryOperator => WriteBinaryOperator(binaryOperator, ctx),
+                AstNode.BinaryOperator binaryOperator => WriteBinaryOperator(binaryOperator, ctx, param),
                 AstNode.Constant constant => WriteConstant(constant, ctx),
                 AstNode.Decimal @decimal => WriteDecimal(@decimal, ctx),
                 AstNode.GlobalCall globalCall => WriteGlobalCall(globalCall, ctx),
@@ -470,7 +479,7 @@ namespace Drizzle.Transpiler
                 AstNode.TheNumberOf theNumberOf => WriteTheNumberOf(theNumberOf, ctx),
                 AstNode.TheNumberOfLines theNumberOfLines => WriteTheNumberOfLines(theNumberOfLines, ctx),
                 AstNode.ThingOf thingOf => WriteThingOf(thingOf, ctx),
-                AstNode.UnaryOperator unaryOperator => WriteUnaryOperator(unaryOperator, ctx),
+                AstNode.UnaryOperator unaryOperator => WriteUnaryOperator(unaryOperator, ctx, param),
                 AstNode.VariableName variableName => WriteVariableName(variableName, ctx),
                 _ => throw new NotSupportedException($"{node.GetType()} is not a supported expression type")
             };
@@ -545,12 +554,48 @@ namespace Drizzle.Transpiler
             return ctx.Parent.AllGlobals.Contains(name) || ctx.Globals.Contains(name);
         }
 
-        private static string WriteUnaryOperator(AstNode.UnaryOperator unaryOperator, HandlerContext ctx)
+        private static string WriteUnaryOperator(
+            AstNode.UnaryOperator unaryOperator,
+            HandlerContext ctx,
+            ExpressionParams exprParams)
         {
-            var op = unaryOperator.Type == AstNode.UnaryOperatorType.Negate ? "-" : "!";
-            var expr = WriteExpression(unaryOperator.Expression, ctx);
+            if (unaryOperator.Type == AstNode.UnaryOperatorType.Not)
+            {
+                var subParams = new ExpressionParams {WantBool = true};
+                var expr = WriteExpression(unaryOperator.Expression, ctx, subParams);
 
-            return $"{op}{expr}";
+                var sb = new StringBuilder();
+
+                sb.Append(expr);
+
+                if (!subParams.BoolGranted)
+                {
+                    sb.Insert(0, "LingoGlobal.ToBool(");
+                    sb.Append(')');
+                }
+
+                sb.Insert(0, '!');
+
+                if (!exprParams.WantBool)
+                {
+                    sb.Insert(0, '(');
+                    sb.Append(" ? 1 : 0)");
+                }
+                else
+                {
+                    exprParams.BoolGranted = true;
+                }
+
+
+                return sb.ToString();
+            }
+            else
+            {
+                Debug.Assert(unaryOperator.Type == AstNode.UnaryOperatorType.Negate);
+                var expr = WriteExpression(unaryOperator.Expression, ctx);
+
+                return $"-{expr}";
+            }
         }
 
         private static string WriteSymbol(AstNode.Symbol node, HandlerContext ctx)
@@ -652,8 +697,24 @@ namespace Drizzle.Transpiler
             return $"LingoGlobal.{node.Name.ToUpper()}";
         }
 
-        private static string WriteBinaryOperator(AstNode.BinaryOperator node, HandlerContext ctx)
+        private static string WriteBinaryOperator(
+            AstNode.BinaryOperator node,
+            HandlerContext ctx,
+            ExpressionParams param = null)
         {
+            if (param?.WantBool ?? false)
+            {
+                if (node.Type is AstNode.BinaryOperatorType.Or or AstNode.BinaryOperatorType.And)
+                {
+                    return WriteBinaryBoolOp(node, ctx, param);
+                }
+
+                if (node.Type is >= AstNode.BinaryOperatorType.LessThan and <= AstNode.BinaryOperatorType.GreaterThanOrEqual)
+                {
+                    return WriteComparisonBoolOp(node, ctx, param);
+                }
+            }
+
             // Operators that need to map to special functions.
             var helperOps = node.Type switch
             {
@@ -694,6 +755,61 @@ namespace Drizzle.Transpiler
             sb.Append(')');
 
             return sb.ToString();
+        }
+
+        private static string WriteComparisonBoolOp(
+            AstNode.BinaryOperator node,
+            HandlerContext ctx,
+            ExpressionParams expressionParams)
+        {
+            var exprLeft = WriteExpression(node.Left, ctx);
+            var exprRight = WriteExpression(node.Right, ctx);
+
+            var op = node.Type switch
+            {
+                // Use non-short-circuiting ops.
+                AstNode.BinaryOperatorType.LessThan => "<",
+                AstNode.BinaryOperatorType.LessThanOrEqual => "<=",
+                AstNode.BinaryOperatorType.GreaterThanOrEqual => ">=",
+                AstNode.BinaryOperatorType.GreaterThan => ">",
+                AstNode.BinaryOperatorType.Equal => "==",
+                AstNode.BinaryOperatorType.NotEqual => "!=",
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            expressionParams.BoolGranted = true;
+
+            return $"({exprLeft} {op} {exprRight})";
+        }
+
+        private static string WriteBinaryBoolOp(
+            AstNode.BinaryOperator node,
+            HandlerContext ctx,
+            ExpressionParams expressionParams)
+        {
+            var exprParamLeft = new ExpressionParams {WantBool = true};
+            var exprParamRight = new ExpressionParams {WantBool = true};
+
+            var exprLeft = WriteExpression(node.Left, ctx, exprParamLeft);
+            var exprRight = WriteExpression(node.Right, ctx, exprParamRight);
+
+            if (!exprParamLeft.BoolGranted)
+                exprLeft = $"LingoGlobal.ToBool({exprLeft})";
+
+            if (!exprParamRight.BoolGranted)
+                exprRight = $"LingoGlobal.ToBool({exprRight})";
+
+            var op = node.Type switch
+            {
+                // Use non-short-circuiting ops.
+                AstNode.BinaryOperatorType.And => "&",
+                AstNode.BinaryOperatorType.Or => "|",
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            expressionParams.BoolGranted = true;
+
+            return $"({exprLeft} {op} {exprRight})";
         }
 
         private static string WriteGlobalCall(string name, HandlerContext ctx, params AstNode.Base[] args)
@@ -781,6 +897,12 @@ namespace Drizzle.Transpiler
         {
             public readonly HashSet<string> BlackListHandlers = new(StringComparer.InvariantCultureIgnoreCase);
             public readonly List<(string, int count)> OverloadParamCounts = new();
+        }
+
+        private sealed class ExpressionParams
+        {
+            public bool WantBool;
+            public bool BoolGranted;
         }
     }
 }
