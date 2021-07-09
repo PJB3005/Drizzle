@@ -172,5 +172,9 @@ namespace Drizzle.Lingo.Runtime
         {
             return a != 0 && a != null;
         }
+
+        public string the_platform => "win";
+
+        public dynamic sprite(dynamic a) => throw new NotImplementedException();
     }
 }

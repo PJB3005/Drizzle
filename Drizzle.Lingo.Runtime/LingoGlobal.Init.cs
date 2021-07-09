@@ -5,6 +5,8 @@
         public void Init()
         {
             _system = new System(this);
+            _key = new Key(this);
+            _mouse = new Mouse(this);
         }
     }
 }

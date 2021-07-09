@@ -53,6 +53,22 @@ namespace Drizzle.Transpiler
                     ("copyPixelsToEffectColor", 6),
                     ("seedForTile", 1),
                 }
+            },
+            ["lvl"] = new ScriptQuirks
+            {
+                OverloadParamCounts =
+                {
+                    ("lvleditdraw", 2),
+                    ("drawshortcutsimg", 2)
+                }
+            },
+            ["PNG_encode"] = new ScriptQuirks
+            {
+                BlackListHandlers =
+                {
+                    "png_encode", "writeChunk", "writeBytes", "writeInt", "gzcompress", "writeCRC", "lingo_crc32",
+                    "bitShift8", "xtraPresent"
+                }
             }
         };
 
@@ -78,7 +94,8 @@ namespace Drizzle.Transpiler
 
             var movieScripts = scripts.Where(kv => MovieScripts.Contains(kv.Key))
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
-            var parentScripts = scripts.Where(kv => ParentScripts.Contains(kv.Key));
+            var parentScripts = scripts.Where(kv => ParentScripts.Contains(kv.Key))
+                .ToDictionary(kv => kv.Key, kv => kv.Value);
             var behaviorScripts = scripts.Except(movieScripts).Except(parentScripts);
 
             var movieHandlers = movieScripts.Values
@@ -89,8 +106,39 @@ namespace Drizzle.Transpiler
 
             var globalContext = new GlobalContext(movieHandlers);
 
-            OutputMovieScripts(scripts, globalContext);
+            OutputMovieScripts(movieScripts, globalContext);
+            OutputParentScripts(parentScripts, globalContext);
+
             OutputMovieGlobals(globalContext);
+        }
+
+        private static void OutputParentScripts(
+            IEnumerable<KeyValuePair<string, AstNode.Script>> scripts,
+            GlobalContext ctx)
+        {
+            foreach (var (name, script) in scripts.Where(kv => ParentScripts.Contains(kv.Key)))
+            {
+                var path = Path.Combine(SourcesDest, $"Parent.{name}.cs");
+                using var file = new StreamWriter(path);
+
+                OutputSingleParentScript(name, script, file, ctx);
+            }
+        }
+
+        private static void OutputSingleParentScript(
+            string name,
+            AstNode.Script script,
+            TextWriter writer,
+            GlobalContext ctx)
+        {
+            WriteFileHeader(writer);
+            writer.WriteLine($"//\n// Parent script: {name}\n//");
+            writer.WriteLine($"public sealed class {name} : LingoParentScript {{");
+
+            EmitScriptBody(name, script, writer, ctx, isMovieScript: false);
+
+            // End class and namespace.
+            writer.WriteLine("}\n}");
         }
 
         private static void OutputMovieGlobals(GlobalContext globalContext)
@@ -141,11 +189,31 @@ namespace Drizzle.Transpiler
             writer.WriteLine($"//\n// Movie script: {name}\n//");
             writer.WriteLine("public sealed partial class MovieScript {");
 
+            EmitScriptBody(name, script, writer, ctx, isMovieScript: true);
+
+            // End class and namespace.
+            writer.WriteLine("}\n}");
+        }
+
+        private static void EmitScriptBody(
+            string name,
+            AstNode.Script script,
+            TextWriter writer,
+            GlobalContext ctx,
+            bool isMovieScript)
+        {
             var allGlobals = script.Nodes.OfType<AstNode.Global>().SelectMany(g => g.Identifiers)
                 .ToHashSet(StringComparer.InvariantCultureIgnoreCase);
             var allHandlers = script.Nodes.OfType<AstNode.Handler>().Select(h => h.Name)
                 .ToHashSet(StringComparer.InvariantCultureIgnoreCase);
-            var scriptContext = new ScriptContext(ctx, allGlobals, allHandlers, isMovieScript: true);
+            var scriptContext = new ScriptContext(ctx, allGlobals, allHandlers, isMovieScript);
+
+            var props = new HashSet<string>();
+            foreach (var prop in script.Nodes.OfType<AstNode.Property>().SelectMany(p => p.Identifiers))
+            {
+                props.Add(prop);
+                writer.WriteLine($"public dynamic {prop};");
+            }
 
             var quirks = Quirks.GetValueOrDefault(name);
 
@@ -156,12 +224,13 @@ namespace Drizzle.Transpiler
 
                 // Have to write into a temporary buffer because we need to pre-declare all variables.
                 var tempWriter = new StringWriter();
-                var handlerContext = new HandlerContext(scriptContext, tempWriter);
+                var handlerContext = new HandlerContext(scriptContext, handler.Name, tempWriter);
                 handlerContext.Locals.UnionWith(handler.Parameters);
+                handlerContext.Locals.UnionWith(props);
 
                 var paramsText = string.Join(',', handler.Parameters.Select(p => $"dynamic {p.ToLower()}"));
                 var handlerLower = handler.Name.ToLower();
-                writer.WriteLine($"public dynamic {handlerLower}({paramsText}) {{");
+                writer.WriteLine($"public dynamic {WriteSanitizeIdentifier(handlerLower)}({paramsText}) {{");
 
                 try
                 {
@@ -179,13 +248,6 @@ namespace Drizzle.Transpiler
                     writer.WriteLine($"dynamic {local.ToLower()} = null;");
                 }
 
-                /*
-                foreach (var global in handlerContext.Globals)
-                {
-                    writer.WriteLine($"ref dynamic {global} = ref _movieScript.global_{global};");
-                }
-                */
-
                 writer.WriteLine(tempWriter.GetStringBuilder());
 
                 if (handler.Body.Statements.Length == 0 || handler.Body.Statements[^1] is not AstNode.Return)
@@ -194,34 +256,41 @@ namespace Drizzle.Transpiler
                 // Handler end.
                 writer.WriteLine("}");
 
-                if (quirks != null)
-                {
-                    foreach (var (h, count) in quirks.OverloadParamCounts)
-                    {
-                        if (!h.Equals(handler.Name, StringComparison.InvariantCultureIgnoreCase))
-                            continue;
-
-                        var overloadParams = string.Join(", ",
-                            handler.Parameters.Take(count).Select(p => $"dynamic {p}"));
-
-                        writer.WriteLine($"public dynamic {handlerLower}({overloadParams}) {{");
-
-                        var nulls = string.Join(", ", Enumerable.Repeat("null", handler.Parameters.Length - count));
-
-                        overloadParams = string.Concat(
-                            handler.Parameters.Take(count).Select(p => $"{p}, "));
-
-                        writer.WriteLine($"return {handlerLower}({overloadParams}{nulls});");
-
-                        writer.WriteLine("}");
-                    }
-                }
             }
 
+            GenerateParamCountOverloads(writer, quirks, script);
             ctx.AllGlobals.UnionWith(allGlobals);
+        }
 
-            // End class and namespace.
-            writer.WriteLine("}\n}");
+        private static void GenerateParamCountOverloads(
+            TextWriter writer,
+            ScriptQuirks quirks,
+            AstNode.Script script)
+        {
+            if (quirks == null)
+                return;
+
+            var handlers = script.Nodes.OfType<AstNode.Handler>()
+                .ToDictionary(h => h.Name, h => h.Parameters.Length, StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var (h, count) in quirks.OverloadParamCounts)
+            {
+                var toLower = h.ToLower();
+                var parameters = Enumerable.Range(1, count).Select(i => $"p{i}").ToArray();
+
+                var overloadParams = string.Join(", ",
+                    parameters.Take(count).Select(p => $"dynamic {p}"));
+
+                writer.WriteLine($"public dynamic {toLower}({overloadParams}) {{");
+
+                var nulls = string.Join(", ", Enumerable.Repeat("null", handlers[toLower] - count));
+
+                overloadParams = string.Concat(parameters.Take(count).Select(p => $"{p}, "));
+
+                writer.WriteLine($"return {toLower}({overloadParams}{nulls});");
+
+                writer.WriteLine("}");
+            }
         }
 
         private static void WriteStatementBlock(AstNode.StatementBlock node, HandlerContext ctx)
@@ -266,7 +335,18 @@ namespace Drizzle.Transpiler
                 case AstNode.Global global:
                     WriteGlobal(global, ctx);
                     break;
+                case AstNode.Property prop:
+
+                    break;
                 default:
+                    if (node is AstNode.VariableName
+                        or AstNode.MemberProp or AstNode.MemberIndex or AstNode.BinaryOperator or AstNode.UnaryOperator
+                        or AstNode.String or AstNode.Integer or AstNode.Decimal or AstNode.Symbol or AstNode.List or
+                        AstNode.Property)
+                    {
+                        Console.WriteLine($"Warning: {ctx.Name} has loose expression {node}");
+                    }
+
                     var exprValue = WriteExpression(node, ctx);
                     ctx.Writer.Write(exprValue);
                     ctx.Writer.WriteLine(';');
@@ -633,7 +713,7 @@ namespace Drizzle.Transpiler
                 return WriteGlobalCall("charmember_helper", ctx, node.Expression);
 
             var child = WriteExpression(node.Expression, ctx);
-            return $"{child}.{node.Property}";
+            return $"{child}.{node.Property.ToLower()}";
         }
 
         private static string WriteMemberIndex(AstNode.MemberIndex node, HandlerContext ctx)
@@ -709,7 +789,8 @@ namespace Drizzle.Transpiler
                     return WriteBinaryBoolOp(node, ctx, param);
                 }
 
-                if (node.Type is >= AstNode.BinaryOperatorType.LessThan and <= AstNode.BinaryOperatorType.GreaterThanOrEqual)
+                if (node.Type is >= AstNode.BinaryOperatorType.LessThan and <= AstNode.BinaryOperatorType
+                    .GreaterThanOrEqual)
                 {
                     return WriteComparisonBoolOp(node, ctx, param);
                 }
@@ -879,9 +960,10 @@ namespace Drizzle.Transpiler
 
         private sealed class HandlerContext
         {
-            public HandlerContext(ScriptContext parent, TextWriter writer)
+            public HandlerContext(ScriptContext parent, string name, TextWriter writer)
             {
                 Parent = parent;
+                Name = name;
                 Writer = writer;
             }
 
@@ -889,6 +971,7 @@ namespace Drizzle.Transpiler
             public HashSet<string> Locals { get; } = new(StringComparer.InvariantCultureIgnoreCase);
             public HashSet<string> DeclaredLocals { get; } = new(StringComparer.InvariantCultureIgnoreCase);
             public ScriptContext Parent { get; }
+            public string Name { get; }
             public TextWriter Writer { get; }
             public int LoopTempIdx { get; set; }
         }
