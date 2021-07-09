@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Text;
+using Drizzle.Lingo.Runtime;
 
 // ReSharper disable SuggestBaseTypeForParameter
 
-namespace Drizzle.Lingo.Ast
+namespace Drizzle.Lingo.Parser.Ast
 {
     public static class AstNode
     {

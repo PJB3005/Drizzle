@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Drizzle.Lingo.Ast;
+using Drizzle.Lingo.Parser.Ast;
 using NUnit.Framework;
 using Pidgin;
 

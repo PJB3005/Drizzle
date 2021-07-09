@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drizzle.ConsoleApp", "Drizz
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drizzle.Editor", "Drizzle.Editor\Drizzle.Editor.csproj", "{8D542145-69B2-42A9-B042-2AAACA987F3D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drizzle.Lingo", "Drizzle.Lingo\Drizzle.Lingo.csproj", "{2FA8C509-BEF1-4CFB-A7E1-836426FECA26}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drizzle.Lingo.Parser", "Drizzle.Lingo.Parser\Drizzle.Lingo.Parser.csproj", "{2FA8C509-BEF1-4CFB-A7E1-836426FECA26}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Files", "Solution Files", "{3E91A48B-6C72-4705-B488-DD806374DE8C}"
 ProjectSection(SolutionItems) = preProject
@@ -20,6 +20,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drizzle.Lingo.Tests", "Drizzle.Lingo.Tests\Drizzle.Lingo.Tests.csproj", "{3B36DF08-A34A-4BF1-9EE2-94E571FCF817}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drizzle.Transpiler", "Drizzle.Transpiler\Drizzle.Transpiler.csproj", "{A1CC8FA9-E001-48B9-B0DE-1A0959A9C564}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drizzle.Lingo.Runtime", "Drizzle.Lingo.Runtime\Drizzle.Lingo.Runtime.csproj", "{00DE47EB-5A6A-43C3-9ED1-202DF22AF9A5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -94,5 +96,17 @@ Global
 		{A1CC8FA9-E001-48B9-B0DE-1A0959A9C564}.Release|x64.Build.0 = Release|Any CPU
 		{A1CC8FA9-E001-48B9-B0DE-1A0959A9C564}.Release|x86.ActiveCfg = Release|Any CPU
 		{A1CC8FA9-E001-48B9-B0DE-1A0959A9C564}.Release|x86.Build.0 = Release|Any CPU
+		{00DE47EB-5A6A-43C3-9ED1-202DF22AF9A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00DE47EB-5A6A-43C3-9ED1-202DF22AF9A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00DE47EB-5A6A-43C3-9ED1-202DF22AF9A5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{00DE47EB-5A6A-43C3-9ED1-202DF22AF9A5}.Debug|x64.Build.0 = Debug|Any CPU
+		{00DE47EB-5A6A-43C3-9ED1-202DF22AF9A5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{00DE47EB-5A6A-43C3-9ED1-202DF22AF9A5}.Debug|x86.Build.0 = Debug|Any CPU
+		{00DE47EB-5A6A-43C3-9ED1-202DF22AF9A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00DE47EB-5A6A-43C3-9ED1-202DF22AF9A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00DE47EB-5A6A-43C3-9ED1-202DF22AF9A5}.Release|x64.ActiveCfg = Release|Any CPU
+		{00DE47EB-5A6A-43C3-9ED1-202DF22AF9A5}.Release|x64.Build.0 = Release|Any CPU
+		{00DE47EB-5A6A-43C3-9ED1-202DF22AF9A5}.Release|x86.ActiveCfg = Release|Any CPU
+		{00DE47EB-5A6A-43C3-9ED1-202DF22AF9A5}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

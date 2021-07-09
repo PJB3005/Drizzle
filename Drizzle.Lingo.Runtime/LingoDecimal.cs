@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Drizzle.Lingo
+namespace Drizzle.Lingo.Runtime
 {
     // Lingo numbers are *not* IEEE-754.
     // Well shit.

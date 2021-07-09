@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using Drizzle.Lingo.Ast;
+using Drizzle.Lingo.Parser.Ast;
+using Drizzle.Lingo.Runtime;
 
-namespace Drizzle.Lingo
+namespace Drizzle.Lingo.Parser
 {
     public static class ScriptCompiler
     {
@@ -84,11 +85,11 @@ namespace Drizzle.Lingo
         {
             switch (node.Name.ToLower())
             {
-                case "abs":
+                /*case "abs":
                 {
                     var val = CompileNode(node.Arguments[0], scope);
 
-                    var method = typeof(LingoGlobals).GetMethod(nameof(LingoGlobals.Abs))!;
+                    var method = typeof(LingoGlobal).GetMethod(nameof(LingoGlobal.Abs))!;
                     return Expression.Call(null, method, val);
                     break;
                 }
@@ -96,10 +97,10 @@ namespace Drizzle.Lingo
                 {
                     var val = CompileNode(node.Arguments[0], scope);
 
-                    var method = typeof(LingoGlobals).GetMethod(nameof(LingoGlobals.Sqrt))!;
+                    var method = typeof(LingoGlobal).GetMethod(nameof(LingoGlobal.Sqrt))!;
                     return Expression.Call(null, method, val);
                     break;
-                }
+                }*/
                 default:
                     throw new NotSupportedException();
             }

@@ -2,9 +2,9 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Drizzle.Lingo;
-using Drizzle.Lingo.Ast;
-using Drizzle.Lingo.Data;
+using Drizzle.Lingo.Parser;
+using Drizzle.Lingo.Parser.Ast;
+using Drizzle.Lingo.Runtime;
 using Pidgin;
 
 namespace Drizzle.ConsoleApp
@@ -13,8 +13,8 @@ namespace Drizzle.ConsoleApp
     {
         private static int Diag(LingoPoint a, LingoPoint b)
         {
-            var w = Math.Abs(a.LocH - b.LocH);
-            var h = Math.Abs(a.LocV - b.LocV);
+            var w = Math.Abs(a.locH - b.locH);
+            var h = Math.Abs(a.locV - b.locV);
 
             return (int) Math.Sqrt(w * w + h * h);
         }

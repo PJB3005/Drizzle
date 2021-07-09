@@ -5,4 +5,9 @@
     <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Drizzle.Lingo.Runtime\Drizzle.Lingo.Runtime.csproj" />
+    <ProjectReference Include="..\Drizzle.Lingo.Parser\Drizzle.Lingo.Parser.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -2,7 +2,7 @@
 using System.Dynamic;
 using System.Linq.Expressions;
 
-namespace Drizzle.Lingo
+namespace Drizzle.Lingo.Parser
 {
     public sealed class LingoRuntime
     {
