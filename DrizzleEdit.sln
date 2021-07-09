@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drizzle.Transpiler", "Drizz
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drizzle.Lingo.Runtime", "Drizzle.Lingo.Runtime\Drizzle.Lingo.Runtime.csproj", "{00DE47EB-5A6A-43C3-9ED1-202DF22AF9A5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drizzle.Ported", "Drizzle.Ported\Drizzle.Ported.csproj", "{74413099-56F3-4299-BD22-E4A699A43185}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -108,5 +110,17 @@ Global
 		{00DE47EB-5A6A-43C3-9ED1-202DF22AF9A5}.Release|x64.Build.0 = Release|Any CPU
 		{00DE47EB-5A6A-43C3-9ED1-202DF22AF9A5}.Release|x86.ActiveCfg = Release|Any CPU
 		{00DE47EB-5A6A-43C3-9ED1-202DF22AF9A5}.Release|x86.Build.0 = Release|Any CPU
+		{74413099-56F3-4299-BD22-E4A699A43185}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74413099-56F3-4299-BD22-E4A699A43185}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74413099-56F3-4299-BD22-E4A699A43185}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{74413099-56F3-4299-BD22-E4A699A43185}.Debug|x64.Build.0 = Debug|Any CPU
+		{74413099-56F3-4299-BD22-E4A699A43185}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{74413099-56F3-4299-BD22-E4A699A43185}.Debug|x86.Build.0 = Debug|Any CPU
+		{74413099-56F3-4299-BD22-E4A699A43185}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74413099-56F3-4299-BD22-E4A699A43185}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74413099-56F3-4299-BD22-E4A699A43185}.Release|x64.ActiveCfg = Release|Any CPU
+		{74413099-56F3-4299-BD22-E4A699A43185}.Release|x64.Build.0 = Release|Any CPU
+		{74413099-56F3-4299-BD22-E4A699A43185}.Release|x86.ActiveCfg = Release|Any CPU
+		{74413099-56F3-4299-BD22-E4A699A43185}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

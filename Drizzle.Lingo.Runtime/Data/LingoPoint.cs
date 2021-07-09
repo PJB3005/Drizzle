@@ -10,5 +10,10 @@
             this.locH = locH;
             this.locV = locV;
         }
+
+        public static LingoPoint operator +(LingoPoint a, LingoPoint b)
+        {
+            return new(a.locH + b.locH, a.locV + b.locV);
+        }
     }
 }

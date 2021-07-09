@@ -21,6 +21,7 @@ namespace Drizzle.ConsoleApp
 
         static void Main(string[] args)
         {
+            /*
             var runtime = new LingoRuntime();
 
             var scriptContents = File.ReadAllText(Path.Combine("..", "..", "..", "..", "LingoSource", "fiffigt.ls"));
@@ -78,6 +79,7 @@ namespace Drizzle.ConsoleApp
                 ns = sw.Elapsed.TotalMilliseconds / count * 1_000_000;
                 Console.WriteLine($"[{iter}] Lingo -> {sw.Elapsed.TotalMilliseconds * 1000:F2} us ({ns:F} ns / iter)");
             }
+            */
 
 
             //Console.WriteLine(diag(new LingoPoint(0, 0), new LingoPoint(20, 20)));
@@ -97,11 +99,10 @@ namespace Drizzle.ConsoleApp
             del();
             del();*/
 
-            /*
             if (true)
             {
                 var text = File.ReadAllText(
-                    @"C:\Users\Pieter-Jan Briers\Projects\DrizzleEdit\LingoSource\levelRendering.ls");
+                    @"C:\Users\Pieter-Jan Briers\Projects\DrizzleEdit\LingoSource\applyBlur.ls");
                 var sw = Stopwatch.StartNew();
                 var parsed = LingoParser.Script.ParseOrThrow(text);
                 Console.WriteLine(DebugPrint.PrintAstNode(parsed));
@@ -147,7 +148,6 @@ on renderLevel()
                 var parsed = LingoParser.Script.ParseOrThrow(text);
                 Console.WriteLine("FINAL: {0}", DebugPrint.PrintAstNode(parsed));
             }
-        */
         }
     }
 }

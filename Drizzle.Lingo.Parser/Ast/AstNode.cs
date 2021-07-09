@@ -82,7 +82,7 @@ namespace Drizzle.Lingo.Parser.Ast
         ) : Base;
 
         public sealed record ParameterList(
-            KeyValuePair<Base, Base>[] Values
+            KeyValuePair<string, Base>[] Values
         ) : Base;
 
         public sealed record NewCastLib(

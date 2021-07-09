@@ -10,7 +10,7 @@ using Pidgin;
 
 namespace Drizzle.Transpiler
 {
-    class Program
+    internal static class Program
     {
         public static readonly HashSet<string> MovieScripts = new()
         {
@@ -31,12 +31,38 @@ namespace Drizzle.Transpiler
             "levelEdit_parentscript"
         };
 
+        private static readonly Dictionary<string, ScriptQuirks> Quirks = new()
+        {
+            ["fiffigt"] = new ScriptQuirks
+            {
+                BlackListHandlers = {"giveHitSurf"}
+            },
+            ["levelRendering"] = new ScriptQuirks
+            {
+                OverloadParamCounts =
+                {
+                    ("drawATileTile", 4),
+                    ("drawATileTile", 5),
+                }
+            },
+            ["spelrelarat"] = new ScriptQuirks
+            {
+                OverloadParamCounts =
+                {
+                    ("copyPixelsToEffectColor", 6),
+                    ("seedForTile", 1),
+                }
+            }
+        };
 
         private static readonly string SourcesRoot = Path.Combine("..", "..", "..", "..", "LingoSource");
-        private static readonly string SourcesDest = Path.Combine("..", "..", "..", "..", "Drizzle.Ported");
+
+        private static readonly string SourcesDest =
+            Path.Combine("..", "..", "..", "..", "Drizzle.Ported", "Translated");
+
         private const string OutputNamespace = "Drizzle.Ported";
 
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var scripts = Directory.GetFiles(SourcesRoot)
                 .AsParallel()
@@ -58,7 +84,7 @@ namespace Drizzle.Transpiler
                 .SelectMany(s => s.Nodes)
                 .OfType<AstNode.Handler>()
                 .Select(h => h.Name)
-                .ToHashSet();
+                .ToHashSet(StringComparer.InvariantCultureIgnoreCase);
 
             var globalContext = new GlobalContext(movieHandlers);
 
@@ -74,11 +100,11 @@ namespace Drizzle.Transpiler
             WriteFileHeader(file);
             file.WriteLine();
             file.WriteLine($"//\n// Movie globals\n//");
-            file.WriteLine("public sealed partial class Movie {");
+            file.WriteLine("public sealed partial class MovieScript {");
 
             foreach (var glob in globalContext.AllGlobals)
             {
-                file.WriteLine($"public dynamic global_{glob};");
+                file.WriteLine($"public dynamic global_{glob.ToLower()};");
             }
 
             file.WriteLine("}\n}");
@@ -112,21 +138,29 @@ namespace Drizzle.Transpiler
         {
             WriteFileHeader(writer);
             writer.WriteLine($"//\n// Movie script: {name}\n//");
-            writer.WriteLine("public sealed partial class Movie {");
+            writer.WriteLine("public sealed partial class MovieScript {");
 
-            var allGlobals = script.Nodes.OfType<AstNode.Global>().SelectMany(g => g.Identifiers).ToHashSet();
-            var allHandlers = script.Nodes.OfType<AstNode.Handler>().Select(h => h.Name).ToHashSet();
-            var scriptContext = new ScriptContext(ctx, allGlobals, allHandlers);
+            var allGlobals = script.Nodes.OfType<AstNode.Global>().SelectMany(g => g.Identifiers)
+                .ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            var allHandlers = script.Nodes.OfType<AstNode.Handler>().Select(h => h.Name)
+                .ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+            var scriptContext = new ScriptContext(ctx, allGlobals, allHandlers, isMovieScript: true);
+
+            var quirks = Quirks.GetValueOrDefault(name);
 
             foreach (var handler in script.Nodes.OfType<AstNode.Handler>())
             {
+                if (quirks?.BlackListHandlers.Contains(handler.Name) ?? false)
+                    continue;
+
                 // Have to write into a temporary buffer because we need to pre-declare all variables.
                 var tempWriter = new StringWriter();
                 var handlerContext = new HandlerContext(scriptContext, tempWriter);
                 handlerContext.Locals.UnionWith(handler.Parameters);
 
-                var paramsText = string.Join(',', handler.Parameters.Select(p => $"dynamic {p}"));
-                writer.WriteLine($"public dynamic {handler.Name.ToLower()}({paramsText}) {{");
+                var paramsText = string.Join(',', handler.Parameters.Select(p => $"dynamic {p.ToLower()}"));
+                var handlerLower = handler.Name.ToLower();
+                writer.WriteLine($"public dynamic {handlerLower}({paramsText}) {{");
 
                 try
                 {
@@ -141,13 +175,46 @@ namespace Drizzle.Transpiler
 
                 foreach (var local in handlerContext.DeclaredLocals)
                 {
-                    writer.WriteLine($"dynamic {local} = null;");
+                    writer.WriteLine($"dynamic {local.ToLower()} = null;");
                 }
+
+                /*
+                foreach (var global in handlerContext.Globals)
+                {
+                    writer.WriteLine($"ref dynamic {global} = ref _movieScript.global_{global};");
+                }
+                */
 
                 writer.WriteLine(tempWriter.GetStringBuilder());
 
+                if (handler.Body.Statements.Length == 0 || handler.Body.Statements[^1] is not AstNode.Return)
+                    writer.WriteLine("return null;");
+
                 // Handler end.
                 writer.WriteLine("}");
+
+                if (quirks != null)
+                {
+                    foreach (var (h, count) in quirks.OverloadParamCounts)
+                    {
+                        if (!h.Equals(handler.Name, StringComparison.InvariantCultureIgnoreCase))
+                            continue;
+
+                        var overloadParams = string.Join(", ",
+                            handler.Parameters.Take(count).Select(p => $"dynamic {p}"));
+
+                        writer.WriteLine($"public dynamic {handlerLower}({overloadParams}) {{");
+
+                        var nulls = string.Join(", ", Enumerable.Repeat("null", handler.Parameters.Length - count));
+
+                        overloadParams = string.Concat(
+                            handler.Parameters.Take(count).Select(p => $"{p}, "));
+
+                        writer.WriteLine($"return {handlerLower}({overloadParams}{nulls});");
+
+                        writer.WriteLine("}");
+                    }
+                }
             }
 
             ctx.AllGlobals.UnionWith(allGlobals);
@@ -174,12 +241,176 @@ namespace Drizzle.Transpiler
                 case AstNode.Return ret:
                     WriteReturn(ret, ctx);
                     break;
+                case AstNode.ExitRepeat exitRepeat:
+                    WriteExitRepeat(exitRepeat, ctx);
+                    break;
+                case AstNode.Case @case:
+                    WriteCase(@case, ctx);
+                    break;
+                case AstNode.RepeatWhile repeatWhile:
+                    WriteRepeatWhile(repeatWhile, ctx);
+                    break;
+                case AstNode.RepeatWithCounter repeatWithCounter:
+                    WriteRepeatWithCounter(repeatWithCounter, ctx);
+                    break;
+                case AstNode.RepeatWithList repeatWithList:
+                    WriteRepeatWithList(repeatWithList, ctx);
+                    break;
+                case AstNode.If @if:
+                    WriteIf(@if, ctx);
+                    break;
+                case AstNode.PutInto putInto:
+                    WritePutInto(putInto, ctx);
+                    break;
+                case AstNode.Global global:
+                    WriteGlobal(global, ctx);
+                    break;
                 default:
                     var exprValue = WriteExpression(node, ctx);
                     ctx.Writer.Write(exprValue);
                     ctx.Writer.WriteLine(';');
                     break;
             }
+        }
+
+        private static void WriteGlobal(AstNode.Global node, HandlerContext ctx)
+        {
+            foreach (var declared in node.Identifiers.Except(ctx.Globals))
+            {
+                // These get handled when locals are declared.
+                /*ctx.DeclaredGlobals.Add(declared);
+                ctx.Locals.Add(declared);*/
+                ctx.Globals.Add(declared);
+                ctx.Parent.Parent.AllGlobals.Add(declared);
+            }
+        }
+
+        private static void WritePutInto(AstNode.PutInto node, HandlerContext ctx)
+        {
+            if (node.Type != AstNode.PutType.After)
+                throw new NotSupportedException();
+
+            var coll = WriteExpression(node.Collection, ctx);
+            var expr = WriteExpression(node.Collection, ctx);
+            ctx.Writer.WriteLine($"{coll} += {expr}.ToString();");
+        }
+
+        private static void WriteIf(AstNode.If node, HandlerContext ctx)
+        {
+            var cond = WriteExpression(node.Condition, ctx);
+            ctx.Writer.WriteLine($"if (LingoGlobal.ToBool({cond})) {{");
+            WriteStatementBlock(node.Statements, ctx);
+            ctx.Writer.WriteLine('}');
+
+            if (node.Else != null && node.Else.Statements.Length > 0)
+            {
+                var elseIf = node.Else.Statements[0] is AstNode.If;
+
+                ctx.Writer.Write("else ");
+                // If the else clause is another if it's an else-if chain
+                // and we forego the braces around the else.
+                if (!elseIf)
+                    ctx.Writer.WriteLine('{');
+
+                WriteStatementBlock(node.Else, ctx);
+                if (!elseIf)
+                    ctx.Writer.WriteLine('}');
+            }
+        }
+
+        private static void WriteRepeatWithList(AstNode.RepeatWithList node, HandlerContext ctx)
+        {
+            var expr = WriteExpression(node.ListExpr, ctx);
+            var name = node.Variable;
+            var loopTmp = $"tmp_{name}";
+            ctx.Writer.WriteLine($"foreach (dynamic {loopTmp} in {expr}) {{");
+
+            if (ctx.Locals.Add(name))
+                ctx.DeclaredLocals.Add(name);
+
+            ctx.Writer.WriteLine($"{name.ToLower()} = {loopTmp};");
+            WriteStatementBlock(node.Block, ctx);
+
+            ctx.Writer.WriteLine("}");
+        }
+
+        private static void WriteRepeatWithCounter(AstNode.RepeatWithCounter node, HandlerContext ctx)
+        {
+            var start = WriteExpression(node.Start, ctx);
+            var end = WriteExpression(node.Finish, ctx);
+            var name = node.Variable;
+            var loopTmp = $"tmp_{name}";
+
+            ctx.Writer.WriteLine($"for (int {loopTmp} = {start}; {loopTmp} <= {end}; {loopTmp}++) {{");
+
+            if (ctx.Locals.Add(name))
+                ctx.DeclaredLocals.Add(name);
+
+            ctx.Writer.WriteLine($"{name.ToLower()} = {loopTmp};");
+            WriteStatementBlock(node.Block, ctx);
+
+            ctx.Writer.WriteLine("}");
+
+            // ctx.LoopTempIdx--;
+        }
+
+        private static void WriteRepeatWhile(AstNode.RepeatWhile node, HandlerContext ctx)
+        {
+            ctx.Writer.Write("while (LingoGlobal.ToBool(");
+            ctx.Writer.Write(WriteExpression(node.Condition, ctx));
+            ctx.Writer.WriteLine(")) {");
+
+            WriteStatementBlock(node.Block, ctx);
+
+            ctx.Writer.WriteLine('}');
+        }
+
+        private static void WriteCase(AstNode.Case node, HandlerContext ctx)
+        {
+            // Check if all expressions are literal.
+            // If so we can translate it as a switch statement.
+            var literals = node.Cases.SelectMany(c => c.exprs)
+                .All(e => e is AstNode.Constant or AstNode.Integer or AstNode.String);
+
+            if (literals)
+            {
+                ctx.Writer.Write("switch (");
+                ctx.Writer.Write(WriteExpression(node.Expression, ctx));
+                ctx.Writer.WriteLine(") {");
+
+                foreach (var (exprs, block) in node.Cases)
+                {
+                    foreach (var expr in exprs)
+                    {
+                        ctx.Writer.Write("case ");
+                        ctx.Writer.Write(WriteExpression(expr, ctx));
+                        ctx.Writer.WriteLine(':');
+                    }
+
+                    WriteStatementBlock(block, ctx);
+
+                    ctx.Writer.WriteLine("break;");
+                }
+
+                if (node.Otherwise != null)
+                {
+                    ctx.Writer.WriteLine("default:");
+                    WriteStatementBlock(node.Otherwise, ctx);
+                    ctx.Writer.WriteLine("break;");
+                }
+
+                ctx.Writer.WriteLine("}");
+            }
+            else
+            {
+                // Will have to be translated as if-else chain.
+                throw new NotImplementedException();
+            }
+        }
+
+        private static void WriteExitRepeat(AstNode.ExitRepeat node, HandlerContext ctx)
+        {
+            ctx.Writer.WriteLine("break;");
         }
 
         private static void WriteReturn(AstNode.Return ret, HandlerContext ctx)
@@ -191,7 +422,7 @@ namespace Drizzle.Transpiler
             }
             else
             {
-                ctx.Writer.WriteLine($"return;");
+                ctx.Writer.WriteLine($"return null;");
             }
         }
 
@@ -199,13 +430,14 @@ namespace Drizzle.Transpiler
         {
             if (node.Assigned is AstNode.VariableName simpleTarget)
             {
+                var name = simpleTarget.Name.ToLower();
                 // Define local variable if necessary.
-                if (!ctx.Parent.AllGlobals.Contains(simpleTarget.Name))
+                if (!IsGlobal(name, ctx))
                 {
                     // Local variable, not global
                     // Make sure it's not a parameter though.
-                    if (ctx.Locals.Add(simpleTarget.Name))
-                        ctx.DeclaredLocals.Add(simpleTarget.Name);
+                    if (ctx.Locals.Add(name))
+                        ctx.DeclaredLocals.Add(name);
                 }
             }
 
@@ -231,30 +463,110 @@ namespace Drizzle.Transpiler
                 AstNode.MemberSlice memberSlice => WriteMemberSlice(memberSlice, ctx),
                 AstNode.NewCastLib newCastLib => WriteNewCastLib(newCastLib, ctx),
                 AstNode.NewScript newScript => WriteNewScript(newScript, ctx),
-                AstNode.ParameterList parameterList => throw new NotImplementedException(),
-                AstNode.PropertyList propertyList => throw new NotImplementedException(),
+                AstNode.ParameterList parameterList => WriteParameterList(parameterList, ctx),
+                AstNode.PropertyList propertyList => WritePropertyList(propertyList, ctx),
                 AstNode.String str => WriteString(str, ctx),
                 AstNode.Symbol symbol => WriteSymbol(symbol, ctx),
-                AstNode.The the => throw new NotImplementedException(),
-                AstNode.TheNumberOf theNumberOf => throw new NotImplementedException(),
-                AstNode.TheNumberOfLines theNumberOfLines => throw new NotImplementedException(),
-                AstNode.ThingOf thingOf => throw new NotImplementedException(),
+                AstNode.The the => WriteThe(the, ctx),
+                AstNode.TheNumberOf theNumberOf => WriteTheNumberOf(theNumberOf, ctx),
+                AstNode.TheNumberOfLines theNumberOfLines => WriteTheNumberOfLines(theNumberOfLines, ctx),
+                AstNode.ThingOf thingOf => WriteThingOf(thingOf, ctx),
                 AstNode.UnaryOperator unaryOperator => WriteUnaryOperator(unaryOperator, ctx),
                 AstNode.VariableName variableName => WriteVariableName(variableName, ctx),
                 _ => throw new NotSupportedException($"{node.GetType()} is not a supported expression type")
             };
         }
 
+        private static string WriteThingOf(AstNode.ThingOf thingOf, HandlerContext ctx)
+        {
+            var helper = thingOf.Type switch
+            {
+                AstNode.ThingOfType.Item => "itemof_helper",
+                AstNode.ThingOfType.Line => "lineof_helper",
+                AstNode.ThingOfType.Char => "charof_helper",
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            return WriteGlobalCall(helper, ctx, thingOf.Index, thingOf.Collection);
+        }
+
+        private static string WriteTheNumberOfLines(AstNode.TheNumberOfLines node, HandlerContext ctx)
+        {
+            return WriteGlobalCall("thenumberoflines_helper", ctx, node.Text);
+        }
+
+        private static string WriteTheNumberOf(AstNode.TheNumberOf node, HandlerContext ctx)
+        {
+            return WriteGlobalCall("thenumberof_helper", ctx, node.Expr);
+        }
+
+        private static string WriteThe(AstNode.The node, HandlerContext ctx)
+        {
+            return $"_global.the_{node.Name}";
+        }
+
+        private static string WriteParameterList(AstNode.ParameterList node, HandlerContext ctx)
+        {
+            var sb = new StringBuilder();
+            sb.Append("new LingoParameterList{");
+            var first = true;
+            foreach (var (k, v) in node.Values)
+            {
+                if (!first)
+                    sb.Append(',');
+
+                first = false;
+                var vExpr = WriteExpression(v, ctx);
+                sb.Append("[\"");
+                sb.Append(k);
+                sb.Append("\"] = ");
+                sb.Append(vExpr);
+            }
+
+            sb.Append('}');
+
+            return sb.ToString();
+        }
+
+        private static string WritePropertyList(AstNode.PropertyList node, HandlerContext ctx)
+        {
+            var sb = new StringBuilder();
+            sb.Append("new LingoPropertyList {");
+            var first = true;
+            foreach (var (k, v) in node.Values)
+            {
+                if (!first)
+                    sb.Append(',');
+
+                first = false;
+                var kExpr = WriteExpression(k, ctx);
+                var vExpr = WriteExpression(v, ctx);
+                sb.Append('[');
+                sb.Append(kExpr);
+                sb.Append("] = ");
+                sb.Append(vExpr);
+            }
+
+            sb.Append("}");
+
+            return sb.ToString();
+        }
+
         private static string WriteVariableName(AstNode.VariableName variableName, HandlerContext ctx)
         {
-            var name = variableName.Name;
+            var name = variableName.Name.ToLower();
             if (ctx.Locals.Contains(name))
                 return name;
 
-            if (ctx.Parent.AllGlobals.Contains(name))
-                return $"_movieScript.global_{name}";
+            if (IsGlobal(name, ctx))
+                return $"{MovieScriptPrefix(ctx)}global_{name}";
 
             return $"_global.{name}";
+        }
+
+        private static bool IsGlobal(string name, HandlerContext ctx)
+        {
+            return ctx.Parent.AllGlobals.Contains(name) || ctx.Globals.Contains(name);
         }
 
         private static string WriteUnaryOperator(AstNode.UnaryOperator unaryOperator, HandlerContext ctx)
@@ -294,6 +606,11 @@ namespace Drizzle.Transpiler
 
         private static string WriteMemberProp(AstNode.MemberProp node, HandlerContext ctx)
         {
+            if (node.Property == "float")
+                return WriteGlobalCall("floatmember_helper", ctx, node.Expression);
+            if (node.Property == "char")
+                return WriteGlobalCall("charmember_helper", ctx, node.Expression);
+
             var child = WriteExpression(node.Expression, ctx);
             return $"{child}.{node.Property}";
         }
@@ -309,7 +626,8 @@ namespace Drizzle.Transpiler
         {
             var child = WriteExpression(node.Expression, ctx);
             var args = node.Parameters.Select(v => WriteExpression(v, ctx));
-            return $"{child}.{node.Name}({string.Join(',', args)})";
+            var name = WriteSanitizeIdentifier(node.Name.ToLower());
+            return $"{child}.{name}({string.Join(',', args)})";
         }
 
         private static string WriteList(AstNode.List node, HandlerContext ctx)
@@ -321,30 +639,36 @@ namespace Drizzle.Transpiler
         private static string WriteInteger(AstNode.Integer node, HandlerContext ctx)
         {
             // That was easy.
-            return node.ToString();
+            return node.Value.ToString();
         }
 
         private static string WriteGlobalCall(AstNode.GlobalCall node, HandlerContext ctx)
         {
             var args = node.Arguments.Select(a => WriteExpression(a, ctx));
-            if (ctx.Parent.AllHandlers.Contains(node.Name))
+            var lower = node.Name.ToLower();
+            if (ctx.Parent.AllHandlers.Contains(lower))
             {
                 // Local call
-                return $"{node.Name}({string.Join(',', args)})";
+                return $"{lower}({string.Join(',', args)})";
             }
 
             if (ctx.Parent.Parent.MovieHandlers.Contains(node.Name))
             {
                 // Movie script call
-                return $"_movieScript.{node.Name}({string.Join(',', args)})";
+                return $"{MovieScriptPrefix(ctx)}{lower}({string.Join(',', args)})";
             }
 
-            return WriteGlobalCall(node.Name, ctx, args);
+            return WriteGlobalCall(lower, ctx, args);
+        }
+
+        private static string MovieScriptPrefix(HandlerContext ctx)
+        {
+            return ctx.Parent.IsMovieScript ? "" : "_movieScript.";
         }
 
         private static string WriteDecimal(AstNode.Decimal node, HandlerContext ctx)
         {
-            return $"new LingoGlobal({node.Value.Value:R})";
+            return $"new LingoDecimal({node.Value.Value:R})";
         }
 
         private static string WriteConstant(AstNode.Constant node, HandlerContext ctx)
@@ -355,35 +679,35 @@ namespace Drizzle.Transpiler
         private static string WriteBinaryOperator(AstNode.BinaryOperator node, HandlerContext ctx)
         {
             // Operators that need to map to special functions.
-            switch (node.Type)
+            var helperOps = node.Type switch
             {
-                case AstNode.BinaryOperatorType.Contains:
-                    return WriteGlobalCall("contains", ctx, node.Left, node.Right);
-                case AstNode.BinaryOperatorType.Starts:
-                    return WriteGlobalCall("starts", ctx, node.Left, node.Right);
-                case AstNode.BinaryOperatorType.Concat:
-                    return WriteGlobalCall("concat", ctx, node.Left, node.Right);
-                case AstNode.BinaryOperatorType.ConcatSpace:
-                    return WriteGlobalCall("concat_space", ctx, node.Left, node.Right);
-            }
+                AstNode.BinaryOperatorType.Contains => "contains",
+                AstNode.BinaryOperatorType.Starts => "starts",
+                AstNode.BinaryOperatorType.Concat => "concat",
+                AstNode.BinaryOperatorType.ConcatSpace => "concat_space",
+                AstNode.BinaryOperatorType.LessThan => "op_lt",
+                AstNode.BinaryOperatorType.LessThanOrEqual => "op_le",
+                AstNode.BinaryOperatorType.NotEqual => "op_ne",
+                AstNode.BinaryOperatorType.Equal => "op_eq",
+                AstNode.BinaryOperatorType.GreaterThan => "op_gt",
+                AstNode.BinaryOperatorType.GreaterThanOrEqual => "op_ge",
+                AstNode.BinaryOperatorType.And => "op_and",
+                AstNode.BinaryOperatorType.Or => "op_or",
+                _ => null
+            };
+
+            if (helperOps != null)
+                return WriteGlobalCall(helperOps, ctx, node.Left, node.Right);
 
             var sb = new StringBuilder();
 
             var op = node.Type switch
             {
-                AstNode.BinaryOperatorType.LessThan => "<",
-                AstNode.BinaryOperatorType.LessThanOrEqual => "<=",
-                AstNode.BinaryOperatorType.NotEqual => "!=",
-                AstNode.BinaryOperatorType.Equal => "==",
-                AstNode.BinaryOperatorType.GreaterThan => ">",
-                AstNode.BinaryOperatorType.GreaterThanOrEqual => ">=",
                 AstNode.BinaryOperatorType.Add => "+",
+                AstNode.BinaryOperatorType.Subtract => "-",
                 AstNode.BinaryOperatorType.Multiply => "*",
                 AstNode.BinaryOperatorType.Divide => "/",
-                AstNode.BinaryOperatorType.And => "&&",
-                AstNode.BinaryOperatorType.Or => "||",
                 AstNode.BinaryOperatorType.Mod => "%",
-                AstNode.BinaryOperatorType.Subtract => "-",
                 _ => throw new ArgumentOutOfRangeException()
             };
 
@@ -411,12 +735,23 @@ namespace Drizzle.Transpiler
             var sb = new StringBuilder();
 
             sb.Append(isStatic ? "LingoGlobal." : "_global.");
-            sb.Append(name.ToLower());
+            sb.Append(WriteSanitizeIdentifier(name.ToLower()));
             sb.Append('(');
             sb.Append(string.Join(',', args));
             sb.Append(')');
 
             return sb.ToString();
+        }
+
+        private static readonly HashSet<string> CSharpKeyWords = new HashSet<string>
+        {
+            "new",
+            "string"
+        };
+
+        private static string WriteSanitizeIdentifier(string identifier)
+        {
+            return CSharpKeyWords.Contains(identifier) ? $"@{identifier}" : identifier;
         }
 
         private sealed class GlobalContext
@@ -426,7 +761,7 @@ namespace Drizzle.Transpiler
                 MovieHandlers = movieHandlers;
             }
 
-            public HashSet<string> AllGlobals { get; } = new();
+            public HashSet<string> AllGlobals { get; } = new(StringComparer.InvariantCultureIgnoreCase);
             public HashSet<string> MovieHandlers { get; }
         }
 
@@ -435,12 +770,18 @@ namespace Drizzle.Transpiler
             public GlobalContext Parent { get; }
             public HashSet<string> AllGlobals { get; }
             public HashSet<string> AllHandlers { get; }
+            public bool IsMovieScript { get; }
 
-            public ScriptContext(GlobalContext parent, HashSet<string> allGlobals, HashSet<string> allHandlers)
+            public ScriptContext(
+                GlobalContext parent,
+                HashSet<string> allGlobals,
+                HashSet<string> allHandlers,
+                bool isMovieScript)
             {
                 Parent = parent;
                 AllGlobals = allGlobals;
                 AllHandlers = allHandlers;
+                IsMovieScript = isMovieScript;
             }
         }
 
@@ -452,10 +793,18 @@ namespace Drizzle.Transpiler
                 Writer = writer;
             }
 
-            public HashSet<string> Locals { get; } = new();
-            public HashSet<string> DeclaredLocals { get; } = new();
+            public HashSet<string> Globals { get; } = new(StringComparer.InvariantCultureIgnoreCase);
+            public HashSet<string> Locals { get; } = new(StringComparer.InvariantCultureIgnoreCase);
+            public HashSet<string> DeclaredLocals { get; } = new(StringComparer.InvariantCultureIgnoreCase);
             public ScriptContext Parent { get; }
             public TextWriter Writer { get; }
+            public int LoopTempIdx { get; set; }
+        }
+
+        private sealed class ScriptQuirks
+        {
+            public readonly HashSet<string> BlackListHandlers = new(StringComparer.InvariantCultureIgnoreCase);
+            public readonly List<(string, int count)> OverloadParamCounts = new();
         }
     }
 }
