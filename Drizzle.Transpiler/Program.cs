@@ -973,7 +973,6 @@ namespace Drizzle.Transpiler
             public ScriptContext Parent { get; }
             public string Name { get; }
             public TextWriter Writer { get; }
-            public int LoopTempIdx { get; set; }
         }
 
         private sealed class ScriptQuirks
