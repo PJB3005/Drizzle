@@ -1,1 +1,506 @@
-global gSaveProps, gTEprops, gTiles, gLEProps, gFullRender, gEEprops, gEffects, gLightEProps, gBlurOptionsglobal gLEVEL, gLOprops, gLoadedName, gSEProps, gViewRender, gMassRenderL, gCameraProps, gImgXtra, gEnvEditorProps, gPEpropsglobal gProps, gLOADPATH, gTrashPropOptions, solidMtrxon exitFrame me  _global.clearGlobals()  gFullRender = 1  gViewRender = 1    -- saveImages("C:\Temp")    gMassRenderL = []  gLOADPATH = []    gLEVEL = [#timeLimit:4800, #defaultTerrain:1, #maxFlies:10, #flySpawnRate:50, #lizards:[], #ambientSounds:[], #music:"NONE", #tags:[], #lightType:"Static", #waterDrips:1, #lightRect:rect(0,0,1040,800), #matrix:[]]    _movie.window.appearanceOptions.border = #none  _movie.window.resizable = FALSE    gLoadedName = "New Project"  member("level Name").text = "New Project"    gImgXtra = xtra("ImgXtra").new()    g = 21  if (g=2) then    -- XC_ShowCursor(0)    --  _player.cursor(200)        gSaveProps = [baScreenInfo("width"), baScreenInfo("height"), baScreenInfo("depth")]        fac = gSaveProps[1].float/gSaveProps[2] .float        screenResolutionPoint = point(1024,768)    baSetDisplay(screenResolutionPoint.locH,screenResolutionPoint.locV,32,"temp", false)        screenSize = point(1024,768)/2        midPos = screenResolutionPoint/2    windowRect = rect(midPos-screenSize, midPos+screenSize)    _movie.window.rect = windowRect    _movie.stage.drawRect = rect(0,0,1024, 768)    -- _movie.stage.drawRect = rect(0,0,180, 180)  else    gSaveProps = [1,1,1]--[baScreenInfo("width"), baScreenInfo("height"), baScreenInfo("depth")]  end if    solidMtrx = []    -- LEVELEDITOR!!!!!  cols = 72--gLOprops.size.loch  rows = 43--gLOprops.size.locv    gLEProps = [#matrix:[] , #levelEditors:[] , #toolMatrix:[],#camPos:point(0,0)]    gLEProps.toolMatrix.add(["inverse", "paintWall", "paintAir", "slope"])  gLEProps.toolMatrix.add(["floor", "squareWall", "squareAir", "move"])  gLEProps.toolMatrix.add(["rock", "spear", "crack", ""])  gLEProps.toolMatrix.add(["horBeam", "verBeam", "glass", "copyBack"])  gLEProps.toolMatrix.add(["shortCutEntrance", "shortCut", "lizardHole", "playerSpawn"])  gLEProps.toolMatrix.add(["forbidbats", "spawnfly", "hive", "waterFall"])  gLEProps.toolMatrix.add(["scavengerHole", "WHAMH", "garbageHole", "wormGrass"])  gLEProps.toolMatrix.add(["workLayer","flip", "mirrorToggle", "setMirrorPoint"])        ResetgEnvEditorProps()    --  if member("matrixTxtLE").text <> "" then  --    savMtrx = value( member("matrixTxtLE").text )  --    gLEProps.matrix = savMtrx[2]  --    if gLEProps.matrix[1][1].count = 2 then  --      repeat with q = 1 to cols then  --        repeat with c = 1 to rows then  --          gLEProps.matrix[q][c].add([0, []])  --        end repeat  --      end repeat  --    end if  --  else  repeat with q = 1 to cols then    ql = []    repeat with c = 1 to rows then      ql.add([[1, []], [1, []], [0, []]])    end repeat    gLEProps.matrix.add(ql)  end repeat  --  end if      gBlurOptions = [#blurLight:0, #blurSky:0]    --TILEEDITOR!!!    gTEprops = [#lastKeys:[], #keys:[], #workLayer:1, #lstMsPs:point(0,0), #tlMatrix:[], #defaultMaterial:"Concrete", #toolType:"material", #toolData:"Big Metal",\  tmPos:point(1,1), #tmSavPosL:[], #specialEdit:0]        --  img = member("levelEditImageShortCuts").image.duplicate()  -- member("levelEditImageShortCuts").image.copyPixels(img, img.rect, img.rect, {#color:0, #bgColor:255})    repeat with q = 1 to cols then    l = []    repeat with c = 1 to rows then      l.add([[#tp:"default", #data:0], [#tp:"default", #data:0], [#tp:"default", #data:0]])    end repeat    gTEprops.tlMatrix.add(l)  end repeat  member("layerText").text = "Layer:1"    gTiles = []    gTiles.add([#nm:"Materials", #tls:[]])      gTiles[1].tls.add( [#nm:"Standard", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(150,150,150)]    )  gTiles[1].tls.add( [#nm:"Concrete", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(150,255,255)]    )  gTiles[1].tls.add( [#nm:"RainStone", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(0,0,255)]    )  -- gTiles[1].tls.add( [#nm:"Rough Rock", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(150,0,150)]    )  -- gTiles[1].tls.add( [#nm:"Steel", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(255,0,255)]    )  gTiles[1].tls.add( [#nm:"Bricks", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(200,150,100)]    )  gTiles[1].tls.add( [#nm:"BigMetal", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(255,0,0)]    )  gTiles[1].tls.add( [#nm:"Tiny Signs", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(255,255,255)]    )  gTiles[1].tls.add( [#nm:"Scaffolding", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(60,60,40)]    )  gTiles[1].tls.add( [#nm:"Dense Pipes", #sz:point(1,1), #specs:[0], #renderType:"densePipeType", #color:color(10,10,255)]    )  gTiles[1].tls.add( [#nm:"SuperStructure", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(160,180,255)]    )  gTiles[1].tls.add( [#nm:"SuperStructure2", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(190,160,0)]    )  gTiles[1].tls.add( [#nm:"Tiled Stone", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(100,0,255)]    )  gTiles[1].tls.add( [#nm:"Chaotic Stone", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(255,0,255)]    )  gTiles[1].tls.add( [#nm:"Small Pipes", #sz:point(1,1), #specs:[0], #renderType:"pipeType", #color:color(255,255,0)]    )  gTiles[1].tls.add( [#nm:"Trash", #sz:point(1,1), #specs:[0], #renderType:"pipeType", #color:color(90,255,0)]    )  gTiles[1].tls.add( [#nm:"Invisible", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(200,200,200)]    )  gTiles[1].tls.add( [#nm:"LargeTrash", #sz:point(1,1), #specs:[0], #renderType:"largeTrashType", #color:color(150,30,255)] )  gTiles[1].tls.add( [#nm:"3DBricks", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(255,150,0)]    )  gTiles[1].tls.add( [#nm:"Random Machines", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(72, 116, 80)]    )  gTiles[1].tls.add( [#nm:"Dirt", #sz:point(1,1), #specs:[0], #renderType:"dirtType", #color:color(124, 72, 52)]    )  gTiles[1].tls.add( [#nm:"Ceramic Tile", #sz:point(1,1), #specs:[0], #renderType:"ceramicType", #color:color(60, 60, 100)]    )  gTiles[1].tls.add( [#nm:"Temple Stone", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(0, 120, 180)]    )  gTiles[1].tls.add( [#nm:"Circuits", #sz:point(1,1), #specs:[0], #renderType:"densePipeType", #color:color(15,200,15)]    )    gTiles.add([#nm:"Special", #tls:[]])  gTiles[2].tls.add( [#nm:"Rect Clear", #sz:point(1,1), #specs:[0], #placeMethod:"rect", #color:color(255, 0, 0)]    )  gTiles[2].tls.add( [#nm:"SH pattern box", #sz:point(1,1), #specs:[0], #placeMethod:"rect", #color:color(210, 0, 255)]    )  gTiles[2].tls.add( [#nm:"SH grate box", #sz:point(1,1), #specs:[0], #placeMethod:"rect", #color:color(160, 0, 255)]    )    sav = member("initImport")  member("initImport").importFileInto("Graphics\init.txt")  sav.name = "initImport"    member("previewTiles").image = image(60000, 500, 1)  ptPos = 1      repeat with q = 1 to the number of lines in sav.text then    if sav.text.line[q] <> "" then      if sav.text.line[q].char[1] = "-" then                vl = value(sav.text.line[q].char[2..sav.text.line[q].length])                gTiles.add( [#nm:vl[1], #clr:vl[2], #tls:[]]    )                      else         ad = value(sav.text.line[q])        debugline = sav.text.line[q]                sav2 = member("previewImprt")        member("previewImprt").importFileInto("Graphics\" &ad.nm&".png")        sav2.name = "previewImprt"                calculatedHeight = sav2.image.rect.height        if ad.tp = "voxelStruct" then          calculatedHeight = 1 + (16*ad.sz.locV) + (20*(ad.sz.locV+(ad.bfTiles*2))*ad.repeatL.count)        end if                -- if(sav2.image.rect.height <> calculatedHeight) then put ad.nm && sav2.image.rect.height && calculatedHeight && ad.repeatL.count && ad.bfTiles && ad.sz.locV                rct = rect(0, calculatedHeight - (16*ad.sz.locV), (16*ad.sz.locH), calculatedHeight)        member("previewTiles").image.copyPixels(sav2.image, rect(ptPos, 0, ptPos + (16*ad.sz.locH), (16*ad.sz.locV)), rct)                ad.ptPos = ptPos        ad.addProp(#category, gTiles.count)        gTiles[gTiles.count].tls.add( ad )                ptPos = ptPos + (16*ad.sz.locH) + 1              end if    end if  end repeat          gProps = []    resetPropEditorProps()    global gPEcolors  gPEcolors = []  sav = member("initImport")  member("initImport").importFileInto("Props\propColors.txt")  sav.name = "initImport"  repeat with q = 1 to the number of lines in sav.text then    if sav.text.line[q] <> "" then      gPEcolors.add(value(sav.text.line[q]))    end if  end repeat    sav = member("initImport")  member("initImport").importFileInto("Props\init.txt")  sav.name = "initImport"    repeat with q = 1 to 2000 then    (member q of castLib 2).erase()  end repeat    repeat with q = 1 to the number of lines in sav.text then    if sav.text.line[q] <> "" then      if sav.text.line[q].char[1] = "-" then                vl = value(sav.text.line[q].char[2..sav.text.line[q].length])                gProps.add( [#nm:vl[1], #clr:vl[2], #prps:[]]    )              else         ad = value(sav.text.line[q])        strng = sav.text.line[q]        ad.addProp(#category, gProps.count)        if(ad.tp = "standard")or(ad.tp = "variedStandard")then          dp = 0          repeat with i = 1 to ad.repeatL.count then            dp = dp + ad.repeatL[i]          end repeat          ad.addProp(#depth, dp)        end if                gProps[gProps.count].prps.add( ad )              end if    end if  end repeat    gPageCount = 0  gPageTick = 0    repeat with q = 3 to gTiles.count then    repeat with c = 1 to gTiles[q].tls.count then      if gPageTick = 0 then        gPageTick = 21        gPageCount = gPageCount + 1        gProps.add( [#nm:"Tiles as props "&gPageCount, #clr:color(255, 0,0), #prps:[]]    )      end if      tl = gTiles[q].tls[c]            if(tl.tp = "voxelStruct")and(tl.tags.getPos("notProp") = 0)then        ad = [#nm:tl.nm, #tp:"standard", #colorTreatment:"standard", #sz:tl.sz + point(tl.bfTiles*2, tl.bfTiles*2), #depth:10 + (tl.specs2 <> [])*10, #repeatL:tl.repeatL, #tags:["Tile"], #layerExceptions:[], #notes:["Tile as prop"]]        ad.addProp(#category, gProps.count)        gProps[gProps.count].prps.add( ad )        gPageTick = gPageTick - 1      end if    end repeat  end repeat    --gProps[gProps.count].prps.sort()    gProps.add( [#nm:"Rope type props", #clr:color(0, 255, 0), #prps:[]]    )  gProps[gProps.count].prps.add([#nm:"Wire", #tp:"rope", #depth:0, #tags:[], #notes:[], #segmentLength:3, #collisionDepth:0, #segRad:1, #grav:0.5, #friction:0.5, #airFric:0.9, #stiff:0, #previewColor:color(255,0, 0), #previewEvery:4, #edgeDirection:0, #rigid:0, #selfPush:0, #sourcePush:0])  gProps[gProps.count].prps.add([#nm:"Tube", #tp:"rope", #depth:4, #tags:[], #notes:[], #segmentLength:10, #collisionDepth:2, #segRad:4.5, #grav:0.5, #friction:0.5, #airFric:0.9, #stiff:1, #previewColor:color(0,0, 255), #previewEvery:2, #edgeDirection:5, #rigid:1.6, #selfPush:0, #sourcePush:0])  gProps[gProps.count].prps.add([#nm:"ThickWire", #tp:"rope", #depth:3, #tags:[], #notes:[], #segmentLength:4, #collisionDepth:1, #segRad:2, #grav:0.5, #friction:0.8, #airFric:0.9, #stiff:1, #previewColor:color(255,255, 0), #previewEvery:2, #edgeDirection:0, #rigid:0.2, #selfPush:0, #sourcePush:0])  gProps[gProps.count].prps.add([#nm:"RidgedTube", #tp:"rope", #depth:4, #tags:[], #notes:[], #segmentLength:5, #collisionDepth:2, #segRad:5, #grav:0.5, #friction:0.3, #airFric:0.7, #stiff:1, #previewColor:color(255,0,255), #previewEvery:2, #edgeDirection:0, #rigid:0.1, #selfPush:0, #sourcePush:0])  gProps[gProps.count].prps.add([#nm:"Fuel Hose", #tp:"rope", #depth:5, #tags:[], #notes:[], #segmentLength:16, #collisionDepth:1, #segRad:7, #grav:0.5, #friction:0.8, #airFric:0.9, #stiff:1, #previewColor:color(255,150,0), #previewEvery:1, #edgeDirection:1.4, #rigid:0.2, #selfPush:0, #sourcePush:0])  gProps[gProps.count].prps.add([#nm:"Broken Fuel Hose", #tp:"rope", #depth:6, #tags:[], #notes:[], #segmentLength:16, #collisionDepth:1, #segRad:7, #grav:0.5, #friction:0.8, #airFric:0.9, #stiff:1, #previewColor:color(255,150,0), #previewEvery:1, #edgeDirection:1.4, #rigid:0.2, #selfPush:0, #sourcePush:0])  gProps[gProps.count].prps.add([#nm:"Large Chain", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:28, #collisionDepth:3, #segRad:9.5, #grav:0.9, #friction:0.8, #airFric:0.95, #stiff:1, #previewColor:color(0,255,0), #previewEvery:1, #edgeDirection:0.0, #rigid:0.0, #selfPush:6.5, #sourcePush:0])  gProps[gProps.count].prps.add([#nm:"Large Chain 2", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:28, #collisionDepth:3, #segRad:9.5, #grav:0.9, #friction:0.8, #airFric:0.95, #stiff:1, #previewColor:color(20,205,0), #previewEvery:1, #edgeDirection:0.0, #rigid:0.0, #selfPush:6.5, #sourcePush:0])  gProps[gProps.count].prps.add([#nm:"Bike Chain", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:38, #collisionDepth:3, #segRad:16.5, #grav:0.9, #friction:0.8, #airFric:0.95, #stiff:1, #previewColor:color(100,100,100), #previewEvery:1, #edgeDirection:0.0, #rigid:0.0, #selfPush:16.5, #sourcePush:0])  gProps[gProps.count].prps.add([#nm:"Zero-G Tube", #tp:"rope", #depth:4, #tags:[], #notes:[], #segmentLength:10, #collisionDepth:2, #segRad:4.5, #grav:0, #friction:0.5, #airFric:0.9, #stiff:1, #previewColor:color(0,255, 0), #previewEvery:2, #edgeDirection:0, #rigid:0.6, #selfPush:2, #sourcePush:0.5])  gProps[gProps.count].prps.add([#nm:"Zero-G Wire", #tp:"rope", #depth:0, #tags:[], #notes:[], #segmentLength:8, #collisionDepth:0, #segRad:1, #grav:0, #friction:0.5, #airFric:0.9, #stiff:1, #previewColor:color(255,0, 0), #previewEvery:2, #edgeDirection:0.3, #rigid:0.5, #selfPush:1.2, #sourcePush:0.5])  gProps[gProps.count].prps.add([#nm:"Fat Hose", #tp:"rope", #depth:6, #tags:[], #notes:[], #segmentLength:40, #collisionDepth:3, #segRad:20, #grav:0.9, #friction:0.6, #airFric:0.95, #stiff:1, #previewColor:color(0,100,150), #previewEvery:1, #edgeDirection:0.1, #rigid:0.2, #selfPush:10, #sourcePush:0.1])  gProps[gProps.count].prps.add([#nm:"Wire Bunch", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:50, #collisionDepth:3, #segRad:20, #grav:0.9, #friction:0.6, #airFric:0.95, #stiff:1, #previewColor:color(255,100,150), #previewEvery:1, #edgeDirection:0.1, #rigid:0.2, #selfPush:10, #sourcePush:0.1])  gProps[gProps.count].prps.add([#nm:"Wire Bunch 2", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:50, #collisionDepth:3, #segRad:20, #grav:0.9, #friction:0.6, #airFric:0.95, #stiff:1, #previewColor:color(255,100,150), #previewEvery:1, #edgeDirection:0.1, #rigid:0.2, #selfPush:10, #sourcePush:0.1])      gProps.add( [#nm:"Long props", #clr:color(0, 255, 0), #prps:[]]    )  gProps[gProps.count].prps.add([#nm:"Cabinet Clamp", #tp:"long", #depth:0, #tags:[], #notes:[]])  gProps[gProps.count].prps.add([#nm:"Drill Suspender", #tp:"long", #depth:5, #tags:[], #notes:[]])  gProps[gProps.count].prps.add([#nm:"Thick Chain", #tp:"long", #depth:0, #tags:[], #notes:[]])  gProps[gProps.count].prps.add([#nm:"Drill", #tp:"long", #depth:10, #tags:[], #notes:[]])  gProps[gProps.count].prps.add([#nm:"Piston", #tp:"long", #depth:4, #tags:[], #notes:[]])    gTrashPropOptions = []    repeat with q = 1 to gProps.count then    repeat with c = 1 to gProps[q].prps.count then      gProps[q].prps[c].addProp(#settings, [:])      gProps[q].prps[c].settings.addProp(#renderOrder, 0)      gProps[q].prps[c].settings.addProp(#seed, 500)      gProps[q].prps[c].settings.addProp(#renderTime, 0)      case gProps[q].prps[c].tp of        "standard", "variedStandard":                    if(gProps[q].prps[c].colorTreatment = "bevel")then            gProps[q].prps[c].notes.add("The highlights and shadows on this prop are generated by code, so it can be rotated to any degree and they will remain correct.")          else            gProps[q].prps[c].notes.add("Be aware that shadows and highlights will not rotate with the prop, so extreme rotations may cause incorrect shading.")          end if                    if gProps[q].prps[c].tp = "variedStandard" then            gProps[q].prps[c].settings.addProp(#variation, (gProps[q].prps[c].random = 0))                        if(gProps[q].prps[c].random)then              gProps[q].prps[c].notes.add("Will put down a random variation. A specific variation can be selected from settings ('N' key).")            else              gProps[q].prps[c].notes.add("This prop comes with many variations. Which variation can be selected from settings ('N' key).")            end if                      else            if(gProps[q].prps[c].sz.locH < 5)and((gProps[q].prps[c].sz.locV < 5))then              gTrashPropOptions.add(point(q,c))              if(gProps[q].prps[c].sz.locH < 3)or((gProps[q].prps[c].sz.locV < 3))then                gTrashPropOptions.add(point(q,c))              end if            end if          end if                  "rope":          gProps[q].prps[c].settings.addProp(#release, 0)        "variedDecal", "variedSoft":          gProps[q].prps[c].settings.addProp(#variation, (gProps[q].prps[c].random = 0))          gProps[q].prps[c].settings.addProp(#customDepth, gProps[q].prps[c].depth)                    if(gProps[q].prps[c].random)then            gProps[q].prps[c].notes.add("Will put down a random variation. A specific variation can be selected from settings ('N' key).")          else            gProps[q].prps[c].notes.add("This prop comes with many variations. Which variation can be selected from settings ('N' key).")          end if                    if(gProps[q].prps[c].tp = "variedSoft")then            if(gProps[q].prps[c].colorize)then              gProps[q].prps[c].settings.addProp(#applyColor, 1)              gProps[q].prps[c].notes.add("It's recommended to render this prop after the effects if the color is activated, as the effects won't affect the color layers.")            end if          end if        "simpleDecal", "soft", "softEffect", "antimatter":          gProps[q].prps[c].settings.addProp(#customDepth, gProps[q].prps[c].depth)      end case            if(gProps[q].prps[c].tp = "soft")or(gProps[q].prps[c].tp = "softEffect")or(gProps[q].prps[c].tp = "variedSoft")then        if(gProps[q].prps[c].selfShade = 1)then          gProps[q].prps[c].notes.add("The highlights and shadows on this prop are generated by code, so it can be rotated to any degree and they will remain correct.")        else          gProps[q].prps[c].notes.add("Be aware that shadows and highlights will not rotate with the prop, so extreme rotations may cause incorrect shading.")        end if      end if            case gProps[q].prps[c].nm of        "wire", "Zero-G Wire":          gProps[q].prps[c].settings.addProp(#thickness, 2)          gProps[q].prps[c].notes.add("The thickness of the wire can be set in settings.")        "Zero-G Tube":          gProps[q].prps[c].settings.addProp(#applyColor, 0)          gProps[q].prps[c].notes.add("The tube can be colored white through the settings.")      end case            repeat with t in gProps[q].prps[c].tags then        case t of          "customColor":            gProps[q].prps[c].settings.addProp(#color, 0)            gProps[q].prps[c].notes.add("Custom color available")          "customColorRainBow":            gProps[q].prps[c].settings.addProp(#color, 1)            gProps[q].prps[c].notes.add("Custom color available")        end case      end repeat          end repeat  end repeat    --EFFECTS EDITOR!    gEffects = []    gEffects.add([#nm:"Natural", #efs:[]])  gEffects[gEffects.count].efs.add( [#nm:"Slime"]    )  gEffects[gEffects.count].efs.add( [#nm:"Melt"]    )  gEffects[gEffects.count].efs.add( [#nm:"Rust"]    )  gEffects[gEffects.count].efs.add( [#nm:"Barnacles"]    )  gEffects[gEffects.count].efs.add( [#nm:"Rubble"]    )  gEffects[gEffects.count].efs.add( [#nm:"DecalsOnlySlime"]    )    gEffects.add([#nm:"Erosion", #efs:[]])  gEffects[gEffects.count].efs.add( [#nm:"Roughen"]    )  gEffects[gEffects.count].efs.add( [#nm:"SlimeX3"]    )  gEffects[gEffects.count].efs.add( [#nm:"Super Melt"]    )  gEffects[gEffects.count].efs.add( [#nm:"Destructive Melt"]    )  gEffects[gEffects.count].efs.add( [#nm:"Erode"]    )  gEffects[gEffects.count].efs.add( [#nm:"Super Erode"]    )  gEffects[gEffects.count].efs.add( [#nm:"DaddyCorruption"]    )    gEffects.add([#nm:"Erosion2", #efs:[]])  gEffects[gEffects.count].efs.add( [#nm:"Slag"]    )    gEffects.add([#nm:"Artificial", #efs:[]])  gEffects[gEffects.count].efs.add( [#nm:"Wires"]    )  gEffects[gEffects.count].efs.add( [#nm:"Chains"]    )    gEffects.add([#nm:"Plants", #efs:[]])  gEffects[gEffects.count].efs.add( [#nm:"Root Grass"]    )  gEffects[gEffects.count].efs.add( [#nm:"Seed Pods"]    )  gEffects[gEffects.count].efs.add( [#nm:"Growers"]    )  gEffects[gEffects.count].efs.add( [#nm:"Cacti"]    )  gEffects[gEffects.count].efs.add( [#nm:"Rain Moss"]    )  gEffects[gEffects.count].efs.add( [#nm:"Hang Roots"]    )  gEffects[gEffects.count].efs.add( [#nm:"Grass"]    )    gEffects.add([#nm:"Plants2", #efs:[]])  gEffects[gEffects.count].efs.add( [#nm:"Arm Growers"]   )  gEffects[gEffects.count].efs.add( [#nm:"Horse Tails"]   )  gEffects[gEffects.count].efs.add( [#nm:"Circuit Plants"]   )  gEffects[gEffects.count].efs.add( [#nm:"Feather Plants"]   )  gEffects[gEffects.count].efs.add( [#nm:"Thorn Growers"]   )  gEffects[gEffects.count].efs.add( [#nm:"Rollers"]   )  gEffects[gEffects.count].efs.add( [#nm:"Garbage Spirals"]   )    gEffects.add([#nm:"Plants3", #efs:[]])  gEffects[gEffects.count].efs.add( [#nm:"Thick Roots"]   )  gEffects[gEffects.count].efs.add( [#nm:"Shadow Plants"]   )    gEffects.add([#nm:"Plants (Individual)", #efs:[]])  gEffects[gEffects.count].efs.add( [#nm:"Fungi Flowers"]    )  gEffects[gEffects.count].efs.add( [#nm:"Lighthouse Flowers"]    )  gEffects[gEffects.count].efs.add( [#nm:"Fern"]    )  gEffects[gEffects.count].efs.add( [#nm:"Giant Mushroom"]    )  gEffects[gEffects.count].efs.add( [#nm:"Sprawlbush"]    )  gEffects[gEffects.count].efs.add( [#nm:"featherFern"]    )  gEffects[gEffects.count].efs.add( [#nm:"Fungus Tree"]    )    gEffects.add([#nm:"Paint Effects", #efs:[]])  gEffects[gEffects.count].efs.add( [#nm:"BlackGoo"]    )  gEffects[gEffects.count].efs.add( [#nm:"DarkSlime"]    )    gEffects.add([#nm:"Restoration", #efs:[]])  gEffects[gEffects.count].efs.add( [#nm:"Restore As Scaffolding"]    )  gEffects[gEffects.count].efs.add( [#nm:"Ceramic Chaos"]    )      gEEprops = [#lastKeys:[], #keys:[], #lstMsPs:point(0,0), #effects:[], emPos:point(1,1), #editEffect:0, #selectEditEffect:0, #mode:"createNew", #brushSize:5]      --Light editor  gLightEProps = [#pos:point(1040/2, 800/2), rot:0, #sz:point(50, 70), #col:1, #keys:0, #lastKeys:0, #lastTm:0, #lightAngle:180, #flatness:1, #lightRect:rect(1000, 1000, -1000, -1000), #paintShape:"pxl"]        gLOprops = [#mouse:0, #lastMouse:0, #mouseClick:0, #pal:1, pals:[[#detCol:color(255, 0, 0)]], #eCol1:1, #eCol2:2, #totEcols:5, #tileSeed:random(400), #colGlows:[0,0], #size:point(cols, rows), #extraTiles:[12,3,12,5], #light:1]  -- gLOProps.pals = []--, , , ,,]      new(script"levelEdit_parentscript", 1)  new(script"levelEdit_parentscript", 2)    gCameraProps = [#cameras:[point(gLOprops.size.locH*10, gLOprops.size.locV*10)-point(35*20, 20*20)], #selectedCamera:0, #quads:[[[0,0], [0,0], [0,0], [0,0]]], #keys:[#n:0, #d:0, #e:0, #p:0], #lastKeys:[#n:0, #d:0, #e:0, #p:0]]    gSEProps = [#sounds:void, #ambientSounds:[], #songs:[], #rects:[], #pickedUpSound:"NONE"]          repeat with mem in ["rainBowMask","blackOutImg1","blackOutImg2"] then    member(mem).image = image(1, 1, 1)  end repeat    member("lightImage").image = image((gLOprops.size.locH*20)+300,(gLOprops.size.locV*20)+300, 1)    repeat with i = 0 to 29 then    member("layer"&i).image = image(1,1,1)    member("layer"&i&"sh").image = image(1,1,1)    member("gradientA" & i).image =  image(1,1,1)    member("gradientB" & i).image =  image(1,1,1)    member("layer" & i & "dc").image =  image(1,1,1)    member("dumpImage").image = image(1,1,1)    member("finalDecalImage").image  = image(1,1,1)  end repeat    end
+global gSaveProps, gTEprops, gTiles, gLEProps, gFullRender, gEEprops, gEffects, gLightEProps, gBlurOptions
+global gLEVEL, gLOprops, gLoadedName, gSEProps, gViewRender, gMassRenderL, gCameraProps, gImgXtra, gEnvEditorProps, gPEprops
+
+global gProps, gLOADPATH, gTrashPropOptions, solidMtrx
+
+on exitFrame me
+  _global.clearGlobals()
+  gFullRender = 1
+  gViewRender = 1
+  
+  -- saveImages("C:\Temp")
+  
+  gMassRenderL = []
+  gLOADPATH = []
+  
+  gLEVEL = [#timeLimit:4800, #defaultTerrain:1, #maxFlies:10, #flySpawnRate:50, #lizards:[], #ambientSounds:[], #music:"NONE", #tags:[], #lightType:"Static", #waterDrips:1, #lightRect:rect(0,0,1040,800), #matrix:[]]
+  
+  _movie.window.appearanceOptions.border = #none
+  _movie.window.resizable = FALSE
+  
+  gLoadedName = "New Project"
+  member("level Name").text = "New Project"
+  
+  gImgXtra = xtra("ImgXtra").new()
+  
+  g = 21
+  if (g=2) then
+    -- XC_ShowCursor(0)
+    --  _player.cursor(200)
+    
+    gSaveProps = [baScreenInfo("width"), baScreenInfo("height"), baScreenInfo("depth")]
+    
+    fac = gSaveProps[1].float/gSaveProps[2] .float
+    
+    screenResolutionPoint = point(1024,768)
+    baSetDisplay(screenResolutionPoint.locH,screenResolutionPoint.locV,32,"temp", false)
+    
+    screenSize = point(1024,768)/2
+    
+    midPos = screenResolutionPoint/2
+    windowRect = rect(midPos-screenSize, midPos+screenSize)
+    _movie.window.rect = windowRect
+    _movie.stage.drawRect = rect(0,0,1024, 768)
+    -- _movie.stage.drawRect = rect(0,0,180, 180)
+  else
+    gSaveProps = [1,1,1]--[baScreenInfo("width"), baScreenInfo("height"), baScreenInfo("depth")]
+  end if
+  
+  solidMtrx = []
+  
+  -- LEVELEDITOR!!!!!
+  cols = 72--gLOprops.size.loch
+  rows = 43--gLOprops.size.locv
+  
+  gLEProps = [#matrix:[] , #levelEditors:[] , #toolMatrix:[],#camPos:point(0,0)]
+  
+  gLEProps.toolMatrix.add(["inverse", "paintWall", "paintAir", "slope"])
+  gLEProps.toolMatrix.add(["floor", "squareWall", "squareAir", "move"])
+  gLEProps.toolMatrix.add(["rock", "spear", "crack", ""])
+  gLEProps.toolMatrix.add(["horBeam", "verBeam", "glass", "copyBack"])
+  gLEProps.toolMatrix.add(["shortCutEntrance", "shortCut", "lizardHole", "playerSpawn"])
+  gLEProps.toolMatrix.add(["forbidbats", "spawnfly", "hive", "waterFall"])
+  gLEProps.toolMatrix.add(["scavengerHole", "WHAMH", "garbageHole", "wormGrass"])
+  gLEProps.toolMatrix.add(["workLayer","flip", "mirrorToggle", "setMirrorPoint"])
+  
+  
+  
+  ResetgEnvEditorProps()
+  
+  --  if member("matrixTxtLE").text <> "" then
+  --    savMtrx = value( member("matrixTxtLE").text )
+  --    gLEProps.matrix = savMtrx[2]
+  --    if gLEProps.matrix[1][1].count = 2 then
+  --      repeat with q = 1 to cols then
+  --        repeat with c = 1 to rows then
+  --          gLEProps.matrix[q][c].add([0, []])
+  --        end repeat
+  --      end repeat
+  --    end if
+  --  else
+  repeat with q = 1 to cols then
+    ql = []
+    repeat with c = 1 to rows then
+      ql.add([[1, []], [1, []], [0, []]])
+    end repeat
+    gLEProps.matrix.add(ql)
+  end repeat
+  --  end if
+  
+  
+  gBlurOptions = [#blurLight:0, #blurSky:0]
+  
+  --TILEEDITOR!!!
+  
+  gTEprops = [#lastKeys:[], #keys:[], #workLayer:1, #lstMsPs:point(0,0), #tlMatrix:[], #defaultMaterial:"Concrete", #toolType:"material", #toolData:"Big Metal",\
+  tmPos:point(1,1), #tmSavPosL:[], #specialEdit:0]
+  
+  
+  
+  --  img = member("levelEditImageShortCuts").image.duplicate()
+  -- member("levelEditImageShortCuts").image.copyPixels(img, img.rect, img.rect, {#color:0, #bgColor:255})
+  
+  repeat with q = 1 to cols then
+    l = []
+    repeat with c = 1 to rows then
+      l.add([[#tp:"default", #data:0], [#tp:"default", #data:0], [#tp:"default", #data:0]])
+    end repeat
+    gTEprops.tlMatrix.add(l)
+  end repeat
+  member("layerText").text = "Layer:1"
+  
+  gTiles = []
+  
+  gTiles.add([#nm:"Materials", #tls:[]])
+  
+  
+  gTiles[1].tls.add( [#nm:"Standard", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(150,150,150)]    )
+  gTiles[1].tls.add( [#nm:"Concrete", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(150,255,255)]    )
+  gTiles[1].tls.add( [#nm:"RainStone", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(0,0,255)]    )
+  -- gTiles[1].tls.add( [#nm:"Rough Rock", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(150,0,150)]    )
+  -- gTiles[1].tls.add( [#nm:"Steel", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(255,0,255)]    )
+  gTiles[1].tls.add( [#nm:"Bricks", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(200,150,100)]    )
+  gTiles[1].tls.add( [#nm:"BigMetal", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(255,0,0)]    )
+  gTiles[1].tls.add( [#nm:"Tiny Signs", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(255,255,255)]    )
+  gTiles[1].tls.add( [#nm:"Scaffolding", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(60,60,40)]    )
+  gTiles[1].tls.add( [#nm:"Dense Pipes", #sz:point(1,1), #specs:[0], #renderType:"densePipeType", #color:color(10,10,255)]    )
+  gTiles[1].tls.add( [#nm:"SuperStructure", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(160,180,255)]    )
+  gTiles[1].tls.add( [#nm:"SuperStructure2", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(190,160,0)]    )
+  gTiles[1].tls.add( [#nm:"Tiled Stone", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(100,0,255)]    )
+  gTiles[1].tls.add( [#nm:"Chaotic Stone", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(255,0,255)]    )
+  gTiles[1].tls.add( [#nm:"Small Pipes", #sz:point(1,1), #specs:[0], #renderType:"pipeType", #color:color(255,255,0)]    )
+  gTiles[1].tls.add( [#nm:"Trash", #sz:point(1,1), #specs:[0], #renderType:"pipeType", #color:color(90,255,0)]    )
+  gTiles[1].tls.add( [#nm:"Invisible", #sz:point(1,1), #specs:[0], #renderType:"unified", #color:color(200,200,200)]    )
+  gTiles[1].tls.add( [#nm:"LargeTrash", #sz:point(1,1), #specs:[0], #renderType:"largeTrashType", #color:color(150,30,255)] )
+  gTiles[1].tls.add( [#nm:"3DBricks", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(255,150,0)]    )
+  gTiles[1].tls.add( [#nm:"Random Machines", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(72, 116, 80)]    )
+  gTiles[1].tls.add( [#nm:"Dirt", #sz:point(1,1), #specs:[0], #renderType:"dirtType", #color:color(124, 72, 52)]    )
+  gTiles[1].tls.add( [#nm:"Ceramic Tile", #sz:point(1,1), #specs:[0], #renderType:"ceramicType", #color:color(60, 60, 100)]    )
+  gTiles[1].tls.add( [#nm:"Temple Stone", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(0, 120, 180)]    )
+  gTiles[1].tls.add( [#nm:"Circuits", #sz:point(1,1), #specs:[0], #renderType:"densePipeType", #color:color(15,200,15)]    )
+  
+  gTiles.add([#nm:"Special", #tls:[]])
+  gTiles[2].tls.add( [#nm:"Rect Clear", #sz:point(1,1), #specs:[0], #placeMethod:"rect", #color:color(255, 0, 0)]    )
+  gTiles[2].tls.add( [#nm:"SH pattern box", #sz:point(1,1), #specs:[0], #placeMethod:"rect", #color:color(210, 0, 255)]    )
+  gTiles[2].tls.add( [#nm:"SH grate box", #sz:point(1,1), #specs:[0], #placeMethod:"rect", #color:color(160, 0, 255)]    )
+  
+  sav = member("initImport")
+  member("initImport").importFileInto("Graphics\init.txt")
+  sav.name = "initImport"
+  
+  member("previewTiles").image = image(60000, 500, 1)
+  ptPos = 1
+  
+  
+  repeat with q = 1 to the number of lines in sav.text then
+    if sav.text.line[q] <> "" then
+      if sav.text.line[q].char[1] = "-" then
+        
+        vl = value(sav.text.line[q].char[2..sav.text.line[q].length])
+        
+        gTiles.add( [#nm:vl[1], #clr:vl[2], #tls:[]]    )
+        
+        
+      else 
+        ad = value(sav.text.line[q])
+        debugline = sav.text.line[q]
+        
+        sav2 = member("previewImprt")
+        member("previewImprt").importFileInto("Graphics\" &ad.nm&".png")
+        sav2.name = "previewImprt"
+        
+        calculatedHeight = sav2.image.rect.height
+        if ad.tp = "voxelStruct" then
+          calculatedHeight = 1 + (16*ad.sz.locV) + (20*(ad.sz.locV+(ad.bfTiles*2))*ad.repeatL.count)
+        end if
+        
+        -- if(sav2.image.rect.height <> calculatedHeight) then put ad.nm && sav2.image.rect.height && calculatedHeight && ad.repeatL.count && ad.bfTiles && ad.sz.locV
+        
+        rct = rect(0, calculatedHeight - (16*ad.sz.locV), (16*ad.sz.locH), calculatedHeight)
+        member("previewTiles").image.copyPixels(sav2.image, rect(ptPos, 0, ptPos + (16*ad.sz.locH), (16*ad.sz.locV)), rct)
+        
+        ad.ptPos = ptPos
+        ad.addProp(#category, gTiles.count)
+        gTiles[gTiles.count].tls.add( ad )
+        
+        ptPos = ptPos + (16*ad.sz.locH) + 1
+        
+      end if
+    end if
+  end repeat
+  
+  
+  
+  
+  gProps = []
+  
+  resetPropEditorProps()
+  
+  global gPEcolors
+  gPEcolors = []
+  sav = member("initImport")
+  member("initImport").importFileInto("Props\propColors.txt")
+  sav.name = "initImport"
+  repeat with q = 1 to the number of lines in sav.text then
+    if sav.text.line[q] <> "" then
+      gPEcolors.add(value(sav.text.line[q]))
+    end if
+  end repeat
+  
+  sav = member("initImport")
+  member("initImport").importFileInto("Props\init.txt")
+  sav.name = "initImport"
+  
+  repeat with q = 1 to 2000 then
+    (member q of castLib 2).erase()
+  end repeat
+  
+  repeat with q = 1 to the number of lines in sav.text then
+    if sav.text.line[q] <> "" then
+      if sav.text.line[q].char[1] = "-" then
+        
+        vl = value(sav.text.line[q].char[2..sav.text.line[q].length])
+        
+        gProps.add( [#nm:vl[1], #clr:vl[2], #prps:[]]    )
+        
+      else 
+        ad = value(sav.text.line[q])
+        strng = sav.text.line[q]
+        ad.addProp(#category, gProps.count)
+        if(ad.tp = "standard")or(ad.tp = "variedStandard")then
+          dp = 0
+          repeat with i = 1 to ad.repeatL.count then
+            dp = dp + ad.repeatL[i]
+          end repeat
+          ad.addProp(#depth, dp)
+        end if
+        
+        gProps[gProps.count].prps.add( ad )
+        
+      end if
+    end if
+  end repeat
+  
+  gPageCount = 0
+  gPageTick = 0
+  
+  repeat with q = 3 to gTiles.count then
+    repeat with c = 1 to gTiles[q].tls.count then
+      if gPageTick = 0 then
+        gPageTick = 21
+        gPageCount = gPageCount + 1
+        gProps.add( [#nm:"Tiles as props "&gPageCount, #clr:color(255, 0,0), #prps:[]]    )
+      end if
+      tl = gTiles[q].tls[c]
+      
+      if(tl.tp = "voxelStruct")and(tl.tags.getPos("notProp") = 0)then
+        ad = [#nm:tl.nm, #tp:"standard", #colorTreatment:"standard", #sz:tl.sz + point(tl.bfTiles*2, tl.bfTiles*2), #depth:10 + (tl.specs2 <> [])*10, #repeatL:tl.repeatL, #tags:["Tile"], #layerExceptions:[], #notes:["Tile as prop"]]
+        ad.addProp(#category, gProps.count)
+        gProps[gProps.count].prps.add( ad )
+        gPageTick = gPageTick - 1
+      end if
+    end repeat
+  end repeat
+  
+  --gProps[gProps.count].prps.sort()
+  
+  gProps.add( [#nm:"Rope type props", #clr:color(0, 255, 0), #prps:[]]    )
+  gProps[gProps.count].prps.add([#nm:"Wire", #tp:"rope", #depth:0, #tags:[], #notes:[], #segmentLength:3, #collisionDepth:0, #segRad:1, #grav:0.5, #friction:0.5, #airFric:0.9, #stiff:0, #previewColor:color(255,0, 0), #previewEvery:4, #edgeDirection:0, #rigid:0, #selfPush:0, #sourcePush:0])
+  gProps[gProps.count].prps.add([#nm:"Tube", #tp:"rope", #depth:4, #tags:[], #notes:[], #segmentLength:10, #collisionDepth:2, #segRad:4.5, #grav:0.5, #friction:0.5, #airFric:0.9, #stiff:1, #previewColor:color(0,0, 255), #previewEvery:2, #edgeDirection:5, #rigid:1.6, #selfPush:0, #sourcePush:0])
+  gProps[gProps.count].prps.add([#nm:"ThickWire", #tp:"rope", #depth:3, #tags:[], #notes:[], #segmentLength:4, #collisionDepth:1, #segRad:2, #grav:0.5, #friction:0.8, #airFric:0.9, #stiff:1, #previewColor:color(255,255, 0), #previewEvery:2, #edgeDirection:0, #rigid:0.2, #selfPush:0, #sourcePush:0])
+  gProps[gProps.count].prps.add([#nm:"RidgedTube", #tp:"rope", #depth:4, #tags:[], #notes:[], #segmentLength:5, #collisionDepth:2, #segRad:5, #grav:0.5, #friction:0.3, #airFric:0.7, #stiff:1, #previewColor:color(255,0,255), #previewEvery:2, #edgeDirection:0, #rigid:0.1, #selfPush:0, #sourcePush:0])
+  gProps[gProps.count].prps.add([#nm:"Fuel Hose", #tp:"rope", #depth:5, #tags:[], #notes:[], #segmentLength:16, #collisionDepth:1, #segRad:7, #grav:0.5, #friction:0.8, #airFric:0.9, #stiff:1, #previewColor:color(255,150,0), #previewEvery:1, #edgeDirection:1.4, #rigid:0.2, #selfPush:0, #sourcePush:0])
+  gProps[gProps.count].prps.add([#nm:"Broken Fuel Hose", #tp:"rope", #depth:6, #tags:[], #notes:[], #segmentLength:16, #collisionDepth:1, #segRad:7, #grav:0.5, #friction:0.8, #airFric:0.9, #stiff:1, #previewColor:color(255,150,0), #previewEvery:1, #edgeDirection:1.4, #rigid:0.2, #selfPush:0, #sourcePush:0])
+  gProps[gProps.count].prps.add([#nm:"Large Chain", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:28, #collisionDepth:3, #segRad:9.5, #grav:0.9, #friction:0.8, #airFric:0.95, #stiff:1, #previewColor:color(0,255,0), #previewEvery:1, #edgeDirection:0.0, #rigid:0.0, #selfPush:6.5, #sourcePush:0])
+  gProps[gProps.count].prps.add([#nm:"Large Chain 2", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:28, #collisionDepth:3, #segRad:9.5, #grav:0.9, #friction:0.8, #airFric:0.95, #stiff:1, #previewColor:color(20,205,0), #previewEvery:1, #edgeDirection:0.0, #rigid:0.0, #selfPush:6.5, #sourcePush:0])
+  gProps[gProps.count].prps.add([#nm:"Bike Chain", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:38, #collisionDepth:3, #segRad:16.5, #grav:0.9, #friction:0.8, #airFric:0.95, #stiff:1, #previewColor:color(100,100,100), #previewEvery:1, #edgeDirection:0.0, #rigid:0.0, #selfPush:16.5, #sourcePush:0])
+  gProps[gProps.count].prps.add([#nm:"Zero-G Tube", #tp:"rope", #depth:4, #tags:[], #notes:[], #segmentLength:10, #collisionDepth:2, #segRad:4.5, #grav:0, #friction:0.5, #airFric:0.9, #stiff:1, #previewColor:color(0,255, 0), #previewEvery:2, #edgeDirection:0, #rigid:0.6, #selfPush:2, #sourcePush:0.5])
+  gProps[gProps.count].prps.add([#nm:"Zero-G Wire", #tp:"rope", #depth:0, #tags:[], #notes:[], #segmentLength:8, #collisionDepth:0, #segRad:1, #grav:0, #friction:0.5, #airFric:0.9, #stiff:1, #previewColor:color(255,0, 0), #previewEvery:2, #edgeDirection:0.3, #rigid:0.5, #selfPush:1.2, #sourcePush:0.5])
+  gProps[gProps.count].prps.add([#nm:"Fat Hose", #tp:"rope", #depth:6, #tags:[], #notes:[], #segmentLength:40, #collisionDepth:3, #segRad:20, #grav:0.9, #friction:0.6, #airFric:0.95, #stiff:1, #previewColor:color(0,100,150), #previewEvery:1, #edgeDirection:0.1, #rigid:0.2, #selfPush:10, #sourcePush:0.1])
+  gProps[gProps.count].prps.add([#nm:"Wire Bunch", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:50, #collisionDepth:3, #segRad:20, #grav:0.9, #friction:0.6, #airFric:0.95, #stiff:1, #previewColor:color(255,100,150), #previewEvery:1, #edgeDirection:0.1, #rigid:0.2, #selfPush:10, #sourcePush:0.1])
+  gProps[gProps.count].prps.add([#nm:"Wire Bunch 2", #tp:"rope", #depth:9, #tags:[], #notes:[], #segmentLength:50, #collisionDepth:3, #segRad:20, #grav:0.9, #friction:0.6, #airFric:0.95, #stiff:1, #previewColor:color(255,100,150), #previewEvery:1, #edgeDirection:0.1, #rigid:0.2, #selfPush:10, #sourcePush:0.1])
+  
+  
+  gProps.add( [#nm:"Long props", #clr:color(0, 255, 0), #prps:[]]    )
+  gProps[gProps.count].prps.add([#nm:"Cabinet Clamp", #tp:"long", #depth:0, #tags:[], #notes:[]])
+  gProps[gProps.count].prps.add([#nm:"Drill Suspender", #tp:"long", #depth:5, #tags:[], #notes:[]])
+  gProps[gProps.count].prps.add([#nm:"Thick Chain", #tp:"long", #depth:0, #tags:[], #notes:[]])
+  gProps[gProps.count].prps.add([#nm:"Drill", #tp:"long", #depth:10, #tags:[], #notes:[]])
+  gProps[gProps.count].prps.add([#nm:"Piston", #tp:"long", #depth:4, #tags:[], #notes:[]])
+  
+  gTrashPropOptions = []
+  
+  repeat with q = 1 to gProps.count then
+    repeat with c = 1 to gProps[q].prps.count then
+      gProps[q].prps[c].addProp(#settings, [:])
+      gProps[q].prps[c].settings.addProp(#renderOrder, 0)
+      gProps[q].prps[c].settings.addProp(#seed, 500)
+      gProps[q].prps[c].settings.addProp(#renderTime, 0)
+      case gProps[q].prps[c].tp of
+        "standard", "variedStandard":
+          
+          if(gProps[q].prps[c].colorTreatment = "bevel")then
+            gProps[q].prps[c].notes.add("The highlights and shadows on this prop are generated by code, so it can be rotated to any degree and they will remain correct.")
+          else
+            gProps[q].prps[c].notes.add("Be aware that shadows and highlights will not rotate with the prop, so extreme rotations may cause incorrect shading.")
+          end if
+          
+          if gProps[q].prps[c].tp = "variedStandard" then
+            gProps[q].prps[c].settings.addProp(#variation, (gProps[q].prps[c].random = 0))
+            
+            if(gProps[q].prps[c].random)then
+              gProps[q].prps[c].notes.add("Will put down a random variation. A specific variation can be selected from settings ('N' key).")
+            else
+              gProps[q].prps[c].notes.add("This prop comes with many variations. Which variation can be selected from settings ('N' key).")
+            end if
+            
+          else
+            if(gProps[q].prps[c].sz.locH < 5)and((gProps[q].prps[c].sz.locV < 5))then
+              gTrashPropOptions.add(point(q,c))
+              if(gProps[q].prps[c].sz.locH < 3)or((gProps[q].prps[c].sz.locV < 3))then
+                gTrashPropOptions.add(point(q,c))
+              end if
+            end if
+          end if
+          
+        "rope":
+          gProps[q].prps[c].settings.addProp(#release, 0)
+        "variedDecal", "variedSoft":
+          gProps[q].prps[c].settings.addProp(#variation, (gProps[q].prps[c].random = 0))
+          gProps[q].prps[c].settings.addProp(#customDepth, gProps[q].prps[c].depth)
+          
+          if(gProps[q].prps[c].random)then
+            gProps[q].prps[c].notes.add("Will put down a random variation. A specific variation can be selected from settings ('N' key).")
+          else
+            gProps[q].prps[c].notes.add("This prop comes with many variations. Which variation can be selected from settings ('N' key).")
+          end if
+          
+          if(gProps[q].prps[c].tp = "variedSoft")then
+            if(gProps[q].prps[c].colorize)then
+              gProps[q].prps[c].settings.addProp(#applyColor, 1)
+              gProps[q].prps[c].notes.add("It's recommended to render this prop after the effects if the color is activated, as the effects won't affect the color layers.")
+            end if
+          end if
+        "simpleDecal", "soft", "softEffect", "antimatter":
+          gProps[q].prps[c].settings.addProp(#customDepth, gProps[q].prps[c].depth)
+      end case
+      
+      if(gProps[q].prps[c].tp = "soft")or(gProps[q].prps[c].tp = "softEffect")or(gProps[q].prps[c].tp = "variedSoft")then
+        if(gProps[q].prps[c].selfShade = 1)then
+          gProps[q].prps[c].notes.add("The highlights and shadows on this prop are generated by code, so it can be rotated to any degree and they will remain correct.")
+        else
+          gProps[q].prps[c].notes.add("Be aware that shadows and highlights will not rotate with the prop, so extreme rotations may cause incorrect shading.")
+        end if
+      end if
+      
+      case gProps[q].prps[c].nm of
+        "wire", "Zero-G Wire":
+          gProps[q].prps[c].settings.addProp(#thickness, 2)
+          gProps[q].prps[c].notes.add("The thickness of the wire can be set in settings.")
+        "Zero-G Tube":
+          gProps[q].prps[c].settings.addProp(#applyColor, 0)
+          gProps[q].prps[c].notes.add("The tube can be colored white through the settings.")
+      end case
+      
+      repeat with t in gProps[q].prps[c].tags then
+        case t of
+          "customColor":
+            gProps[q].prps[c].settings.addProp(#color, 0)
+            gProps[q].prps[c].notes.add("Custom color available")
+          "customColorRainBow":
+            gProps[q].prps[c].settings.addProp(#color, 1)
+            gProps[q].prps[c].notes.add("Custom color available")
+        end case
+      end repeat
+      
+    end repeat
+  end repeat
+  
+  --EFFECTS EDITOR!
+  
+  gEffects = []
+  
+  gEffects.add([#nm:"Natural", #efs:[]])
+  gEffects[gEffects.count].efs.add( [#nm:"Slime"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"Melt"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"Rust"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"Barnacles"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"Rubble"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"DecalsOnlySlime"]    )
+  
+  gEffects.add([#nm:"Erosion", #efs:[]])
+  gEffects[gEffects.count].efs.add( [#nm:"Roughen"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"SlimeX3"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"Super Melt"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"Destructive Melt"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"Erode"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"Super Erode"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"DaddyCorruption"]    )
+  
+  gEffects.add([#nm:"Erosion2", #efs:[]])
+  gEffects[gEffects.count].efs.add( [#nm:"Slag"]    )
+  
+  gEffects.add([#nm:"Artificial", #efs:[]])
+  gEffects[gEffects.count].efs.add( [#nm:"Wires"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"Chains"]    )
+  
+  gEffects.add([#nm:"Plants", #efs:[]])
+  gEffects[gEffects.count].efs.add( [#nm:"Root Grass"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"Seed Pods"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"Growers"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"Cacti"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"Rain Moss"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"Hang Roots"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"Grass"]    )
+  
+  gEffects.add([#nm:"Plants2", #efs:[]])
+  gEffects[gEffects.count].efs.add( [#nm:"Arm Growers"]   )
+  gEffects[gEffects.count].efs.add( [#nm:"Horse Tails"]   )
+  gEffects[gEffects.count].efs.add( [#nm:"Circuit Plants"]   )
+  gEffects[gEffects.count].efs.add( [#nm:"Feather Plants"]   )
+  gEffects[gEffects.count].efs.add( [#nm:"Thorn Growers"]   )
+  gEffects[gEffects.count].efs.add( [#nm:"Rollers"]   )
+  gEffects[gEffects.count].efs.add( [#nm:"Garbage Spirals"]   )
+  
+  gEffects.add([#nm:"Plants3", #efs:[]])
+  gEffects[gEffects.count].efs.add( [#nm:"Thick Roots"]   )
+  gEffects[gEffects.count].efs.add( [#nm:"Shadow Plants"]   )
+  
+  gEffects.add([#nm:"Plants (Individual)", #efs:[]])
+  gEffects[gEffects.count].efs.add( [#nm:"Fungi Flowers"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"Lighthouse Flowers"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"Fern"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"Giant Mushroom"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"Sprawlbush"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"featherFern"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"Fungus Tree"]    )
+  
+  gEffects.add([#nm:"Paint Effects", #efs:[]])
+  gEffects[gEffects.count].efs.add( [#nm:"BlackGoo"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"DarkSlime"]    )
+  
+  gEffects.add([#nm:"Restoration", #efs:[]])
+  gEffects[gEffects.count].efs.add( [#nm:"Restore As Scaffolding"]    )
+  gEffects[gEffects.count].efs.add( [#nm:"Ceramic Chaos"]    )
+  
+  
+  gEEprops = [#lastKeys:[], #keys:[], #lstMsPs:point(0,0), #effects:[], emPos:point(1,1), #editEffect:0, #selectEditEffect:0, #mode:"createNew", #brushSize:5]
+  
+  
+  --Light editor
+  gLightEProps = [#pos:point(1040/2, 800/2), rot:0, #sz:point(50, 70), #col:1, #keys:0, #lastKeys:0, #lastTm:0, #lightAngle:180, #flatness:1, #lightRect:rect(1000, 1000, -1000, -1000), #paintShape:"pxl"]
+  
+  
+  
+  gLOprops = [#mouse:0, #lastMouse:0, #mouseClick:0, #pal:1, pals:[[#detCol:color(255, 0, 0)]], #eCol1:1, #eCol2:2, #totEcols:5, #tileSeed:random(400), #colGlows:[0,0], #size:point(cols, rows), #extraTiles:[12,3,12,5], #light:1]
+  -- gLOProps.pals = []--, , , ,,]
+  
+  
+  new(script"levelEdit_parentscript", 1)
+  new(script"levelEdit_parentscript", 2)
+  
+  gCameraProps = [#cameras:[point(gLOprops.size.locH*10, gLOprops.size.locV*10)-point(35*20, 20*20)], #selectedCamera:0, #quads:[[[0,0], [0,0], [0,0], [0,0]]], #keys:[#n:0, #d:0, #e:0, #p:0], #lastKeys:[#n:0, #d:0, #e:0, #p:0]]
+  
+  gSEProps = [#sounds:void, #ambientSounds:[], #songs:[], #rects:[], #pickedUpSound:"NONE"]
+  
+  
+  
+  
+  repeat with mem in ["rainBowMask","blackOutImg1","blackOutImg2"] then
+    member(mem).image = image(1, 1, 1)
+  end repeat
+  
+  member("lightImage").image = image((gLOprops.size.locH*20)+300,(gLOprops.size.locV*20)+300, 1)
+  
+  repeat with i = 0 to 29 then
+    member("layer"&i).image = image(1,1,1)
+    member("layer"&i&"sh").image = image(1,1,1)
+    member("gradientA" & i).image =  image(1,1,1)
+    member("gradientB" & i).image =  image(1,1,1)
+    member("layer" & i & "dc").image =  image(1,1,1)
+    member("dumpImage").image = image(1,1,1)
+    member("finalDecalImage").image  = image(1,1,1)
+  end repeat
+  
+  
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
