@@ -142,7 +142,7 @@ namespace Drizzle.Transpiler
         {
             WriteFileHeader(writer);
             writer.WriteLine($"//\n// Behavior script: {name}\n//");
-            writer.WriteLine($"public sealed class {name} : LingoParentScript {{");
+            writer.WriteLine($"public sealed class {name} : LingoBehaviorScript {{");
 
             EmitScriptBody(name, script, writer, ctx, isMovieScript: false);
 
