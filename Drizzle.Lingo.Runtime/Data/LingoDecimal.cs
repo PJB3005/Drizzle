@@ -39,5 +39,6 @@ namespace Drizzle.Lingo.Runtime
         public static LingoDecimal operator /(LingoDecimal a, LingoDecimal b) => new(a.Value / b.Value);
 
         public static implicit operator LingoDecimal(int x) => new(x);
+        public static explicit operator int(LingoDecimal x) => (int) x.Value;
     }
 }

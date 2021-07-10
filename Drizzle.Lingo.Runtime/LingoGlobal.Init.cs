@@ -7,6 +7,7 @@
             _system = new System(this);
             _key = new Key(this);
             _mouse = new Mouse(this);
+            _movie = new Movie(this);
         }
     }
 }

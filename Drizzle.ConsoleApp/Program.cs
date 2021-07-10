@@ -13,8 +13,8 @@ namespace Drizzle.ConsoleApp
     {
         private static int Diag(LingoPoint a, LingoPoint b)
         {
-            var w = Math.Abs(a.locH - b.locH);
-            var h = Math.Abs(a.locV - b.locV);
+            var w = Math.Abs(a.loch - b.loch);
+            var h = Math.Abs(a.locv - b.locv);
 
             return (int) Math.Sqrt(w * w + h * h);
         }

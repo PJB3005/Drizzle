@@ -15,7 +15,7 @@
             intBottom = bottom;
         }
 
-        public LingoRect(LingoPoint lt, LingoPoint rb) : this(lt.locH, lt.locV, rb.locH, rb.locV)
+        public LingoRect(LingoPoint lt, LingoPoint rb) : this(lt.loch, lt.locv, rb.loch, rb.locv)
         {
         }
 
@@ -26,6 +26,15 @@
                 a.intTop + b.intTop,
                 a.intRight + b.intRight,
                 a.intBottom + b.intBottom);
+        }
+
+        public static LingoRect operator *(LingoRect a, int b)
+        {
+            return new(
+                a.intLeft * b,
+                a.intTop * b,
+                a.intRight * b,
+                a.intBottom * b);
         }
     }
 }

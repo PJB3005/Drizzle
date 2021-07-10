@@ -89,6 +89,8 @@ namespace Drizzle.Lingo.Runtime
         public static LingoPoint point(int h, int v) => new(h, v);
         public static LingoPoint point(LingoDecimal h, LingoDecimal v) => new((int) h.Value, (int) v.Value);
         public static LingoRect rect(int l, int t, int r, int b) => new(l, t, r, b);
+        public static LingoRect rect(LingoDecimal l, LingoDecimal t, LingoDecimal r, LingoDecimal b) =>
+            new((int) l, (int) t, (int) r, (int) b);
         public static LingoRect rect(LingoPoint lt, LingoPoint rb) => new(lt, rb);
 
         public static LingoDecimal floatmember_helper(int i) => new(i);
@@ -101,6 +103,7 @@ namespace Drizzle.Lingo.Runtime
         public static LingoDecimal atan(LingoDecimal d) => LingoDecimal.Atan(d);
 
         public static LingoDecimal power(LingoDecimal @base, LingoDecimal exp) => LingoDecimal.Pow(@base, exp);
+        public static LingoSymbol symbol(string s) => new(s);
 
         public void put(dynamic d)
         {
@@ -122,6 +125,11 @@ namespace Drizzle.Lingo.Runtime
             throw new NotImplementedException();
         }
 
+        public dynamic bascreeninfo(string prop)
+        {
+            throw new NotImplementedException();
+        }
+
         public string getnthfilenameinfolder(dynamic a, dynamic b)
         {
             throw new NotImplementedException();
@@ -137,8 +145,10 @@ namespace Drizzle.Lingo.Runtime
         public int objectp(dynamic d) => throw new NotImplementedException();
 
         public dynamic member(dynamic a) => throw new NotImplementedException();
+        public dynamic member(dynamic a, dynamic b) => throw new NotImplementedException();
         public int the_randomSeed { get; set; }
         public LingoColor color(int r, int g, int b) => new(r, g, b);
+        public LingoColor color(int palIdx) => throw new NotImplementedException();
         public LingoImage image(int w, int h, int bitDepth) => throw new NotImplementedException();
         public int random(int max) => throw new NotImplementedException();
         public string @string(dynamic value) => value.ToString();
@@ -176,5 +186,47 @@ namespace Drizzle.Lingo.Runtime
         public string the_platform => "win";
 
         public dynamic sprite(dynamic a) => throw new NotImplementedException();
+        public dynamic sound(dynamic a) => throw new NotImplementedException();
+        public dynamic value(string a) => throw new NotImplementedException();
+        public dynamic call(LingoSymbol a) => throw new NotImplementedException();
+        public dynamic call(LingoSymbol a, dynamic a1) => throw new NotImplementedException();
+        public dynamic call(LingoSymbol a, dynamic a1, dynamic a2) => throw new NotImplementedException();
+        public dynamic call(LingoSymbol a, dynamic a1, dynamic a2, dynamic a3) => throw new NotImplementedException();
+        public dynamic call(LingoSymbol a, dynamic a1, dynamic a2, dynamic a3, dynamic a4) => throw new NotImplementedException();
+
+        public static string chars(string str, int first, int last)
+        {
+            if (first == last)
+                return str[first + 1].ToString();
+
+            return str[(first + 1)..Math.Min(str.Length, last + 1)];
+        }
+
+        public void alert(string msg) => throw new NotImplementedException();
+
+        public LingoSymbol ilk(object obj)
+        {
+            var val = obj switch
+            {
+                int => "integer",
+                LingoDecimal => "float",
+                LingoList => "list",
+                LingoPropertyList => "proplist",
+                string => "string",
+                LingoRect => "rect",
+                LingoPoint => "point",
+                LingoColor => "color",
+                LingoSymbol => "symbol",
+                LingoImage => "image",
+                // Lol apparently ilk() is called once and it's to check if something is a list
+                // so I didn't even need to fill out this much.
+                null => "void",
+                _ => throw new NotSupportedException()
+            };
+
+            return new LingoSymbol(val);
+        }
+
+        public void createfile(dynamic d, string f) => d.createfile(f);
     }
 }

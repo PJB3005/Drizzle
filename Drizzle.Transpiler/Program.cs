@@ -69,6 +69,13 @@ namespace Drizzle.Transpiler
                     "png_encode", "writeChunk", "writeBytes", "writeInt", "gzcompress", "writeCRC", "lingo_crc32",
                     "bitShift8", "xtraPresent"
                 }
+            },
+            ["TEdraw"] = new ScriptQuirks
+            {
+                OverloadParamCounts =
+                {
+                    ("tedraw", 2)
+                }
             }
         };
 
@@ -96,7 +103,8 @@ namespace Drizzle.Transpiler
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
             var parentScripts = scripts.Where(kv => ParentScripts.Contains(kv.Key))
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
-            var behaviorScripts = scripts.Except(movieScripts).Except(parentScripts);
+            var behaviorScripts = scripts.Except(movieScripts).Except(parentScripts)
+                .ToDictionary(kv => kv.Key, kv => kv.Value);
 
             var movieHandlers = movieScripts.Values
                 .SelectMany(s => s.Nodes)
@@ -108,15 +116,45 @@ namespace Drizzle.Transpiler
 
             OutputMovieScripts(movieScripts, globalContext);
             OutputParentScripts(parentScripts, globalContext);
+            OutputBehaviorScripts(behaviorScripts, globalContext);
 
             OutputMovieGlobals(globalContext);
+        }
+
+        private static void OutputBehaviorScripts(
+            IEnumerable<KeyValuePair<string, AstNode.Script>> scripts,
+            GlobalContext ctx)
+        {
+            foreach (var (name, script) in scripts)
+            {
+                var path = Path.Combine(SourcesDest, $"Behavior.{name}.cs");
+                using var file = new StreamWriter(path);
+
+                OutputSingleBehaviorScript(name, script, file, ctx);
+            }
+        }
+
+        private static void OutputSingleBehaviorScript(
+            string name,
+            AstNode.Script script,
+            TextWriter writer,
+            GlobalContext ctx)
+        {
+            WriteFileHeader(writer);
+            writer.WriteLine($"//\n// Behavior script: {name}\n//");
+            writer.WriteLine($"public sealed class {name} : LingoParentScript {{");
+
+            EmitScriptBody(name, script, writer, ctx, isMovieScript: false);
+
+            // End class and namespace.
+            writer.WriteLine("}\n}");
         }
 
         private static void OutputParentScripts(
             IEnumerable<KeyValuePair<string, AstNode.Script>> scripts,
             GlobalContext ctx)
         {
-            foreach (var (name, script) in scripts.Where(kv => ParentScripts.Contains(kv.Key)))
+            foreach (var (name, script) in scripts)
             {
                 var path = Path.Combine(SourcesDest, $"Parent.{name}.cs");
                 using var file = new StreamWriter(path);
@@ -163,7 +201,7 @@ namespace Drizzle.Transpiler
             IEnumerable<KeyValuePair<string, AstNode.Script>> scripts,
             GlobalContext ctx)
         {
-            foreach (var (name, script) in scripts.Where(kv => MovieScripts.Contains(kv.Key)))
+            foreach (var (name, script) in scripts)
             {
                 var path = Path.Combine(SourcesDest, $"Movie.{name}.cs");
                 using var file = new StreamWriter(path);
@@ -713,7 +751,7 @@ namespace Drizzle.Transpiler
                 return WriteGlobalCall("charmember_helper", ctx, node.Expression);
 
             var child = WriteExpression(node.Expression, ctx);
-            return $"{child}.{node.Property.ToLower()}";
+            return $"{child}.{WriteSanitizeIdentifier(node.Property.ToLower())}";
         }
 
         private static string WriteMemberIndex(AstNode.MemberIndex node, HandlerContext ctx)
