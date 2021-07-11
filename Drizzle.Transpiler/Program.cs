@@ -17,7 +17,7 @@ namespace Drizzle.Transpiler
         {
             "testDraw",
             "stop",
-            "spelrelarat",
+            "spelrelaterat",
             "ropeModel",
             "lvl",
             "levelRendering",
@@ -46,7 +46,7 @@ namespace Drizzle.Transpiler
                     ("drawATileTile", 5),
                 }
             },
-            ["spelrelarat"] = new ScriptQuirks
+            ["spelrelaterat"] = new ScriptQuirks
             {
                 OverloadParamCounts =
                 {
@@ -142,6 +142,7 @@ namespace Drizzle.Transpiler
         {
             WriteFileHeader(writer);
             writer.WriteLine($"//\n// Behavior script: {name}\n//");
+            writer.WriteLine("[BehaviorScript]");
             writer.WriteLine($"public sealed class {name} : LingoBehaviorScript {{");
 
             EmitScriptBody(name, script, writer, ctx, isMovieScript: false);
@@ -171,6 +172,7 @@ namespace Drizzle.Transpiler
         {
             WriteFileHeader(writer);
             writer.WriteLine($"//\n// Parent script: {name}\n//");
+            writer.WriteLine("[ParentScript]");
             writer.WriteLine($"public sealed class {name} : LingoParentScript {{");
 
             EmitScriptBody(name, script, writer, ctx, isMovieScript: false);
@@ -574,7 +576,7 @@ namespace Drizzle.Transpiler
             ctx.Writer.WriteLine($"{lhs} = {rhs};");
         }
 
-        private static string WriteExpression(AstNode.Base node, HandlerContext ctx, ExpressionParams param = default)
+        private static string WriteExpression(AstNode.Base node, HandlerContext ctx, ExpressionParams? param = null)
         {
             return node switch
             {
@@ -675,7 +677,7 @@ namespace Drizzle.Transpiler
         private static string WriteUnaryOperator(
             AstNode.UnaryOperator unaryOperator,
             HandlerContext ctx,
-            ExpressionParams exprParams)
+            ExpressionParams? exprParams)
         {
             if (unaryOperator.Type == AstNode.UnaryOperatorType.Not)
             {
@@ -694,7 +696,7 @@ namespace Drizzle.Transpiler
 
                 sb.Insert(0, '!');
 
-                if (!exprParams.WantBool)
+                if (exprParams is not {WantBool: true})
                 {
                     sb.Insert(0, '(');
                     sb.Append(" ? 1 : 0)");
@@ -818,7 +820,7 @@ namespace Drizzle.Transpiler
         private static string WriteBinaryOperator(
             AstNode.BinaryOperator node,
             HandlerContext ctx,
-            ExpressionParams param = null)
+            ExpressionParams? param)
         {
             if (param?.WantBool ?? false)
             {

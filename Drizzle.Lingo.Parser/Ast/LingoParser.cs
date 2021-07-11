@@ -328,6 +328,8 @@ namespace Drizzle.Lingo.Parser.Ast
         private static Parser<char, AstNode.Base> The(Parser<char, AstNode.Base> subExpr) =>
             Try(String("the").Before(ThisShouldBeAProperBound))
                 .Then(OneOf(
+                    Tok("last").Then(Tok("char")).Then(Tok("of"))
+                        .Then(subExpr).Select(i => (AstNode.Base) new AstNode.GlobalCall("last_char", new[] {i})),
                     Tok("number").Then(Tok("of")).Then(
                         OneOf(
                             Try(Tok("lines"))
@@ -402,11 +404,19 @@ namespace Drizzle.Lingo.Parser.Ast
                             Try(Slice(expr)).TraceBegin("member slice"),
                             Index(expr).TraceBegin("member index")
                         ),
-
                         // TODO: are these associativity rules correct?
                         // Precedence 5
-                        Operator.Prefix(Negate)
-                            .And(Operator.Prefix(Not)),
+                        // Yeah lingo docs just lie about precedence don't worry about it.
+                        Operator.Prefix(Negate.TraceBegin("trying negate")),
+                        // Precedence 1
+                        precedence1,
+                        // Precedence 5 (yes lol)
+                        Operator.Prefix(Not),
+                        // Precedence 2
+                        Operator.InfixL(ConcatSpace.TraceBegin("Concat Space"))
+                            .And(Operator.InfixL(Concat.TraceBegin("Concat"))),
+                        // Precedence 3
+                        Operator.InfixL(Subtract),
                         // Precedence 4
                         Operator.InfixL(Add)
                             .And(Operator.InfixL(Multiply /*.TraceBegin("Multiply")*/))
@@ -414,13 +424,6 @@ namespace Drizzle.Lingo.Parser.Ast
                             .And(Operator.InfixL(And /*.TraceBegin("And")*/))
                             .And(Operator.InfixL(Or /*.TraceBegin("Or")*/))
                             .And(Operator.InfixL(Mod /*.TraceBegin("Mod")*/)),
-                        // Precedence 3
-                        Operator.InfixL(Subtract),
-                        // Precedence 2
-                        Operator.InfixL(ConcatSpace.TraceBegin("Concat Space"))
-                            .And(Operator.InfixL(Concat.TraceBegin("Concat"))),
-                        // Precedence 1
-                        precedence1,
                     };
                     return (
                         OneOf(
@@ -680,14 +683,15 @@ namespace Drizzle.Lingo.Parser.Ast
                 HandlerParameter);
 
         private static readonly Parser<char, AstNode.Handler> Handler =
-            Tok("on")
+            SkipNnlWhiteSpace
+                .Then(Tok("on")).TraceBegin("end my life").TracePos("A1")
                 //.Trace("HANDLER")
                 .Then(Map(
                     (name, parameters, body) => new AstNode.Handler(name, parameters.ToArray(), body),
-                    Identifier,
-                    HandleParenthesesParameter.Before(EndLine),
-                    StatementBlock
-                ))
+                    Identifier.TracePos("A3"),
+                    HandleParenthesesParameter.Before(EndLine).TracePos("A5"),
+                    StatementBlock.TracePos("A7")
+                )).TracePos("A2")
                 .Before(Tok("end"))
                 .Before(IdentifierUnchecked.Optional())
                 //.Trace(h => $"HANDLER: {DebugPrint.PrintAstNode(h)}")
