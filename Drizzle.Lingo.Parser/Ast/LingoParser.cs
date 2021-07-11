@@ -211,7 +211,7 @@ namespace Drizzle.Lingo.Parser.Ast
                         subExpr
                     ).Before(Tok(':'))
                     .Then(subExpr, KeyValuePair.Create)
-                    .Separated(Tok(','))
+                    .SeparatedAtLeastOnce(Tok(','))
                     .Select(v => (AstNode.Base) new AstNode.PropertyList(v.ToArray()))
             );
 
