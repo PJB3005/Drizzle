@@ -115,7 +115,7 @@ namespace Drizzle.Lingo.Runtime.Parser
         private static readonly Parser<char, AstNode.Base> PropertyDecl =
             Try(Tok("property"))
                 .Then(Identifier.SeparatedAtLeastOnce(Tok(',')))
-                .Select(s => (AstNode.Base) new AstNode.Property(s.ToArray()))
+                .Select(s => (AstNode.Base)new AstNode.Property(s.ToArray()))
                 .Labelled("property declarations");
 
         private static readonly Parser<char, Unit> EmptyLine =
@@ -144,21 +144,21 @@ namespace Drizzle.Lingo.Runtime.Parser
                     // Decimal point and after.
                     .Then(Char('.').Then(Digit.AtLeastOnceString(), (a, b) => a + b),
                         (a, b) => a + b)
-                    .Select(s => (AstNode.Base) new AstNode.Decimal(LingoDecimal.Parse(s))));
+                    .Select(s => (AstNode.Base)new AstNode.Decimal(LingoDecimal.Parse(s))));
 
         private static readonly Parser<char, AstNode.Base> Integer =
-            Tok(Num.Select(i => (AstNode.Base) new AstNode.Integer(i)));
+            Tok(Num.Select(i => (AstNode.Base)new AstNode.Integer(i)));
 
         private static readonly Parser<char, AstNode.Base> Symbol =
             Tok(Char('#')
                 .Then(Identifier)
-                .Select(i => (AstNode.Base) new AstNode.Symbol(i.ToLowerInvariant())));
+                .Select(i => (AstNode.Base)new AstNode.Symbol(i.ToLowerInvariant())));
 
         private static readonly Parser<char, AstNode.Base> String =
             Tok(AnyCharExcept('"')
                 .ManyString()
                 .Between(Char('"'))
-                .Select(s => (AstNode.Base) new AstNode.String(s)));
+                .Select(s => (AstNode.Base)new AstNode.String(s)));
 
         private static readonly string[] AllConstants =
         {
@@ -177,13 +177,13 @@ namespace Drizzle.Lingo.Runtime.Parser
 
         private static readonly Parser<char, AstNode.Base> Constant =
             Tok(OneOf(AllConstants.Select(c => String(c)).Union(AllConstants.Select(c => String(c.ToLower()))))
-                .Select(c => (AstNode.Base) new AstNode.Constant(c)));
+                .Select(c => (AstNode.Base)new AstNode.Constant(c)));
 
         private static readonly Parser<char, AstNode.Base> Literal =
             OneOf(Try(Decimal), Integer, Symbol, String, Try(Constant));
 
         private static readonly Parser<char, AstNode.Base> VariableName =
-            Identifier.Select(i => (AstNode.Base) new AstNode.VariableName(i));
+            Identifier.Select(i => (AstNode.Base)new AstNode.VariableName(i));
 
         private static Parser<char, T> Parenthesized<T>(this Parser<char, T> parser) =>
             parser.Between(Tok('('), Tok(')'));
@@ -191,27 +191,27 @@ namespace Drizzle.Lingo.Runtime.Parser
         private static Parser<char, AstNode.Base> GlobalCall(Parser<char, AstNode.Base> subExpr) =>
             Identifier
                 .Then(Parenthesized(subExpr /*.Trace(arg => $"arg: {arg}")*/.Separated(Tok(','))),
-                    (ident, args) => (AstNode.Base) new AstNode.GlobalCall(ident, args.ToArray()));
+                    (ident, args) => (AstNode.Base)new AstNode.GlobalCall(ident, args.ToArray()));
 
         private static Parser<char, AstNode.Base> List(Parser<char, AstNode.Base> subExpr) =>
             subExpr
                 .Separated(Tok(','))
                 .Between(Tok('['), Tok(']'))
-                .Select(v => (AstNode.Base) new AstNode.List(v.ToArray()));
+                .Select(v => (AstNode.Base)new AstNode.List(v.ToArray()));
 
         private static Parser<char, AstNode.Base> PropertyListCore(Parser<char, AstNode.Base> subExpr) =>
             OneOf(
                 // Empty list clause.
                 Tok(':').ThenReturn(
-                    (AstNode.Base) new AstNode.PropertyList(
+                    (AstNode.Base)new AstNode.PropertyList(
                         Array.Empty<KeyValuePair<AstNode.Base, AstNode.Base>>())),
                 OneOf(
-                        Try(Identifier).Select(i => (AstNode.Base) new AstNode.Symbol(i)),
+                        Try(Identifier).Select(i => (AstNode.Base)new AstNode.Symbol(i)),
                         subExpr
                     ).Before(Tok(':'))
                     .Then(subExpr, KeyValuePair.Create)
                     .SeparatedAtLeastOnce(Tok(','))
-                    .Select(v => (AstNode.Base) new AstNode.PropertyList(v.ToArray()))
+                    .Select(v => (AstNode.Base)new AstNode.PropertyList(v.ToArray()))
             );
 
         private static Parser<char, AstNode.Base> PropertyList(Parser<char, AstNode.Base> subExpr) =>
@@ -322,28 +322,28 @@ namespace Drizzle.Lingo.Runtime.Parser
                 //.Trace(n => $"Trying keyword: {n}")
                 .Then(
                     expr,
-                    (name, arg) => (AstNode.Base) new AstNode.GlobalCall(name, new[] {arg}));
+                    (name, arg) => (AstNode.Base)new AstNode.GlobalCall(name, new[] { arg }));
 
         private static Parser<char, AstNode.Base> The(Parser<char, AstNode.Base> subExpr) =>
             Try(String("the").Before(ThisShouldBeAProperBound))
                 .Then(OneOf(
                     Tok("last").Then(Tok("char")).Then(Tok("of"))
-                        .Then(subExpr).Select(i => (AstNode.Base) new AstNode.GlobalCall("last_char", new[] {i})),
+                        .Then(subExpr).Select(i => (AstNode.Base)new AstNode.GlobalCall("last_char", new[] { i })),
                     Tok("number").Then(Tok("of")).Then(
                         OneOf(
                             Try(Tok("lines"))
                                 .Then(Tok("in"))
-                                .Then(subExpr).Select(n => (AstNode.Base) new AstNode.TheNumberOfLines(n)),
-                            subExpr.Select(n => (AstNode.Base) new AstNode.TheNumberOf(n))
+                                .Then(subExpr).Select(n => (AstNode.Base)new AstNode.TheNumberOfLines(n)),
+                            subExpr.Select(n => (AstNode.Base)new AstNode.TheNumberOf(n))
                         )
                     ),
-                    Identifier.Select(i => (AstNode.Base) new AstNode.The(i)))
+                    Identifier.Select(i => (AstNode.Base)new AstNode.The(i)))
                 );
 
         private static Parser<char, AstNode.Base> NewCastLib(Parser<char, AstNode.Base> subExpr) =>
             Try(Tok("new").Then(
                 subExpr.Before(Tok(',')).Before(Tok("castLib"))
-                    .Then(subExpr, (type, castLib) => (AstNode.Base) new AstNode.NewCastLib(type, castLib))
+                    .Then(subExpr, (type, castLib) => (AstNode.Base)new AstNode.NewCastLib(type, castLib))
                     .Parenthesized()
             ));
 
@@ -352,13 +352,13 @@ namespace Drizzle.Lingo.Runtime.Parser
                 Tok("script")
                     .Then(subExpr)
                     .Then(Tok(',').Then(subExpr.Separated(Tok(','))),
-                        (type, castLib) => (AstNode.Base) new AstNode.NewScript(type, castLib.ToArray()))
+                        (type, castLib) => (AstNode.Base)new AstNode.NewScript(type, castLib.ToArray()))
                     .Parenthesized()
             ));
 
         private static Parser<char, AstNode.Base> ThingOf(Parser<char, AstNode.Base> subExpr) =>
             Map(
-                (type, index, collection) => (AstNode.Base) new AstNode.ThingOf(type, index, collection),
+                (type, index, collection) => (AstNode.Base)new AstNode.ThingOf(type, index, collection),
                 Try(OneOf(
                     String("item").Before(ThisShouldBeAProperBound).ThenReturn(AstNode.ThingOfType.Item),
                     String("line").Before(ThisShouldBeAProperBound).ThenReturn(AstNode.ThingOfType.Line),
@@ -372,7 +372,7 @@ namespace Drizzle.Lingo.Runtime.Parser
                 .Then(subExpr)
                 .Before(Tok("of")).Before(Tok("castLib"))
                 .Then(subExpr,
-                    (member, castLib) => (AstNode.Base) new AstNode.GlobalCall("member", new[] {member, castLib})));
+                    (member, castLib) => (AstNode.Base)new AstNode.GlobalCall("member", new[] { member, castLib })));
 
 
         public static readonly Parser<char, AstNode.Base> Expression = ExpressionFunc(true, true);
@@ -408,6 +408,11 @@ namespace Drizzle.Lingo.Runtime.Parser
                         // Precedence 5
                         // Yeah lingo docs just lie about precedence don't worry about it.
                         Operator.Prefix(Negate.TraceBegin("trying negate")),
+                        // Also precendece 4 (???)
+                        Operator.InfixL(Add)
+                            .And(Operator.InfixL(Multiply /*.TraceBegin("Multiply")*/))
+                            .And(Operator.InfixL(Divide /*.TraceBegin("Divide")*/))
+                            .And(Operator.InfixL(Mod /*.TraceBegin("Mod")*/)),
                         // Precedence 1
                         precedence1,
                         // Precedence 5 (yes lol)
@@ -418,12 +423,8 @@ namespace Drizzle.Lingo.Runtime.Parser
                         // Precedence 3
                         Operator.InfixL(Subtract),
                         // Precedence 4
-                        Operator.InfixL(Add)
-                            .And(Operator.InfixL(Multiply /*.TraceBegin("Multiply")*/))
-                            .And(Operator.InfixL(Divide /*.TraceBegin("Divide")*/))
-                            .And(Operator.InfixL(And /*.TraceBegin("And")*/))
-                            .And(Operator.InfixL(Or /*.TraceBegin("Or")*/))
-                            .And(Operator.InfixL(Mod /*.TraceBegin("Mod")*/)),
+                        Operator.InfixL(And /*.TraceBegin("And")*/)
+                            .And(Operator.InfixL(Or /*.TraceBegin("Or")*/)),
                     };
 
                     if (!allowBinOps)
@@ -467,7 +468,7 @@ namespace Drizzle.Lingo.Runtime.Parser
             Try(Tok("while"))
                 .Then(Expression)
                 .Before(BTok("then").Optional())
-                .Then(StatementBlock, (cond, block) => (AstNode.Base) new AstNode.RepeatWhile(cond, block))
+                .Then(StatementBlock, (cond, block) => (AstNode.Base)new AstNode.RepeatWhile(cond, block))
                 .Before(Tok("end").Before(Tok("repeat")));
 
         private static readonly Parser<char, AstNode.Base> RepeatWith =
@@ -476,14 +477,14 @@ namespace Drizzle.Lingo.Runtime.Parser
                     // repeat with .. in ..
                     Map(
                         (varName, listExpr, block) =>
-                            (AstNode.Base) new AstNode.RepeatWithList(varName, listExpr, block),
+                            (AstNode.Base)new AstNode.RepeatWithList(varName, listExpr, block),
                         Try(Identifier.Before(Tok("in"))),
                         Expression.Before(BTok("then").Optional()),
                         StatementBlock),
 
                     // repeat with .. = .. to ..
                     Map((varName, start, end, block) =>
-                            (AstNode.Base) new AstNode.RepeatWithCounter(varName, start, end, block),
+                            (AstNode.Base)new AstNode.RepeatWithCounter(varName, start, end, block),
                         Identifier.Before(Tok('=')),
                         Expression.Before(Tok("to")),
                         Expression.Before(BTok("then").Optional()),
@@ -502,7 +503,7 @@ namespace Drizzle.Lingo.Runtime.Parser
                 .Before(Tok("then"));
 
         private static Parser<char, AstNode.Base> IfSingleLine(AstNode.Base cond, AstNode.Base imm) =>
-            Map((elseIfs, @else) => (AstNode.Base) new AstNode.If(
+            Map((elseIfs, @else) => (AstNode.Base)new AstNode.If(
                     cond,
                     SingleStatementBlock(imm),
                     // Fold else ifs into nested if else statements.
@@ -529,7 +530,7 @@ namespace Drizzle.Lingo.Runtime.Parser
 
         private static Parser<char, AstNode.Base> IfBlock(AstNode.Base cond) =>
             Map((body, elseIfs, @else) =>
-                        (AstNode.Base) new AstNode.If(
+                        (AstNode.Base)new AstNode.If(
                             cond,
                             body,
                             // Fold else ifs into nested if else statements.
@@ -597,7 +598,7 @@ namespace Drizzle.Lingo.Runtime.Parser
         private static readonly Parser<char, AstNode.Base> PutInto =
             Try(Tok("put")
                 .Then(Map(
-                    (expr, type, collection) => (AstNode.Base) new AstNode.PutInto(expr, type, collection),
+                    (expr, type, collection) => (AstNode.Base)new AstNode.PutInto(expr, type, collection),
                     Expression,
                     OneOf(
                         Tok("after").ThenReturn(AstNode.PutType.After),
@@ -637,7 +638,7 @@ namespace Drizzle.Lingo.Runtime.Parser
         private static readonly Parser<char, AstNode.Base> Case =
             Try(Tok("case"))
                 .Then(Map((expr, cases, otherwise) =>
-                        (AstNode.Base) new AstNode.Case(expr, cases.ToArray(), otherwise.GetValueOrDefault()),
+                        (AstNode.Base)new AstNode.Case(expr, cases.ToArray(), otherwise.GetValueOrDefault()),
                     Expression.Before(Tok("of")),
                     CaseBody.Before(Nop.TraceBegin("case body ended here")),
                     Try(CaseOtherwise).TraceBegin("foo")
@@ -657,12 +658,12 @@ namespace Drizzle.Lingo.Runtime.Parser
             Try(Tok("return"))
                 .Then(Expression.Optional(),
                     (_, expr) =>
-                        expr.HasValue ? (AstNode.Base) new AstNode.Return(expr.Value) : new AstNode.Return(null));
+                        expr.HasValue ? (AstNode.Base)new AstNode.Return(expr.Value) : new AstNode.Return(null));
 
         private static readonly Parser<char, AstNode.Base> Exit =
             Try(Tok("exit"))
                 .Then(Tok("repeat").Optional())
-                .Select(r => r.HasValue ? (AstNode.Base) new AstNode.ExitRepeat() : new AstNode.Return(null));
+                .Select(r => r.HasValue ? (AstNode.Base)new AstNode.ExitRepeat() : new AstNode.Return(null));
 
         public static readonly Parser<char, AstNode.Base> Statement =
                 OneOf(
@@ -723,7 +724,7 @@ namespace Drizzle.Lingo.Runtime.Parser
 
         private static AstNode.StatementBlock SingleStatementBlock(AstNode.Base b)
         {
-            return new AstNode.StatementBlock(new[] {b});
+            return new AstNode.StatementBlock(new[] { b });
         }
     }
 }
