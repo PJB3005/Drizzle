@@ -140,7 +140,7 @@ namespace Drizzle.Lingo.Runtime
 
         public dynamic script(dynamic a)
         {
-            throw new NotImplementedException();
+            return LingoRuntime.CreateScript(a, new LingoList());
         }
 
         public int the_milliseconds => _system.milliseconds;
