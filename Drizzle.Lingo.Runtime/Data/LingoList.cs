@@ -36,6 +36,11 @@ namespace Drizzle.Lingo.Runtime
             List.Add(value);
         }
 
+        public void append(dynamic value)
+        {
+            List.Add(value);
+        }
+
         public IEnumerator<object> GetEnumerator()
         {
             return List.GetEnumerator();
