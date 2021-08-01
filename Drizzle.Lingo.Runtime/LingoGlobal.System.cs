@@ -15,7 +15,7 @@ namespace Drizzle.Lingo.Runtime
                 _global = global;
             }
 
-            public int milliseconds => throw new NotImplementedException();
+            public int milliseconds => (int)_global.LingoRuntime.Stopwatch.ElapsedMilliseconds;
         }
     }
 }

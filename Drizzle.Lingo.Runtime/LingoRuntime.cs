@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
 using System.Reflection;
 using Serilog;
 
@@ -18,6 +18,8 @@ namespace Drizzle.Lingo.Runtime
         private readonly Dictionary<string, Type> _behaviorScripts = new(StringComparer.InvariantCultureIgnoreCase);
         private readonly Dictionary<string, Type> _parentScripts = new(StringComparer.InvariantCultureIgnoreCase);
 
+        public Stopwatch Stopwatch { get; } = new();
+
         public HashSet<int> KeysDown { get; } = new();
 
         public LingoRuntime(Assembly assembly)
@@ -30,6 +32,7 @@ namespace Drizzle.Lingo.Runtime
         {
             Log.Debug("Initializing Lingo, pebbles save us all...");
 
+            Stopwatch.Start();
             Global.Init();
             LoadCast();
             InitScript();
