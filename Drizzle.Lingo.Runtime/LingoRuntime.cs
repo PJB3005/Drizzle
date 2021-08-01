@@ -18,6 +18,8 @@ namespace Drizzle.Lingo.Runtime
         private readonly Dictionary<string, Type> _behaviorScripts = new(StringComparer.InvariantCultureIgnoreCase);
         private readonly Dictionary<string, Type> _parentScripts = new(StringComparer.InvariantCultureIgnoreCase);
 
+        public HashSet<int> KeysDown { get; } = new();
+
         public LingoRuntime(Assembly assembly)
         {
             _assembly = assembly;

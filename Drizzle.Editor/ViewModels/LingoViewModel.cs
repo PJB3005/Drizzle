@@ -1,9 +1,11 @@
 ﻿using System;
+using Avalonia.Input;
 using Avalonia.Threading;
 using Drizzle.Editor.ViewModels.LingoFrames;
 using Drizzle.Lingo.Runtime;
 using Drizzle.Ported;
 using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 using Serilog;
 
 namespace Drizzle.Editor.ViewModels
@@ -15,7 +17,8 @@ namespace Drizzle.Editor.ViewModels
 
         public LingoFrameViewModel? Frame { get; private set; }
 
-        private int _lastFrame;
+        [Reactive] public int LastFrame { get; private set; }
+        [Reactive] public string? LastFrameName { get; private set; }
 
         public void Init()
         {
@@ -31,9 +34,10 @@ namespace Drizzle.Editor.ViewModels
         {
             Runtime.Tick();
 
-            if (_lastFrame != Runtime.CurrentFrame)
+            if (LastFrame != Runtime.CurrentFrame)
             {
-                _lastFrame = Runtime.CurrentFrame;
+                LastFrame = Runtime.CurrentFrame;
+                LastFrameName = Runtime.LastFrameBehaviorName;
 
                 Frame = GetFrameViewModel();
                 try
@@ -63,7 +67,7 @@ namespace Drizzle.Editor.ViewModels
 
         private LingoFrameViewModel? GetFrameViewModel()
         {
-            return _lastFrame switch
+            return LastFrame switch
             {
                 3 => new FrameLoadLevelViewModel(),
                 _ => null

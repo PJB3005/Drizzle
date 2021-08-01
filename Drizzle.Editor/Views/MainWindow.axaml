@@ -4,17 +4,20 @@
         xmlns:vm="using:Drizzle.Editor.ViewModels"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ed="clr-namespace:Drizzle.Editor"
+        xmlns:views="clr-namespace:Drizzle.Editor.Views"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Drizzle.Editor.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
-        Title="Drizzle.Editor" CanResize="False" Width="1024" Height="768">
+        Title="Drizzle.Editor" CanResize="False" Width="1024" Height="768"
+        KeyDown="OnKeyDown" KeyUp="OnKeyUp">
 
     <Design.DataContext>
         <vm:MainWindowViewModel/>
     </Design.DataContext>
     
-    <Panel>
-        <ContentControl Content="{Binding LingoVM.Frame}" />
-    </Panel>
+    <DockPanel>
+        <views:LingoStatus DockPanel.Dock="Bottom" DataContext="{Binding LingoVM}" />
+        <ContentControl Margin="4" Content="{Binding LingoVM.Frame}" />
+    </DockPanel>
     
 </Window>

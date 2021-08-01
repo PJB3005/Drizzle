@@ -1,0 +1,13 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:vm="clr-namespace:Drizzle.Editor.ViewModels"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Drizzle.Editor.Views.LingoStatus">
+    <Design.DataContext>
+        <vm:LingoViewModel/>
+    </Design.DataContext>
+    
+    <StackPanel Orientation="Horizontal">
+        <TextBlock Text="{Binding LastFrame,StringFormat=Current frame: {0}}" />
+        <TextBlock Margin="2 0" Text="{Binding LastFrameName,StringFormat=Behavior: {0}}" />
+    </StackPanel>
+</UserControl>

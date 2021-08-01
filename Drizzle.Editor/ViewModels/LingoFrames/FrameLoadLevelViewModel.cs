@@ -1,24 +1,32 @@
-﻿using Drizzle.Lingo.Runtime;
+﻿using System.Collections.ObjectModel;
+using System.Linq;
+using Drizzle.Lingo.Runtime;
+using DynamicData;
 using ReactiveUI;
 
 namespace Drizzle.Editor.ViewModels.LingoFrames
 {
     public sealed class FrameLoadLevelViewModel : LingoFrameViewModel
     {
-        private string _selectedLevel = "A";
-
-        public string SelectedLevel
+        public int SelectedIndex
         {
-            get => _selectedLevel;
-            private set => this.RaiseAndSetIfChanged(ref _selectedLevel, value);
+            get => MovieScript.global_ldprps.currproject - 1;
+            set => MovieScript.global_ldprps.currproject = value + 1;
+        }
+
+        public ObservableCollection<string> ProjectsList { get; } = new();
+
+        public override void OnLoad(LingoRuntime runtime)
+        {
+            base.OnLoad(runtime);
+
+            var projects = (LingoList)MovieScript.global_projects;
+            ProjectsList.AddRange(projects.Cast<string>());
         }
 
         public override void OnUpdate()
         {
-            var loadLevelProps = (LingoPropertyList) MovieScript.global_ldprps;
-            var projects = (LingoList)MovieScript.global_projects;
-            int curProject = loadLevelProps[new LingoSymbol("currproject")];
-            SelectedLevel = projects[curProject].ToString();
+            this.RaisePropertyChanged(nameof(SelectedIndex));
         }
     }
 }

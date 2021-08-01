@@ -22,6 +22,7 @@ namespace Drizzle.Editor
                 {
                     DataContext = viewModel,
                 };
+
                 viewModel.LingoVM.Init();
             }
 

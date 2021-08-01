@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Serilog;
 
 namespace Drizzle.Lingo.Runtime
 {
@@ -39,6 +41,22 @@ namespace Drizzle.Lingo.Runtime
         public void append(dynamic value)
         {
             List.Add(value);
+        }
+
+        public void deleteat(int number)
+        {
+            if (number > List.Count || number <= 0)
+            {
+                Log.Warning("Invalid deleteAt() index");
+                return;
+            }
+
+            List.RemoveAt(number - 1);
+        }
+
+        public void addat(int number, dynamic value)
+        {
+            List.Insert(number - 1, value);
         }
 
         public IEnumerator<object> GetEnumerator()

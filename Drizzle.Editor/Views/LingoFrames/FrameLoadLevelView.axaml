@@ -7,6 +7,6 @@
         <vmf:FrameLoadLevelViewModel />
     </Design.DataContext>
 
-    <TextBlock Text="{Binding SelectedLevel}" />
-    
+    <ListBox Items="{Binding ProjectsList}" Focusable="False"
+             SelectedIndex="{Binding SelectedIndex}" SelectionMode="Single" />
 </UserControl>

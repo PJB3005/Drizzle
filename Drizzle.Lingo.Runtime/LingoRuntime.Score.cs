@@ -59,6 +59,7 @@ namespace Drizzle.Lingo.Runtime
         public int NextFrame { get; private set; } = 1;
 
         public LingoScriptRuntimeBase? CurrentFrameBehavior { get; private set; }
+        public string? LastFrameBehaviorName { get; private set; }
 
         private void TickAdvanceScore()
         {
@@ -75,7 +76,10 @@ namespace Drizzle.Lingo.Runtime
             NextFrame += 1;
 
             if (!ScoreFrameScripts.TryGetValue(CurrentFrame, out var frameScript))
+            {
+                LastFrameBehaviorName = null;
                 return;
+            }
 
             if (changedFrame)
             {
@@ -83,6 +87,7 @@ namespace Drizzle.Lingo.Runtime
             }
 
             CurrentFrameBehavior = InstantiateBehaviorScript(frameScript);
+            LastFrameBehaviorName = frameScript;
 
             var method = CurrentFrameBehavior.GetType().GetMethod("enterFrame",
                 BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);

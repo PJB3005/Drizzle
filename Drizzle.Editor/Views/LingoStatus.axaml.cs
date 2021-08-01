@@ -1,11 +1,11 @@
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
-namespace Drizzle.Editor.Views.LingoFrames
+namespace Drizzle.Editor.Views
 {
-    public sealed partial class FrameLoadLevelView : UserControl
+    public sealed class LingoStatus : UserControl
     {
-        public FrameLoadLevelView()
+        public LingoStatus()
         {
             InitializeComponent();
         }

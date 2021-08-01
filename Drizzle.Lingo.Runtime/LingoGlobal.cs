@@ -115,6 +115,9 @@ namespace Drizzle.Lingo.Runtime
 
         public dynamic @new(dynamic a)
         {
+            if (a is BaseXtra xtra)
+                return xtra.Duplicate();
+
             throw new NotImplementedException();
         }
 
