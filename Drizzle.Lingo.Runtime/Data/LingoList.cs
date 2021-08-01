@@ -6,7 +6,7 @@ using Serilog;
 
 namespace Drizzle.Lingo.Runtime
 {
-    public class LingoList : IEnumerable<object>
+    public class LingoList : IEnumerable<object>, ILingoListDuplicate
     {
         public List<dynamic> List { get; }
 
@@ -59,6 +59,16 @@ namespace Drizzle.Lingo.Runtime
             List.Insert(number - 1, value);
         }
 
+        public LingoList duplicate()
+        {
+            return new LingoList(List.Select(i => DuplicateIfList(i)));
+        }
+
+        ILingoListDuplicate ILingoListDuplicate.duplicate()
+        {
+            return duplicate();
+        }
+
         public IEnumerator<object> GetEnumerator()
         {
             return List.GetEnumerator();
@@ -87,6 +97,34 @@ namespace Drizzle.Lingo.Runtime
         public static LingoList operator /(LingoList a, dynamic b)
         {
             return new(a.Select(e => (dynamic)e / b));
+        }
+
+        public static bool operator ==(LingoList a, LingoList b)
+        {
+            if (a.count != b.count)
+                return false;
+
+            for (var i = 0; i < a.count; i++)
+            {
+                var itemA = a.List[i];
+                var itemB = b.List[i];
+
+                if (itemA != itemB)
+                    return false;
+            }
+
+            return true;
+        }
+
+
+        public static bool operator !=(LingoList a, LingoList b)
+        {
+            return !(a == b);
+        }
+
+        public static object? DuplicateIfList(object? obj)
+        {
+            return obj is ILingoListDuplicate dup ? dup.duplicate() : obj;
         }
     }
 }

@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Dynamic;
+using System.Linq;
 using Serilog;
 
 namespace Drizzle.Lingo.Runtime
 {
-    public class LingoPropertyList : DynamicObject
+    public class LingoPropertyList : DynamicObject, ILingoListDuplicate
     {
         public Dictionary<dynamic, dynamic?> Dict { get; }
 
@@ -25,10 +26,26 @@ namespace Drizzle.Lingo.Runtime
             Dict = new Dictionary<dynamic, dynamic?>(capacity);
         }
 
+        public LingoPropertyList(IEnumerable<KeyValuePair<dynamic, dynamic?>> source)
+        {
+            Dict = new Dictionary<dynamic, dynamic?>(source);
+        }
+
         public dynamic? this[dynamic index]
         {
             get => Dict[index];
             set => Dict[index] = value;
+        }
+
+        public LingoPropertyList duplicate()
+        {
+            return new LingoPropertyList(
+                Dict.Select(kv => new KeyValuePair<dynamic, dynamic?>(kv.Key, LingoList.DuplicateIfList(kv.Value))));
+        }
+
+        ILingoListDuplicate ILingoListDuplicate.duplicate()
+        {
+            return duplicate();
         }
 
         public void addprop(dynamic? key, dynamic? value)
