@@ -64,26 +64,36 @@ namespace Drizzle.Lingo.Runtime
         {
             Debug.Assert(CurrentFrameBehavior == null);
 
-            CurrentFrame = NextFrame;
-            NextFrame += 1;
+            var changedFrame = false;
+            if (CurrentFrame != NextFrame)
+            {
+                changedFrame = true;
+                Log.Debug("Advancing to frame {CurrentFrame}", CurrentFrame);
+                CurrentFrame = NextFrame;
+            }
 
-            // Log.Debug("Advancing to frame {CurrentFrame}", CurrentFrame);
+            NextFrame += 1;
 
             if (!ScoreFrameScripts.TryGetValue(CurrentFrame, out var frameScript))
                 return;
 
-            // Log.Debug("Current frame behavior script is {FrameBehaviorScript}", frameScript);
+            if (changedFrame)
+            {
+                Log.Debug("Current frame behavior script is {FrameBehaviorScript}", frameScript);
+            }
 
             CurrentFrameBehavior = InstantiateBehaviorScript(frameScript);
 
-            var method = CurrentFrameBehavior.GetType().GetMethod("enterFrame", BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+            var method = CurrentFrameBehavior.GetType().GetMethod("enterFrame",
+                BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
             if (method != null)
             {
                 // Log.Debug("Invoking enterFrame handler");
                 method.Invoke(CurrentFrameBehavior, Array.Empty<object?>());
             }
 
-            method = CurrentFrameBehavior.GetType().GetMethod("exitFrame", BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+            method = CurrentFrameBehavior.GetType().GetMethod("exitFrame",
+                BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
             if (method != null)
             {
                 // Log.Debug("Invoking exitFrame handler");
