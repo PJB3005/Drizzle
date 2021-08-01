@@ -41,8 +41,11 @@ namespace Drizzle.Lingo.Runtime
 
         public override bool TryGetMember(GetMemberBinder binder, out object? result)
         {
-            return Dict.TryGetValue(binder.Name, out result) ||
-                   Dict.TryGetValue(new LingoSymbol(binder.Name), out result);
+            if (Dict.TryGetValue(binder.Name, out result) ||
+                Dict.TryGetValue(new LingoSymbol(binder.Name), out result)) return true;
+
+            result = null;
+            return true;
         }
 
         public override bool TrySetMember(SetMemberBinder binder, object? value)
