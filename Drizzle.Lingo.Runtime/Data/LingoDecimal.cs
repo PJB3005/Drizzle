@@ -4,7 +4,7 @@ namespace Drizzle.Lingo.Runtime
 {
     // Lingo numbers are *not* IEEE-754.
     // Well shit.
-    public struct LingoDecimal
+    public struct LingoDecimal : IEquatable<LingoDecimal>, IComparable<LingoDecimal>
     {
         // TODO: Implement Lingo arithmetic accurately. If we care.
         public double Value;
@@ -40,5 +40,55 @@ namespace Drizzle.Lingo.Runtime
 
         public static implicit operator LingoDecimal(int x) => new(x);
         public static explicit operator int(LingoDecimal x) => (int) x.Value;
+
+        public bool Equals(LingoDecimal other)
+        {
+            return Value.Equals(other.Value);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is LingoDecimal other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return Value.GetHashCode();
+        }
+
+        public static bool operator ==(LingoDecimal left, LingoDecimal right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(LingoDecimal left, LingoDecimal right)
+        {
+            return !left.Equals(right);
+        }
+
+        public int CompareTo(LingoDecimal other)
+        {
+            return Value.CompareTo(other.Value);
+        }
+
+        public static bool operator <(LingoDecimal left, LingoDecimal right)
+        {
+            return left.CompareTo(right) < 0;
+        }
+
+        public static bool operator >(LingoDecimal left, LingoDecimal right)
+        {
+            return left.CompareTo(right) > 0;
+        }
+
+        public static bool operator <=(LingoDecimal left, LingoDecimal right)
+        {
+            return left.CompareTo(right) <= 0;
+        }
+
+        public static bool operator >=(LingoDecimal left, LingoDecimal right)
+        {
+            return left.CompareTo(right) >= 0;
+        }
     }
 }

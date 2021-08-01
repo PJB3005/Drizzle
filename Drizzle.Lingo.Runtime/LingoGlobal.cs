@@ -76,11 +76,11 @@ namespace Drizzle.Lingo.Runtime
         }
 
         public static LingoPoint point(int h, int v) => new(h, v);
-        public static LingoPoint point(LingoDecimal h, LingoDecimal v) => new((int) h.Value, (int) v.Value);
+        public static LingoPoint point(LingoDecimal h, LingoDecimal v) => new(h, v);
         public static LingoRect rect(int l, int t, int r, int b) => new(l, t, r, b);
 
         public static LingoRect rect(LingoDecimal l, LingoDecimal t, LingoDecimal r, LingoDecimal b) =>
-            new((int) l, (int) t, (int) r, (int) b);
+            new(l, t, r, b);
 
         public static LingoRect rect(LingoPoint lt, LingoPoint rb) => new(lt, rb);
 
@@ -154,6 +154,9 @@ namespace Drizzle.Lingo.Runtime
         public LingoColor color(int r, int g, int b) => new(r, g, b);
         public LingoColor color(int palIdx) => throw new NotImplementedException();
         public LingoImage image(int w, int h, int bitDepth) => new LingoImage(w, h, bitDepth);
+
+        public LingoImage image(LingoDecimal w, LingoDecimal h, int bitDepth) =>
+            new LingoImage((int)w, (int)h, bitDepth);
 
         public int random(int max)
         {

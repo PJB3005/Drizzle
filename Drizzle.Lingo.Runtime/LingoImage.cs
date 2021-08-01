@@ -51,10 +51,10 @@ namespace Drizzle.Lingo.Runtime
             var srcImg = source.Image;
 
             var srcRect = Rectangle.FromLTRB(
-                Math.Clamp(sourceRect.left, 0, srcImg.Width),
-                Math.Clamp(sourceRect.top, 0, srcImg.Height),
-                Math.Min(srcImg.Width, sourceRect.right),
-                Math.Min(srcImg.Height, sourceRect.bottom));
+                Math.Clamp((int) sourceRect.left, 0, srcImg.Width),
+                Math.Clamp((int) sourceRect.top, 0, srcImg.Height),
+                Math.Min(srcImg.Width, (int) sourceRect.right),
+                Math.Min(srcImg.Height, (int) sourceRect.bottom));
 
             if (srcRect.Width == 0 || srcRect.Height == 0)
             {
@@ -71,12 +71,12 @@ namespace Drizzle.Lingo.Runtime
             {
                 Log.Debug("copyPixels() doing out-of bounds read");
 
-                var padImage = NewImgForDepth(Depth, sourceRect.width, sourceRect.height);
+                var padImage = NewImgForDepth(Depth, (int) sourceRect.width, (int) sourceRect.height);
 
                 padImage.Mutate(
                     ctx =>
                     {
-                        var point = new Point(Math.Max(0, -sourceRect.left), Math.Max(0, -sourceRect.top));
+                        var point = new Point(Math.Max(0, (int) -sourceRect.left), Math.Max(0, (int) -sourceRect.top));
                         ctx.DrawImage(srcCropped, point, opacity: 1f);
                     });
 
@@ -86,9 +86,9 @@ namespace Drizzle.Lingo.Runtime
             Image.Mutate(c =>
             {
                 var srcScaled = srcCropped.Clone(s =>
-                    s.Resize(destRect.width, destRect.height, new NearestNeighborResampler()));
+                    s.Resize((int) destRect.width, (int) destRect.height, new NearestNeighborResampler()));
 
-                c.DrawImage(srcScaled, new Point(destRect.left, destRect.top), PixelColorBlendingMode.Overlay, 1);
+                c.DrawImage(srcScaled, new Point((int) destRect.left, (int) destRect.top), PixelColorBlendingMode.Overlay, 1);
             });
         }
 
@@ -102,6 +102,11 @@ namespace Drizzle.Lingo.Runtime
             throw new NotImplementedException();
         }
 
+        public void setpixel(LingoDecimal x, LingoDecimal y, LingoColor color)
+        {
+            setpixel((int)x, (int)y, color);
+        }
+
         public void setpixel(int x, int y, LingoColor color)
         {
             throw new NotImplementedException();
@@ -109,7 +114,7 @@ namespace Drizzle.Lingo.Runtime
 
         public void setpixel(LingoPoint point, LingoColor color)
         {
-            throw new NotImplementedException();
+            setpixel(point.loch, point.locv, color);
         }
 
         public LingoImage duplicate()

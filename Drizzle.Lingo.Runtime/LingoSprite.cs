@@ -6,13 +6,13 @@ namespace Drizzle.Lingo.Runtime
     {
         public LingoRect rect { get; set; }
 
-        public int locv
+        public LingoDecimal locv
         {
             get => loc.locv;
             set => loc = new LingoPoint(loch, value);
         }
 
-        public int loch
+        public LingoDecimal loch
         {
             get => loc.loch;
             set => loc = new LingoPoint(value, loch);

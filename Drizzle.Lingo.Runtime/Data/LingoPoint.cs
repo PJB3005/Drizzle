@@ -2,10 +2,20 @@
 {
     public struct LingoPoint
     {
-        public int loch;
-        public int locv;
+        // Yes, of course
+        // Despite what the documentation clearly states
+        // These contain float coordinates, not int.
+
+        public LingoDecimal loch;
+        public LingoDecimal locv;
 
         public LingoPoint(int loch, int locv)
+        {
+            this.loch = loch;
+            this.locv = locv;
+        }
+
+        public LingoPoint(LingoDecimal loch, LingoDecimal locv)
         {
             this.loch = loch;
             this.locv = locv;

@@ -10,13 +10,15 @@ namespace Drizzle.ConsoleApp
 {
     class Program
     {
-        private static int Diag(LingoPoint a, LingoPoint b)
+        /*
+        private static LingoDecimal Diag(LingoPoint a, LingoPoint b)
         {
             var w = Math.Abs(a.loch - b.loch);
             var h = Math.Abs(a.locv - b.locv);
 
             return (int) Math.Sqrt(w * w + h * h);
         }
+        */
 
         static void Main(string[] args)
         {

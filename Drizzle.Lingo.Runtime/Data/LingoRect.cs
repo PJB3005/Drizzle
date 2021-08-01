@@ -4,15 +4,23 @@ namespace Drizzle.Lingo.Runtime
 {
     public struct LingoRect : IEquatable<LingoRect>
     {
-        public int left;
-        public int top;
-        public int right;
-        public int bottom;
+        public LingoDecimal left;
+        public LingoDecimal top;
+        public LingoDecimal right;
+        public LingoDecimal bottom;
 
-        public int width => right - left;
-        public int height => bottom - top;
+        public LingoDecimal width => right - left;
+        public LingoDecimal height => bottom - top;
 
         public LingoRect(int left, int top, int right, int bottom)
+        {
+            this.left = left;
+            this.top = top;
+            this.right = right;
+            this.bottom = bottom;
+        }
+
+        public LingoRect(LingoDecimal left, LingoDecimal top, LingoDecimal right, LingoDecimal bottom)
         {
             this.left = left;
             this.top = top;
@@ -33,7 +41,7 @@ namespace Drizzle.Lingo.Runtime
                 a.bottom + b.bottom);
         }
 
-        public static LingoRect operator *(LingoRect a, int b)
+        public static LingoRect operator *(LingoRect a, LingoDecimal b)
         {
             return new(
                 a.left * b,
