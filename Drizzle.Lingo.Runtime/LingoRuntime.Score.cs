@@ -92,5 +92,11 @@ namespace Drizzle.Lingo.Runtime
 
             CurrentFrameBehavior = null;
         }
+
+        public void ScoreGo(int newFrame)
+        {
+            CurrentFrame = newFrame;
+            NextFrame = newFrame;
+        }
     }
 }

@@ -7,7 +7,7 @@ namespace Drizzle.Lingo.Runtime
     {
         public Movie _movie { get; private set; } = default!;
 
-        public void go(dynamic a) => _movie.go(a);
+        public void go(int frame) => _movie.go(frame);
         public int the_frame => _movie.frame;
 
         public sealed class Movie
@@ -22,15 +22,15 @@ namespace Drizzle.Lingo.Runtime
                 window = new Window(global);
             }
 
-            public int frame { get; set; }
+            public int frame => _global.LingoRuntime.CurrentFrame;
 
             public string path => throw new NotImplementedException();
 
             public dynamic stage => throw new NotImplementedException();
 
-            public void go(dynamic a)
+            public void go(int newFrame)
             {
-
+                _global.LingoRuntime.ScoreGo(newFrame);
             }
         }
 
