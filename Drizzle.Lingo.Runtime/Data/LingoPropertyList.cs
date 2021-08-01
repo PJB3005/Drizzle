@@ -25,7 +25,7 @@ namespace Drizzle.Lingo.Runtime
             Dict = new Dictionary<dynamic, dynamic?>(capacity);
         }
 
-        public dynamic this[dynamic index]
+        public dynamic? this[dynamic index]
         {
             get => Dict[index];
             set => Dict[index] = value;
@@ -50,7 +50,7 @@ namespace Drizzle.Lingo.Runtime
 
         public override bool TrySetMember(SetMemberBinder binder, object? value)
         {
-            Dict[binder.Name] = value;
+            Dict[new LingoSymbol(binder.Name)] = value;
             return true;
         }
     }

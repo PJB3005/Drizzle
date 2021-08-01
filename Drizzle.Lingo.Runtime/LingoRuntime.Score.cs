@@ -67,26 +67,26 @@ namespace Drizzle.Lingo.Runtime
             CurrentFrame = NextFrame;
             NextFrame += 1;
 
-            Log.Debug("Advancing to frame {CurrentFrame}", CurrentFrame);
+            // Log.Debug("Advancing to frame {CurrentFrame}", CurrentFrame);
 
             if (!ScoreFrameScripts.TryGetValue(CurrentFrame, out var frameScript))
                 return;
 
-            Log.Debug("Current frame behavior script is {FrameBehaviorScript}", frameScript);
+            // Log.Debug("Current frame behavior script is {FrameBehaviorScript}", frameScript);
 
             CurrentFrameBehavior = InstantiateBehaviorScript(frameScript);
 
             var method = CurrentFrameBehavior.GetType().GetMethod("enterFrame", BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
             if (method != null)
             {
-                Log.Debug("Invoking enterFrame handler");
+                // Log.Debug("Invoking enterFrame handler");
                 method.Invoke(CurrentFrameBehavior, Array.Empty<object?>());
             }
 
             method = CurrentFrameBehavior.GetType().GetMethod("exitFrame", BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
             if (method != null)
             {
-                Log.Debug("Invoking exitFrame handler");
+                // Log.Debug("Invoking exitFrame handler");
                 method.Invoke(CurrentFrameBehavior, Array.Empty<object?>());
             }
 

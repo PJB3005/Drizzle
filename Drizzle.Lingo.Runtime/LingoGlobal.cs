@@ -132,7 +132,7 @@ namespace Drizzle.Lingo.Runtime
         {
             var idx = fileNumber - 1;
             var entries = Directory.GetFileSystemEntries(folderPath);
-            return idx >= entries.Length ? "" : entries[idx];
+            return idx >= entries.Length ? "" : Path.GetFileName(entries[idx]);
         }
 
         public dynamic script(dynamic a)
@@ -203,9 +203,17 @@ namespace Drizzle.Lingo.Runtime
             return bA || bB ? 1 : 0;
         }
 
-        public static bool ToBool(dynamic? a)
+        public static bool ToBool(object? a)
         {
-            return a != 0 && a != null;
+            if (a is int i)
+                return i != 0;
+
+            return a != null;
+        }
+
+        public static bool ToBool(int a)
+        {
+            return a != 0;
         }
 
         public string the_platform => "win";
@@ -228,9 +236,9 @@ namespace Drizzle.Lingo.Runtime
         public static string chars(string str, int first, int last)
         {
             if (first == last)
-                return str[first + 1].ToString();
+                return str[first - 1].ToString();
 
-            return str[(first + 1)..Math.Min(str.Length, last + 1)];
+            return str[(first - 1)..Math.Min(str.Length, last)];
         }
 
         public void alert(string msg) => throw new NotImplementedException();

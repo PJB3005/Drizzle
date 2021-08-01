@@ -19,6 +19,11 @@ namespace Drizzle.Lingo.Runtime
             {
                 return 0;
             }
+
+            public int keypressed(int a)
+            {
+                return 0;
+            }
         }
     }
 }

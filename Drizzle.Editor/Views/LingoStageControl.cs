@@ -1,7 +1,7 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Media;
 
-namespace Drizzle.Editor
+namespace Drizzle.Editor.Views
 {
     public sealed class LingoStageControl : Control
     {
