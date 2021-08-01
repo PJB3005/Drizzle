@@ -46,6 +46,8 @@ namespace Drizzle.Lingo.Runtime
 
         public int linesize { get; set; }
 
+        public string text { get; set; } = "";
+
         public LingoSprite()
         {
 

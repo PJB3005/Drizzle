@@ -2,6 +2,6 @@
 {
     public class LingoBehaviorScript : LingoScriptBase
     {
-
+        public int spritenum { get; set; }
     }
 }
