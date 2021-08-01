@@ -68,8 +68,8 @@ namespace Drizzle.Lingo.Runtime
             if (CurrentFrame != NextFrame)
             {
                 changedFrame = true;
-                Log.Debug("Advancing to frame {CurrentFrame}", CurrentFrame);
                 CurrentFrame = NextFrame;
+                Log.Debug("Advancing to frame {CurrentFrame}", CurrentFrame);
             }
 
             NextFrame += 1;
