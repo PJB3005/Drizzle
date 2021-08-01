@@ -27,7 +27,7 @@ namespace Drizzle.Lingo.Runtime
 
         private Random _random = new();
 
-        public string the_moviePath => throw new NotImplementedException();
+        public string the_moviePath => LingoRuntime.MovieBasePath;
 
         public static int abs(int value) => Math.Abs(value);
         public static LingoDecimal abs(LingoDecimal value) => LingoDecimal.Abs(value);
@@ -128,9 +128,11 @@ namespace Drizzle.Lingo.Runtime
             throw new NotImplementedException();
         }
 
-        public string getnthfilenameinfolder(dynamic a, dynamic b)
+        public string getnthfilenameinfolder(string folderPath, int fileNumber)
         {
-            throw new NotImplementedException();
+            var idx = fileNumber - 1;
+            var entries = Directory.GetFileSystemEntries(folderPath);
+            return idx >= entries.Length ? "" : entries[idx];
         }
 
         public dynamic script(dynamic a)
@@ -139,7 +141,7 @@ namespace Drizzle.Lingo.Runtime
         }
 
         public int the_milliseconds => _system.milliseconds;
-        public string the_moviepath => throw new NotImplementedException();
+        public string the_moviepath => the_moviePath;
         public int objectp(dynamic d) => throw new NotImplementedException();
 
         public CastMember? member(object memberNameOrNum, object? castNameOrNum = null) =>
