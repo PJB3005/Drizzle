@@ -8,37 +8,48 @@ namespace Drizzle.Lingo.Runtime
 {
     public class LingoList : IEnumerable<object>, ILingoListDuplicate
     {
-        public List<dynamic> List { get; }
+        public List<dynamic?> List { get; }
 
-        public dynamic this[int index]
+        public dynamic? this[int index]
         {
             get => List[index - 1];
             set => List[index - 1] = value;
+        }
+
+        public dynamic? this[LingoDecimal index]
+        {
+            get => this[(int) index];
+            set => this[(int) index] = value;
         }
 
         public int count => List.Count;
 
         public LingoList()
         {
-            List = new List<dynamic>();
+            List = new List<dynamic?>();
         }
 
-        public LingoList(IEnumerable<dynamic> items)
+        public LingoList(int capacity)
         {
-            List = new List<dynamic>(items);
+            List = new List<dynamic?>(capacity);
         }
 
-        public int getpos(dynamic value)
+        public LingoList(IEnumerable<dynamic?> items)
+        {
+            List = new List<dynamic?>(items);
+        }
+
+        public int getpos(dynamic? value)
         {
             return List.IndexOf(value) + 1;
         }
 
-        public void add(dynamic value)
+        public void add(dynamic? value)
         {
             List.Add(value);
         }
 
-        public void append(dynamic value)
+        public void append(dynamic? value)
         {
             List.Add(value);
         }
@@ -54,7 +65,7 @@ namespace Drizzle.Lingo.Runtime
             List.RemoveAt(number - 1);
         }
 
-        public void addat(int number, dynamic value)
+        public void addat(int number, dynamic? value)
         {
             List.Insert(number - 1, value);
         }
