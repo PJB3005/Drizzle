@@ -101,7 +101,11 @@ namespace Drizzle.Lingo.Runtime
 
         public LingoScriptRuntimeBase CreateScript(string type, LingoList list)
         {
-            var instance = InstantiateScriptType(_parentScripts[type])!;
+            if (!_parentScripts.TryGetValue(type, out var scriptType)
+                && !_behaviorScripts.TryGetValue(type, out scriptType))
+                throw new ArgumentException("Unknown script type");
+
+            var instance = InstantiateScriptType(scriptType)!;
 
             var newMethod = instance.GetType().GetMethod("new");
             newMethod?.Invoke(instance, list.List.ToArray());
