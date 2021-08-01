@@ -25,7 +25,7 @@ namespace Drizzle.Lingo.Runtime
 
         private bool _buildingCast;
 
-        public CastMember? GetCastMember(object nameOrNum, object? cast)
+        public CastMember? GetCastMember(object nameOrNum, object? cast=null)
         {
             var found = cast switch
             {
