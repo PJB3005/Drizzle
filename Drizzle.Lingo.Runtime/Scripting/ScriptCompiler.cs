@@ -85,14 +85,14 @@ namespace Drizzle.Lingo.Runtime.Scripting
         {
             return constant.Name switch
             {
-                "backspace" => Expression.Constant(51),
+                "backspace" => Expression.Constant("\x08"),
                 "empty" => Expression.Constant(""),
-                "enter" => Expression.Constant(3),
+                "enter" => Expression.Constant("\x03"),
                 "false" => Expression.Constant(0),
                 "pi" => Expression.Constant(new LingoDecimal(Math.PI)),
                 "quote" => Expression.Constant("\""),
-                "return" => Expression.Constant(36),
-                "space" => Expression.Constant(49),
+                "return" => Expression.Constant("\r"),
+                "space" => Expression.Constant(" "),
                 "true" => Expression.Constant(1),
                 "void" => Expression.Constant(null),
                 _ => throw new ArgumentOutOfRangeException()

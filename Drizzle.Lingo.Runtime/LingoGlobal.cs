@@ -14,15 +14,15 @@ namespace Drizzle.Lingo.Runtime
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     public sealed partial class LingoGlobal
     {
-        public const int BACKSPACE = 51;
+        public const string BACKSPACE = "\x08";
         public const string EMPTY = "";
-        public const int ENTER = 3;
+        public const string ENTER = "\x03";
+        public const int TRUE = 1;
         public const int FALSE = 0;
         public static readonly LingoDecimal PI = new LingoDecimal(Math.PI);
         public const string QUOTE = "\"";
-        public const int RETURN = 36;
-        public const int SPACE = 49;
-        public const int TRUE = 1;
+        public const string RETURN = "\r";
+        public const string SPACE = " ";
         public const object VOID = null;
 
         private Random _random = new();
@@ -32,7 +32,7 @@ namespace Drizzle.Lingo.Runtime
         public static int abs(int value) => Math.Abs(value);
         public static LingoDecimal abs(LingoDecimal value) => LingoDecimal.Abs(value);
 
-        public static int sqrt(int value) => (int) Math.Sqrt(value);
+        public static int sqrt(int value) => (int)Math.Sqrt(value);
         public static LingoDecimal sqrt(LingoDecimal value) => LingoDecimal.Sqrt(value);
 
         public static int contains(string container, string value) =>
@@ -102,7 +102,7 @@ namespace Drizzle.Lingo.Runtime
 
         public dynamic xtra(object xtraNameOrNum)
         {
-            var xtraName = (string) xtraNameOrNum;
+            var xtraName = (string)xtraNameOrNum;
             xtraName = xtraName.ToLower();
 
             return xtraName switch
@@ -183,6 +183,7 @@ namespace Drizzle.Lingo.Runtime
                 Log.Warning("Invalid type comparison: {A} <> {B}", a, b);
                 return 1;
             }
+
             return a != b ? 1 : 0;
         }
 
