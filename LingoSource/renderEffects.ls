@@ -573,7 +573,7 @@ on get3DLr(lr)
   return nwLr
 end 
 
-on applyDarkSlime me, q, c
+on applyDarkSlime me, q, c, unused_nm
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
   
