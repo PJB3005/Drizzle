@@ -25,9 +25,9 @@ namespace Drizzle.Lingo.Runtime
             return linemember_helper(collection)[idx];
         }
 
-        public static char charof_helper(int idx, string str)
+        public static string charof_helper(int idx, string str)
         {
-            return str[idx - 1];
+            return str[idx - 1].ToString();
         }
 
         public static dynamic charmember_helper(string d)
@@ -64,7 +64,7 @@ namespace Drizzle.Lingo.Runtime
             // I have no idea why this is necessary.
             public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object? result)
             {
-                result = this[(int) indexes[0]];
+                result = this[(int)indexes[0]];
                 return true;
             }
 
@@ -108,7 +108,7 @@ namespace Drizzle.Lingo.Runtime
 
             public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object? result)
             {
-                result = this[(int) indexes[0]];
+                result = this[(int)indexes[0]];
                 return true;
             }
 
