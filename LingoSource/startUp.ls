@@ -211,7 +211,7 @@ on exitFrame me
   member("initImport").importFileInto("Props\init.txt")
   sav.name = "initImport"
   
-  repeat with q = 1 to 2000 then
+  repeat with q = 1 to 1000 then
     (member q of castLib 2).erase()
   end repeat
   
