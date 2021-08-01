@@ -1,6 +1,8 @@
-﻿namespace Drizzle.Lingo.Runtime
+﻿using System;
+
+namespace Drizzle.Lingo.Runtime
 {
-    public struct LingoRect
+    public struct LingoRect : IEquatable<LingoRect>
     {
         public int left;
         public int top;
@@ -38,6 +40,31 @@
                 a.top * b,
                 a.right * b,
                 a.bottom * b);
+        }
+
+        public bool Equals(LingoRect other)
+        {
+            return left == other.left && top == other.top && right == other.right && bottom == other.bottom;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is LingoRect other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(left, top, right, bottom);
+        }
+
+        public static bool operator ==(LingoRect left, LingoRect right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(LingoRect left, LingoRect right)
+        {
+            return !left.Equals(right);
         }
     }
 }
