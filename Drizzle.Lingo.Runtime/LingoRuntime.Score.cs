@@ -55,8 +55,9 @@ namespace Drizzle.Lingo.Runtime
             [90] = "massRenderLoop",
         };
 
+        private bool _doIncrementFrame = false;
         public int CurrentFrame { get; private set; } = 0;
-        public int NextFrame { get; private set; } = 1;
+        private int _lastFrame;
 
         public LingoScriptRuntimeBase? CurrentFrameBehavior { get; private set; }
         public string? LastFrameBehaviorName { get; private set; }
@@ -65,15 +66,18 @@ namespace Drizzle.Lingo.Runtime
         {
             Debug.Assert(CurrentFrameBehavior == null);
 
+            if (_doIncrementFrame)
+                CurrentFrame += 1;
+
+            _doIncrementFrame = true;
+
             var changedFrame = false;
-            if (CurrentFrame != NextFrame)
+            if (CurrentFrame != _lastFrame)
             {
+                _lastFrame = CurrentFrame;
                 changedFrame = true;
-                CurrentFrame = NextFrame;
                 Log.Debug("Advancing to frame {CurrentFrame}", CurrentFrame);
             }
-
-            NextFrame += 1;
 
             if (!ScoreFrameScripts.TryGetValue(CurrentFrame, out var frameScript))
             {
@@ -111,7 +115,7 @@ namespace Drizzle.Lingo.Runtime
         public void ScoreGo(int newFrame)
         {
             CurrentFrame = newFrame;
-            NextFrame = newFrame;
+            _doIncrementFrame = false;
         }
     }
 }
