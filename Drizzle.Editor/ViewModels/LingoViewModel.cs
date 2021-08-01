@@ -70,6 +70,7 @@ namespace Drizzle.Editor.ViewModels
             return LastFrame switch
             {
                 3 => new FrameLoadLevelViewModel(),
+                10 => new FrameLevelOverviewViewModel(),
                 _ => null
             };
         }
