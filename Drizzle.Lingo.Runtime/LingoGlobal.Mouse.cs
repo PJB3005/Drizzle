@@ -2,7 +2,7 @@
 {
     public sealed partial class LingoGlobal
     {
-        public Mouse _mouse { get; private set; }
+        public Mouse _mouse { get; private set; } = default!;
 
         public sealed class Mouse
         {

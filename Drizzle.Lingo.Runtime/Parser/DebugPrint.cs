@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace Drizzle.Lingo.Parser.Ast
+namespace Drizzle.Lingo.Runtime.Parser
 {
     public static class DebugPrint
     {

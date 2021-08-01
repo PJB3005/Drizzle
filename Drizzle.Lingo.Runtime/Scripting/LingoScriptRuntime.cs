@@ -2,12 +2,19 @@
 using System.Dynamic;
 using System.Linq.Expressions;
 
-namespace Drizzle.Lingo.Parser
+namespace Drizzle.Lingo.Runtime.Scripting
 {
-    public sealed class LingoRuntime
+    public sealed class LingoScriptRuntime
     {
         private readonly Dictionary<string, GetMemberBinder> _getMemberBinders = new();
         private readonly Dictionary<ExpressionType, BinaryOperationBinder> _binaryOperationBinders = new();
+
+        public LingoScriptRuntime(LingoGlobal global)
+        {
+            Global = global;
+        }
+
+        public LingoGlobal Global { get; }
 
         public GetMemberBinder GetGetMemberBinder(string memberName)
         {

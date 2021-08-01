@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Dynamic;
 
 namespace Drizzle.Lingo.Runtime
 {
     public sealed partial class LingoGlobal
     {
-        public Movie _movie { get; private set; }
+        public Movie _movie { get; private set; } = default!;
 
         public void go(dynamic a) => _movie.go(a);
         public int the_frame => _movie.frame;
@@ -40,9 +41,11 @@ namespace Drizzle.Lingo.Runtime
 
             }
 
-            public dynamic appearanceoptions => throw new NotImplementedException();
+            // Literally unused except for one set, just return it.
+            public dynamic appearanceoptions => new ExpandoObject();
             public int resizable { get; set; }
             public LingoRect rect { get; set; }
+            public LingoSymbol sizestate => new ("normal");
         }
     }
 }

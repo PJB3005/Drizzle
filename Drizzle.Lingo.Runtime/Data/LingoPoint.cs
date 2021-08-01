@@ -53,8 +53,8 @@
 
         public int inside(LingoRect rect)
         {
-            var b = rect.intLeft >= loch && rect.intTop >= locv &&
-                    rect.intRight <= loch && rect.intBottom <= locv;
+            var b = rect.left >= loch && rect.top >= locv &&
+                    rect.right <= loch && rect.bottom <= locv;
 
             return b ? 1 : 0;
         }

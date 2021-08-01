@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drizzle.ConsoleApp", "Drizz
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drizzle.Editor", "Drizzle.Editor\Drizzle.Editor.csproj", "{8D542145-69B2-42A9-B042-2AAACA987F3D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drizzle.Lingo.Parser", "Drizzle.Lingo.Parser\Drizzle.Lingo.Parser.csproj", "{2FA8C509-BEF1-4CFB-A7E1-836426FECA26}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Files", "Solution Files", "{3E91A48B-6C72-4705-B488-DD806374DE8C}"
 ProjectSection(SolutionItems) = preProject
 	.editorconfig = .editorconfig
@@ -62,18 +60,6 @@ Global
 		{8D542145-69B2-42A9-B042-2AAACA987F3D}.Release|x64.Build.0 = Release|Any CPU
 		{8D542145-69B2-42A9-B042-2AAACA987F3D}.Release|x86.ActiveCfg = Release|Any CPU
 		{8D542145-69B2-42A9-B042-2AAACA987F3D}.Release|x86.Build.0 = Release|Any CPU
-		{2FA8C509-BEF1-4CFB-A7E1-836426FECA26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2FA8C509-BEF1-4CFB-A7E1-836426FECA26}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2FA8C509-BEF1-4CFB-A7E1-836426FECA26}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{2FA8C509-BEF1-4CFB-A7E1-836426FECA26}.Debug|x64.Build.0 = Debug|Any CPU
-		{2FA8C509-BEF1-4CFB-A7E1-836426FECA26}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{2FA8C509-BEF1-4CFB-A7E1-836426FECA26}.Debug|x86.Build.0 = Debug|Any CPU
-		{2FA8C509-BEF1-4CFB-A7E1-836426FECA26}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2FA8C509-BEF1-4CFB-A7E1-836426FECA26}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2FA8C509-BEF1-4CFB-A7E1-836426FECA26}.Release|x64.ActiveCfg = Release|Any CPU
-		{2FA8C509-BEF1-4CFB-A7E1-836426FECA26}.Release|x64.Build.0 = Release|Any CPU
-		{2FA8C509-BEF1-4CFB-A7E1-836426FECA26}.Release|x86.ActiveCfg = Release|Any CPU
-		{2FA8C509-BEF1-4CFB-A7E1-836426FECA26}.Release|x86.Build.0 = Release|Any CPU
 		{3B36DF08-A34A-4BF1-9EE2-94E571FCF817}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3B36DF08-A34A-4BF1-9EE2-94E571FCF817}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3B36DF08-A34A-4BF1-9EE2-94E571FCF817}.Debug|x64.ActiveCfg = Debug|Any CPU

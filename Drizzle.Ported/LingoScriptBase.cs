@@ -2,7 +2,7 @@
 
 namespace Drizzle.Ported
 {
-    public abstract class LingoScriptBase
+    public abstract class LingoScriptBase : LingoScriptRuntimeBase
     {
         protected MovieScript _movieScript;
         protected LingoGlobal _global;
@@ -11,6 +11,11 @@ namespace Drizzle.Ported
         {
             _movieScript = movieScript;
             _global = global;
+        }
+
+        public sealed override void Init(object movieScript, LingoGlobal global)
+        {
+            Init((MovieScript) movieScript, global);
         }
     }
 }

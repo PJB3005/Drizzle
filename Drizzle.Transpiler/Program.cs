@@ -5,8 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using Drizzle.Lingo.Parser.Ast;
 using Drizzle.Lingo.Runtime;
+using Drizzle.Lingo.Runtime.Parser;
 using Pidgin;
 
 namespace Drizzle.Transpiler
@@ -304,7 +304,7 @@ namespace Drizzle.Transpiler
 
         private static void GenerateParamCountOverloads(
             TextWriter writer,
-            ScriptQuirks quirks,
+            ScriptQuirks? quirks,
             AstNode.Script script)
         {
             if (quirks == null)
@@ -751,6 +751,10 @@ namespace Drizzle.Transpiler
                 return WriteGlobalCall("floatmember_helper", ctx, node.Expression);
             if (node.Property == "char")
                 return WriteGlobalCall("charmember_helper", ctx, node.Expression);
+            if (node.Property == "line")
+                return WriteGlobalCall("linemember_helper", ctx, node.Expression);
+            if (node.Property == "length")
+                return WriteGlobalCall("lengthmember_helper", ctx, node.Expression);
 
             var child = WriteExpression(node.Expression, ctx);
             return $"{child}.{WriteSanitizeIdentifier(node.Property.ToLower())}";

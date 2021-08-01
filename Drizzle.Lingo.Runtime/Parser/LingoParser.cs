@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Drizzle.Lingo.Runtime;
 using Pidgin;
 using Pidgin.Expression;
 using static Pidgin.Parser;
 using static Pidgin.Parser<char>;
 
-namespace Drizzle.Lingo.Parser.Ast
+namespace Drizzle.Lingo.Runtime.Parser
 {
     public static class LingoParser
     {
@@ -449,7 +448,7 @@ namespace Drizzle.Lingo.Parser.Ast
         private static readonly Parser<char, AstNode.StatementBlock> StatementBlock =
                 Try(SkipWhiteSpaceAndLines
                         .Then(
-                            Rec(() => Statement).TraceBegin("Statementblock -> statement")
+                            Rec(() => Statement!).TraceBegin("Statementblock -> statement")
                                 .TracePos(v => $"Statement: {v}")
                                 //.Trace(DebugPrint.PrintAstNode)
                                 .Before(EndLine)))
@@ -552,7 +551,7 @@ namespace Drizzle.Lingo.Parser.Ast
         private static readonly Parser<char, AstNode.Base> If =
             IfHeader.Before(WhiteSpaceOrWrap)
                 .Then(
-                    Try(Rec(() => Statement)).Optional(),
+                    Try(Rec(() => Statement!)).Optional(),
                     (cond, imm) => (cond, imm))
                 .Bind(tuple => tuple.imm.HasValue ? IfSingleLine(tuple.cond, tuple.imm.Value) : IfBlock(tuple.cond))
                 .TracePos("End if").TraceBegin("Trying if");
@@ -622,7 +621,7 @@ namespace Drizzle.Lingo.Parser.Ast
                 .TraceBegin("trying new case body")
                 .Then(
                     Try(SkipWhiteSpaceAndLines
-                            .Then(Rec(() => Statement))
+                            .Then(Rec(() => Statement!))
                             .Before(EndLine))
                         .Until(Try(Lookahead(Try(CaseEnd).Or(Try(CaseOtherwise)).Or(CaseExpr.IgnoreResult())
                             .TraceBegin("Checking end"))))

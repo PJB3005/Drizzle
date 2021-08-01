@@ -1,10 +1,11 @@
 ﻿using System;
+using Serilog;
 
 namespace Drizzle.Lingo.Runtime
 {
     public sealed partial class LingoGlobal
     {
-        public Global _global { get; private set; }
+        public Global _global { get; private set; } = default!;
 
         public sealed class Global
         {
@@ -17,9 +18,14 @@ namespace Drizzle.Lingo.Runtime
 
             public void clearglobals()
             {
-                throw new NotImplementedException();
+                Log.Debug("Clearing globals");
+                var movieScript = _global.MovieScriptInstance;
+                foreach (var field in movieScript.GetType().GetFields())
+                {
+                    if (Attribute.IsDefined(field, typeof(LingoGlobalAttribute)))
+                        field.SetValue(movieScript, null);
+                }
             }
-
         }
     }
 }

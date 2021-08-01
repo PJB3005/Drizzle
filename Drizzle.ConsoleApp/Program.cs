@@ -2,9 +2,8 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Drizzle.Lingo.Parser;
-using Drizzle.Lingo.Parser.Ast;
 using Drizzle.Lingo.Runtime;
+using Drizzle.Lingo.Runtime.Parser;
 using Pidgin;
 
 namespace Drizzle.ConsoleApp

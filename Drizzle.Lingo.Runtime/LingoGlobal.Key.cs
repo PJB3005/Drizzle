@@ -4,7 +4,7 @@ namespace Drizzle.Lingo.Runtime
 {
     public sealed partial class LingoGlobal
     {
-        public Key _key { get; private set; }
+        public Key _key { get; private set; } = default!;
 
         public sealed class Key
         {

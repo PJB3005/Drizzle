@@ -1,9 +1,16 @@
 ﻿using System;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using Drizzle.Lingo.Runtime.Cast;
+using Drizzle.Lingo.Runtime.Xtra;
+using Serilog;
 
 namespace Drizzle.Lingo.Runtime
 {
+    /// <summary>
+    ///     Implementation of Lingo's global properties and methods.
+    /// </summary>
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     public sealed partial class LingoGlobal
     {
@@ -17,6 +24,8 @@ namespace Drizzle.Lingo.Runtime
         public const int SPACE = 49;
         public const int TRUE = 1;
         public const object VOID = null;
+
+        private Random _random = new();
 
         public string the_moviePath => throw new NotImplementedException();
 
@@ -37,7 +46,10 @@ namespace Drizzle.Lingo.Runtime
 
         public dynamic slice_helper(dynamic obj, int start, int end)
         {
-            throw new NotImplementedException();
+            if (obj is ISliceable sliceable)
+                return sliceable[start..end];
+
+            throw new NotSupportedException();
         }
 
         public dynamic new_castlib(dynamic type, dynamic lib)
@@ -47,7 +59,7 @@ namespace Drizzle.Lingo.Runtime
 
         public dynamic new_script(dynamic type, LingoList list)
         {
-            throw new NotImplementedException();
+            return LingoRuntime.CreateScript(type, list);
         }
 
         public static int thenumberof_helper(dynamic value)
@@ -58,44 +70,22 @@ namespace Drizzle.Lingo.Runtime
             throw new ArgumentException();
         }
 
-        public static int thenumberoflines_helper(string value)
-        {
-            // TODO: Requires caching
-            var count = 0;
-            foreach (var chr in value)
-            {
-                if (chr == '\n')
-                    count += 1;
-            }
-
-            return count;
-        }
-
         public static dynamic itemof_helper(dynamic idx, dynamic collection)
         {
             return collection[idx];
         }
 
-        public static string lineof_helper(int idx, string collection)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static char charof_helper(int idx, string str)
-        {
-            return str[idx];
-        }
-
         public static LingoPoint point(int h, int v) => new(h, v);
         public static LingoPoint point(LingoDecimal h, LingoDecimal v) => new((int) h.Value, (int) v.Value);
         public static LingoRect rect(int l, int t, int r, int b) => new(l, t, r, b);
+
         public static LingoRect rect(LingoDecimal l, LingoDecimal t, LingoDecimal r, LingoDecimal b) =>
             new((int) l, (int) t, (int) r, (int) b);
+
         public static LingoRect rect(LingoPoint lt, LingoPoint rb) => new(lt, rb);
 
         public static LingoDecimal floatmember_helper(int i) => new(i);
         public static dynamic floatmember_helper(dynamic d) => d.@float;
-        public static dynamic charmember_helper(string d) => throw new NotImplementedException();
 
         public static LingoDecimal cos(LingoDecimal d) => LingoDecimal.Cos(d);
         public static LingoDecimal sin(LingoDecimal d) => LingoDecimal.Sin(d);
@@ -110,9 +100,17 @@ namespace Drizzle.Lingo.Runtime
             Console.WriteLine(d);
         }
 
-        public dynamic xtra(dynamic xtraNameOrNum)
+        public dynamic xtra(object xtraNameOrNum)
         {
-            throw new NotImplementedException();
+            var xtraName = (string) xtraNameOrNum;
+            xtraName = xtraName.ToLower();
+
+            return xtraName switch
+            {
+                "fileio" => new FileIOXtra(),
+                "imgxtra" => new ImgXtra(),
+                _ => throw new NotSupportedException($"Unsupported xtra: {xtraNameOrNum}")
+            };
         }
 
         public dynamic @new(dynamic a)
@@ -144,23 +142,48 @@ namespace Drizzle.Lingo.Runtime
         public string the_moviepath => throw new NotImplementedException();
         public int objectp(dynamic d) => throw new NotImplementedException();
 
-        public dynamic member(dynamic a) => throw new NotImplementedException();
-        public dynamic member(dynamic a, dynamic b) => throw new NotImplementedException();
+        public CastMember? member(object memberNameOrNum, object? castNameOrNum = null) =>
+            LingoRuntime.GetCastMember(memberNameOrNum, castNameOrNum);
+
         public int the_randomSeed { get; set; }
         public LingoColor color(int r, int g, int b) => new(r, g, b);
         public LingoColor color(int palIdx) => throw new NotImplementedException();
-        public LingoImage image(int w, int h, int bitDepth) => throw new NotImplementedException();
-        public int random(int max) => throw new NotImplementedException();
+        public LingoImage image(int w, int h, int bitDepth) => new LingoImage(w, h, bitDepth);
+
+        public int random(int max)
+        {
+            return _random.Next(1, max + 1);
+        }
+
         public string @string(dynamic value) => value.ToString();
 
-        public static int op_eq(dynamic a, dynamic b) => a == b ? 1 : 0;
-        public static int op_ne(dynamic a, dynamic b) => a != b ? 1 : 0;
-        public static int op_lt(dynamic a, dynamic b) => a < b ? 1 : 0;
-        public static int op_le(dynamic a, dynamic b) => a >= b ? 1 : 0;
-        public static int op_gt(dynamic a, dynamic b) => a > b ? 1 : 0;
-        public static int op_ge(dynamic a, dynamic b) => a <= b ? 1 : 0;
+        public static int op_eq(dynamic? a, dynamic? b)
+        {
+            if (a?.GetType() != b?.GetType())
+            {
+                Log.Warning("Invalid type comparison: {A} == {B}", a, b);
+                return 0;
+            }
 
-        public static int op_and(dynamic a, dynamic b)
+            return a == b ? 1 : 0;
+        }
+
+        public static int op_ne(dynamic? a, dynamic? b)
+        {
+            if (a?.GetType() != b?.GetType())
+            {
+                Log.Warning("Invalid type comparison: {A} <> {B}", a, b);
+                return 1;
+            }
+            return a != b ? 1 : 0;
+        }
+
+        public static int op_lt(dynamic? a, dynamic? b) => a < b ? 1 : 0;
+        public static int op_le(dynamic? a, dynamic? b) => a >= b ? 1 : 0;
+        public static int op_gt(dynamic? a, dynamic? b) => a > b ? 1 : 0;
+        public static int op_ge(dynamic? a, dynamic? b) => a <= b ? 1 : 0;
+
+        public static int op_and(dynamic? a, dynamic? b)
         {
             // Lingo does not short circuit because of course not...
             var bA = ToBool(a);
@@ -169,7 +192,7 @@ namespace Drizzle.Lingo.Runtime
             return bA && bB ? 1 : 0;
         }
 
-        public static int op_or(dynamic a, dynamic b)
+        public static int op_or(dynamic? a, dynamic? b)
         {
             // Lingo does not short circuit because of course not...
             var bA = ToBool(a);
@@ -178,21 +201,27 @@ namespace Drizzle.Lingo.Runtime
             return bA || bB ? 1 : 0;
         }
 
-        public static bool ToBool(dynamic a)
+        public static bool ToBool(dynamic? a)
         {
             return a != 0 && a != null;
         }
 
         public string the_platform => "win";
 
-        public dynamic sprite(dynamic a) => throw new NotImplementedException();
+        public LingoSprite sprite(dynamic a)
+        {
+            Log.Warning("sprite() not implemented");
+            return new LingoSprite();
+        }
+
         public dynamic sound(dynamic a) => throw new NotImplementedException();
-        public dynamic value(string a) => throw new NotImplementedException();
         public dynamic call(LingoSymbol a) => throw new NotImplementedException();
         public dynamic call(LingoSymbol a, dynamic a1) => throw new NotImplementedException();
         public dynamic call(LingoSymbol a, dynamic a1, dynamic a2) => throw new NotImplementedException();
         public dynamic call(LingoSymbol a, dynamic a1, dynamic a2, dynamic a3) => throw new NotImplementedException();
-        public dynamic call(LingoSymbol a, dynamic a1, dynamic a2, dynamic a3, dynamic a4) => throw new NotImplementedException();
+
+        public dynamic call(LingoSymbol a, dynamic a1, dynamic a2, dynamic a3, dynamic a4) =>
+            throw new NotImplementedException();
 
         public static string chars(string str, int first, int last)
         {
@@ -228,5 +257,10 @@ namespace Drizzle.Lingo.Runtime
         }
 
         public void createfile(dynamic d, string f) => d.createfile(f);
+
+        public LingoScriptRuntimeBase MovieScriptInstance => LingoRuntime.MovieScriptInstance;
+        public static string last_char(string str) => str[^1].ToString();
+        public static int stringp(object str) => str is string ? 1 : 0;
+        public LingoCastLib castlib(dynamic nameOrNum) => throw new NotImplementedException();
     }
 }

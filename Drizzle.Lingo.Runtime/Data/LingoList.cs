@@ -10,9 +10,11 @@ namespace Drizzle.Lingo.Runtime
 
         public dynamic this[int index]
         {
-            get => List[index + 1];
-            set => List[index + 1] = value;
+            get => List[index - 1];
+            set => List[index - 1] = value;
         }
+
+        public int count => List.Count;
 
         public LingoList()
         {
@@ -29,6 +31,11 @@ namespace Drizzle.Lingo.Runtime
             return List.IndexOf(value) + 1;
         }
 
+        public void add(dynamic value)
+        {
+            List.Add(value);
+        }
+
         public IEnumerator<object> GetEnumerator()
         {
             return List.GetEnumerator();
@@ -41,22 +48,22 @@ namespace Drizzle.Lingo.Runtime
 
         public static LingoList operator +(LingoList a, dynamic b)
         {
-            return new(a.Select(e => e + b));
+            return new(a.Select(e => (dynamic)e + b));
         }
 
         public static LingoList operator -(LingoList a, dynamic b)
         {
-            return new(a.Select(e => e - b));
+            return new(a.Select(e => (dynamic)e - b));
         }
 
         public static LingoList operator *(LingoList a, dynamic b)
         {
-            return new(a.Select(e => e * b));
+            return new(a.Select(e => (dynamic)e * b));
         }
 
         public static LingoList operator /(LingoList a, dynamic b)
         {
-            return new(a.Select(e => e / b));
+            return new(a.Select(e => (dynamic)e / b));
         }
     }
 }

@@ -1,11 +1,8 @@
 ﻿namespace Drizzle.Lingo.Runtime
 {
     // NOT a script instance, those are different!
-    public abstract class LingoScriptBase
+    public abstract class LingoScriptRuntimeBase
     {
-        protected LingoScriptBase()
-        {
-
-        }
+        public abstract void Init(object movieScript, LingoGlobal global);
     }
 }
