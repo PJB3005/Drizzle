@@ -365,7 +365,7 @@ namespace Drizzle.Lingo.Runtime.Parser
                     String("char").Before(ThisShouldBeAProperBound).ThenReturn(AstNode.ThingOfType.Char)
                 )),
                 subExpr.Before(Tok("of")),
-                subExpr);
+                Rec(() => ExpressionNoBinOps));
 
         private static Parser<char, AstNode.Base> MemberOfCastLib(Parser<char, AstNode.Base> subExpr) =>
             Try(Tok("member")
@@ -375,10 +375,11 @@ namespace Drizzle.Lingo.Runtime.Parser
                     (member, castLib) => (AstNode.Base) new AstNode.GlobalCall("member", new[] {member, castLib})));
 
 
-        public static readonly Parser<char, AstNode.Base> Expression = ExpressionFunc(true);
-        private static readonly Parser<char, AstNode.Base> ExpressionNoEquals = ExpressionFunc(false);
+        public static readonly Parser<char, AstNode.Base> Expression = ExpressionFunc(true, true);
+        private static readonly Parser<char, AstNode.Base> ExpressionNoEquals = ExpressionFunc(false, true);
+        private static readonly Parser<char, AstNode.Base> ExpressionNoBinOps = ExpressionFunc(false, false);
 
-        private static Parser<char, AstNode.Base> ExpressionFunc(bool allowEquals) =>
+        private static Parser<char, AstNode.Base> ExpressionFunc(bool allowEquals, bool allowBinOps) =>
             ExpressionParser.Build<char, AstNode.Base>(
                 _ =>
                 {
@@ -424,6 +425,10 @@ namespace Drizzle.Lingo.Runtime.Parser
                             .And(Operator.InfixL(Or /*.TraceBegin("Or")*/))
                             .And(Operator.InfixL(Mod /*.TraceBegin("Mod")*/)),
                     };
+
+                    if (!allowBinOps)
+                        operatorTable = operatorTable.Where(t => !t.InfixLOps.Any()).ToArray();
+
                     return (
                         OneOf(
                             NewCastLib(expr),
