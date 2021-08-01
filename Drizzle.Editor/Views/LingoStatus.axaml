@@ -8,6 +8,6 @@
     
     <StackPanel Orientation="Horizontal">
         <TextBlock Text="{Binding LastFrame,StringFormat=Current frame: {0}}" />
-        <TextBlock Margin="2 0" Text="{Binding LastFrameName,StringFormat=Behavior: {0}}" />
+        <TextBlock Margin="8 0" Text="{Binding LastFrameName,StringFormat=Behavior: {0}}" />
     </StackPanel>
 </UserControl>
