@@ -119,5 +119,10 @@ namespace Drizzle.Lingo.Runtime
         {
             throw new NotImplementedException();
         }
+
+        public string numtochar(int num)
+        {
+            return ((char)num).ToString();
+        }
     }
 }
