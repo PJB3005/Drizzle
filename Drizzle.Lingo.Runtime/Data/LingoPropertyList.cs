@@ -39,6 +39,12 @@ namespace Drizzle.Lingo.Runtime
             Dict[key] = value;
         }
 
+        public object? findpos(dynamic? key)
+        {
+            // findpos is only used as a "does it exist in the list" check so this is fine.
+            return Dict.ContainsKey(key) ? new object() : null;
+        }
+
         public override bool TryGetMember(GetMemberBinder binder, out object? result)
         {
             if (Dict.TryGetValue(binder.Name, out result) ||
