@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Pidgin;
 using Pidgin.Expression;
@@ -193,11 +194,39 @@ namespace Drizzle.Lingo.Runtime.Parser
                 .Then(Parenthesized(subExpr /*.Trace(arg => $"arg: {arg}")*/.Separated(Tok(','))),
                     (ident, args) => (AstNode.Base)new AstNode.GlobalCall(ident, args.ToArray()));
 
-        private static Parser<char, AstNode.Base> List(Parser<char, AstNode.Base> subExpr) =>
-            subExpr
+        private static Parser<char, (AstNode.Base, AstNode.Base?)> ListLikeElem(Parser<char, AstNode.Base> subExpr) =>
+            Map(
+                (a, b) => (a, b.HasValue ? b.Value : null),
+                subExpr,
+                Tok(':').Then(subExpr).Optional());
+
+        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
+        private static Parser<char, AstNode.Base> ListLike(Parser<char, AstNode.Base> subExpr) =>
+            ListLikeElem(subExpr)
                 .Separated(Tok(','))
                 .Between(Tok('['), Tok(']'))
-                .Select(v => (AstNode.Base)new AstNode.List(v.ToArray()));
+                .Select<AstNode.Base>(elems =>
+                {
+                    var propList = false;
+                    var linList = false;
+
+                    foreach (var elem in elems)
+                    {
+                        if (elem.Item2 == null)
+                            linList = true;
+                        else
+                            propList = true;
+                    }
+
+                    if (propList && linList)
+                        throw new Exception("List contains mixed property/linear segments!");
+                    if (propList)
+                        return new AstNode.PropertyList(
+                            elems.Select(ab => KeyValuePair.Create(ab.Item1, ab.Item2!)).ToArray());
+                    if (linList)
+                        return new AstNode.List(elems.Select(ab => ab.Item1).ToArray());
+                    return new AstNode.List(Array.Empty<AstNode.Base>());
+                });
 
         private static Parser<char, AstNode.Base> PropertyListCore(Parser<char, AstNode.Base> subExpr) =>
             OneOf(
@@ -214,10 +243,14 @@ namespace Drizzle.Lingo.Runtime.Parser
                     .Select(v => (AstNode.Base)new AstNode.PropertyList(v.ToArray()))
             );
 
-        private static Parser<char, AstNode.Base> PropertyList(Parser<char, AstNode.Base> subExpr) =>
-            OneOf(
-                PropertyListCore(subExpr).Between(Tok('['), Tok(']')),
-                PropertyListCore(subExpr).Between(Tok('{'), Tok('}')));
+        private static Parser<char, AstNode.Base> PropListEmpty =
+            Tok('[').Then(Tok(':')).Then(Tok(']'))
+                .ThenReturn<AstNode.Base>(
+                    new AstNode.PropertyList(Array.Empty<KeyValuePair<AstNode.Base, AstNode.Base>>()));
+
+        private static Parser<char, AstNode.Base> ParameterList(Parser<char, AstNode.Base> subExpr) =>
+            PropertyListCore(subExpr)
+                .Between(Tok('{'), Tok('}'));
 
         private static Parser<char, Func<AstNode.Base, AstNode.Base>> MemberCall(Parser<char, AstNode.Base> subExpr) =>
             Tok('.').Then(Identifier)
@@ -444,8 +477,9 @@ namespace Drizzle.Lingo.Runtime.Parser
                             The(expr) /*.TraceBegin("TRYING THE")*/,
                             VariableName /*.TraceBegin("TRYING VAR")*/,
                             Parenthesized(expr) /*.TraceBegin("TRYING PARENS")*/,
-                            Try(PropertyList(expr)) /*.TraceBegin("TRYING PROPERTY LIST")*/,
-                            List(expr) /*.TraceBegin("TRYING LIST")*/
+                            Try(PropListEmpty),
+                            ListLike(expr),
+                            ParameterList(expr) /*.TraceBegin("TRYING PROPERTY LIST")*/
                         ).TraceBegin("TRYING TERM").TracePos(n => $"term: {DebugPrint.PrintAstNode(n)}"),
                         operatorTable
                     );
