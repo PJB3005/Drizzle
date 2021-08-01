@@ -65,6 +65,7 @@ namespace Drizzle.Lingo.Runtime
             Debug.Assert(CurrentFrameBehavior == null);
 
             CurrentFrame = NextFrame;
+            NextFrame += 1;
 
             Log.Debug("Advancing to frame {CurrentFrame}", CurrentFrame);
 
