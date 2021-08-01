@@ -36,7 +36,7 @@ namespace Drizzle.Transpiler
         {
             ["fiffigt"] = new ScriptQuirks
             {
-                BlackListHandlers = {"giveHitSurf"}
+                BlackListHandlers = { "giveHitSurf" }
             },
             ["levelRendering"] = new ScriptQuirks
             {
@@ -75,6 +75,13 @@ namespace Drizzle.Transpiler
                 OverloadParamCounts =
                 {
                     ("tedraw", 2)
+                }
+            },
+            ["loadLevel"] = new ScriptQuirks
+            {
+                OverloadParamCounts =
+                {
+                    ("loadlevel", 1)
                 }
             }
         };
@@ -268,7 +275,11 @@ namespace Drizzle.Transpiler
                 handlerContext.Locals.UnionWith(handler.Parameters);
                 handlerContext.Locals.UnionWith(props);
 
-                var paramsText = string.Join(',', handler.Parameters.Select(p => $"dynamic {p.ToLower()}"));
+                var paramsList = handler.Parameters.ToList();
+                if (paramsList.Count > 0 && paramsList[0] == "me")
+                    paramsList.RemoveAt(0);
+
+                var paramsText = string.Join(',', paramsList.Select(p => $"dynamic {p.ToLower()}"));
                 var handlerLower = handler.Name.ToLower();
                 writer.WriteLine($"public dynamic {WriteSanitizeIdentifier(handlerLower)}({paramsText}) {{");
 
@@ -295,7 +306,6 @@ namespace Drizzle.Transpiler
 
                 // Handler end.
                 writer.WriteLine("}");
-
             }
 
             GenerateParamCountOverloads(writer, quirks, script);
@@ -311,7 +321,10 @@ namespace Drizzle.Transpiler
                 return;
 
             var handlers = script.Nodes.OfType<AstNode.Handler>()
-                .ToDictionary(h => h.Name, h => h.Parameters.Length, StringComparer.InvariantCultureIgnoreCase);
+                .ToDictionary(
+                    h => h.Name,
+                    h => h.Parameters.Count(p => p != "me"),
+                    StringComparer.InvariantCultureIgnoreCase);
 
             foreach (var (h, count) in quirks.OverloadParamCounts)
             {
@@ -418,7 +431,7 @@ namespace Drizzle.Transpiler
 
         private static void WriteIf(AstNode.If node, HandlerContext ctx)
         {
-            var exprParams = new ExpressionParams {WantBool = true};
+            var exprParams = new ExpressionParams { WantBool = true };
             var cond = WriteExpression(node.Condition, ctx, exprParams);
 
             ctx.Writer.WriteLine(exprParams.BoolGranted
@@ -482,7 +495,7 @@ namespace Drizzle.Transpiler
 
         private static void WriteRepeatWhile(AstNode.RepeatWhile node, HandlerContext ctx)
         {
-            var exprParams = new ExpressionParams {WantBool = true};
+            var exprParams = new ExpressionParams { WantBool = true };
             var expr = WriteExpression(node.Condition, ctx);
 
             ctx.Writer.WriteLine(exprParams.BoolGranted
@@ -660,6 +673,10 @@ namespace Drizzle.Transpiler
         private static string WriteVariableName(AstNode.VariableName variableName, HandlerContext ctx)
         {
             var name = variableName.Name.ToLower();
+
+            if (name == "me")
+                return "this";
+
             if (ctx.Locals.Contains(name))
                 return name;
 
@@ -681,7 +698,7 @@ namespace Drizzle.Transpiler
         {
             if (unaryOperator.Type == AstNode.UnaryOperatorType.Not)
             {
-                var subParams = new ExpressionParams {WantBool = true};
+                var subParams = new ExpressionParams { WantBool = true };
                 var expr = WriteExpression(unaryOperator.Expression, ctx, subParams);
 
                 var sb = new StringBuilder();
@@ -696,7 +713,7 @@ namespace Drizzle.Transpiler
 
                 sb.Insert(0, '!');
 
-                if (exprParams is not {WantBool: true})
+                if (exprParams is not { WantBool: true })
                 {
                     sb.Insert(0, '(');
                     sb.Append(" ? 1 : 0)");
@@ -912,8 +929,8 @@ namespace Drizzle.Transpiler
             HandlerContext ctx,
             ExpressionParams expressionParams)
         {
-            var exprParamLeft = new ExpressionParams {WantBool = true};
-            var exprParamRight = new ExpressionParams {WantBool = true};
+            var exprParamLeft = new ExpressionParams { WantBool = true };
+            var exprParamRight = new ExpressionParams { WantBool = true };
 
             var exprLeft = WriteExpression(node.Left, ctx, exprParamLeft);
             var exprRight = WriteExpression(node.Right, ctx, exprParamRight);
@@ -947,7 +964,7 @@ namespace Drizzle.Transpiler
             var method = typeof(LingoGlobal).GetMember(name,
                 BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
 
-            var isStatic = method.Any(m => m is MethodInfo {IsStatic: true});
+            var isStatic = method.Any(m => m is MethodInfo { IsStatic: true });
 
             var sb = new StringBuilder();
 

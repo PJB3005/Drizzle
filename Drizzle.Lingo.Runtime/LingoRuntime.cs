@@ -102,7 +102,7 @@ namespace Drizzle.Lingo.Runtime
             var instance = InstantiateScriptType(_parentScripts[type])!;
 
             var newMethod = instance.GetType().GetMethod("new");
-            newMethod?.Invoke(instance, new[] { instance }.Concat(list.List).ToArray());
+            newMethod?.Invoke(instance, list.List.ToArray());
 
             return instance;
         }

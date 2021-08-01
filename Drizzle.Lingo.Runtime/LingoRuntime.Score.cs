@@ -79,14 +79,14 @@ namespace Drizzle.Lingo.Runtime
             if (method != null)
             {
                 Log.Debug("Invoking enterFrame handler");
-                method.Invoke(CurrentFrameBehavior, new object?[] {null});
+                method.Invoke(CurrentFrameBehavior, Array.Empty<object?>());
             }
 
             method = CurrentFrameBehavior.GetType().GetMethod("exitFrame", BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
             if (method != null)
             {
                 Log.Debug("Invoking exitFrame handler");
-                method.Invoke(CurrentFrameBehavior, new object?[] {null});
+                method.Invoke(CurrentFrameBehavior, Array.Empty<object?>());
             }
 
             CurrentFrameBehavior = null;
