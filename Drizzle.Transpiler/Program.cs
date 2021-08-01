@@ -425,7 +425,7 @@ namespace Drizzle.Transpiler
                 throw new NotSupportedException();
 
             var coll = WriteExpression(node.Collection, ctx);
-            var expr = WriteExpression(node.Collection, ctx);
+            var expr = WriteExpression(node.Expression, ctx);
             ctx.Writer.WriteLine($"{coll} += {expr}.ToString();");
         }
 
