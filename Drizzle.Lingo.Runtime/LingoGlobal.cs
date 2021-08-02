@@ -84,6 +84,7 @@ namespace Drizzle.Lingo.Runtime
 
         public static LingoRect rect(LingoPoint lt, LingoPoint rb) => new(lt, rb);
 
+        public static LingoDecimal floatmember_helper(LingoDecimal dec) => dec;
         public static LingoDecimal floatmember_helper(int i) => new(i);
         public static dynamic floatmember_helper(dynamic d) => d.@float;
 
