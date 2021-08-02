@@ -913,21 +913,19 @@ namespace Drizzle.Transpiler
             var exprLeft = WriteExpression(node.Left, ctx);
             var exprRight = WriteExpression(node.Right, ctx);
 
-            var op = node.Type switch
-            {
-                // Use non-short-circuiting ops.
-                AstNode.BinaryOperatorType.LessThan => "<",
-                AstNode.BinaryOperatorType.LessThanOrEqual => "<=",
-                AstNode.BinaryOperatorType.GreaterThanOrEqual => ">=",
-                AstNode.BinaryOperatorType.GreaterThan => ">",
-                AstNode.BinaryOperatorType.Equal => "==",
-                AstNode.BinaryOperatorType.NotEqual => "!=",
-                _ => throw new ArgumentOutOfRangeException()
-            };
-
             expressionParams.BoolGranted = true;
 
-            return $"({exprLeft} {op} {exprRight})";
+            return node.Type switch
+            {
+                // Use non-short-circuiting ops.
+                AstNode.BinaryOperatorType.LessThan => $"{exprLeft} < {exprRight}",
+                AstNode.BinaryOperatorType.LessThanOrEqual => $"{exprLeft} <= {exprRight}",
+                AstNode.BinaryOperatorType.GreaterThanOrEqual => $"{exprLeft} >= {exprRight}",
+                AstNode.BinaryOperatorType.GreaterThan => $"{exprLeft} > {exprRight}",
+                AstNode.BinaryOperatorType.Equal => $"LingoGlobal.op_eq_b({exprLeft}, {exprRight})",
+                AstNode.BinaryOperatorType.NotEqual => $"LingoGlobal.op_ne_b({exprLeft}, {exprRight})",
+                _ => throw new ArgumentOutOfRangeException()
+            };
         }
 
         private static string WriteBinaryBoolOp(

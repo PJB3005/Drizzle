@@ -165,26 +165,33 @@ namespace Drizzle.Lingo.Runtime
 
         public string @string(dynamic value) => value.ToString();
 
-        public static int op_eq(dynamic? a, dynamic? b)
+        public static bool op_eq_b(dynamic? a, dynamic? b)
         {
+            if ((a is 0 && b is null) || (a is null && b is 0))
+                return true;
+
             if (a?.GetType() != b?.GetType())
             {
                 // Log.Warning("Invalid type comparison: {A} == {B}", a, b);
-                return 0;
+                return false;
             }
 
-            return a == b ? 1 : 0;
+            return a == b;
+        }
+
+        public static int op_eq(dynamic? a, dynamic? b)
+        {
+            return op_eq_b(a, b) ? 1 : 0;
+        }
+
+        public static bool op_ne_b(dynamic? a, dynamic? b)
+        {
+            return !op_eq_b(a, b);
         }
 
         public static int op_ne(dynamic? a, dynamic? b)
         {
-            if (a?.GetType() != b?.GetType())
-            {
-                // Log.Warning("Invalid type comparison: {A} <> {B}", a, b);
-                return 1;
-            }
-
-            return a != b ? 1 : 0;
+            return op_eq_b(a, b) ? 0 : 1;
         }
 
         public static int op_lt(dynamic? a, dynamic? b) => a < b ? 1 : 0;
