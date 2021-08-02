@@ -6,7 +6,6 @@ namespace Drizzle.Lingo.Runtime.Xtra
     public sealed class FileIOXtra : BaseXtra
     {
         private FileStream? _file;
-        private StreamReader? _reader;
 
         public void openfile(string filePath, int mode = 0)
         {
@@ -19,19 +18,55 @@ namespace Drizzle.Lingo.Runtime.Xtra
             };
 
             _file = File.Open(filePath, FileMode.Open, access);
-            _reader = new StreamReader(_file, leaveOpen: true);
         }
 
         public void closefile()
         {
             _file?.Dispose();
             _file = null;
-            _reader = null;
+        }
+
+        public void delete()
+        {
+            if (_file == null)
+                throw new InvalidOperationException("File not open!");
+
+            var name = _file.Name;
+            closefile();
+
+            File.Delete(name);
+        }
+
+        public void createfile(string path)
+        {
+            File.Create(path).Dispose();
+        }
+
+        public void writestring(string str)
+        {
+            if (_file == null)
+                throw new InvalidOperationException("File not open!");
+
+            using var writer = new StreamWriter(_file, leaveOpen: true);
+            writer.Write(str);
+        }
+
+        public void writereturn(LingoSymbol type)
+        {
+            if (_file == null)
+                throw new InvalidOperationException("File not open!");
+
+            using var writer = new StreamWriter(_file, leaveOpen: true);
+            writer.Write("\r\n");
         }
 
         public string readfile()
         {
-            return _reader!.ReadToEnd();
+            if (_file == null)
+                throw new InvalidOperationException("File not open!");
+
+            var reader = new StreamReader(_file, leaveOpen: true);
+            return reader.ReadToEnd();
         }
 
         public override BaseXtra Duplicate()
