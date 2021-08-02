@@ -132,22 +132,11 @@ namespace Drizzle.Lingo.Runtime
             if (match.Groups[3].Success)
                 name = match.Groups[3].Value;
 
-            var type = ext.ToLower() switch
-            {
-                "png" or "bmp" => CastMemberType.Bitmap,
-                "lingo" => CastMemberType.Script,
-                "txt" => CastMemberType.Text,
-                _ => CastMemberType.Empty
-            };
-
             var member = GetCastMember(number, cast)!;
-            member.name = name;
-            member.Type = type;
+            member.ImportFile(file, ext, name);
 
-            if (type == CastMemberType.Empty)
+            if (member.Type == CastMemberType.Empty)
                 Log.Warning("Warning: unrecognized cast member type {CastFileName}", file);
-            else
-                member.importfileinto(file);
 
             return member;
         }

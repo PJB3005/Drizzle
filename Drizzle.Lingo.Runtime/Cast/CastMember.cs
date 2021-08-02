@@ -1,5 +1,5 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using System.IO;
 
 namespace Drizzle.Lingo.Runtime.Cast
 {
@@ -39,11 +39,29 @@ namespace Drizzle.Lingo.Runtime.Cast
 
         public void importfileinto(string path, LingoPropertyList? propList = null)
         {
-            ImportFileImpl(Runtime.GetFilePath(path));
+            var fullPath = Runtime.GetFilePath(path);
+            var name = Path.GetFileNameWithoutExtension(path);
+            var ext = Path.GetExtension(path)[1..];
+            ImportFile(fullPath, ext, name);
         }
 
-        public void ImportFileImpl(string fullPath)
+        public void ImportFile(string fullPath, string ext, string? name)
         {
+            erase();
+
+            var type = ext switch
+            {
+                "png" or "bmp" => CastMemberType.Bitmap,
+                "lingo" => CastMemberType.Script,
+                "txt" => CastMemberType.Text,
+                _ => CastMemberType.Empty
+            };
+
+            Type = type;
+
+            if (name != null)
+                this.name = name;
+
             switch (Type)
             {
                 case CastMemberType.Bitmap:
