@@ -41,22 +41,22 @@
             return new(a.loch / b.loch, a.locv / b.locv);
         }
 
-        public static LingoPoint operator +(LingoPoint a, int b)
+        public static LingoPoint operator +(LingoPoint a, LingoDecimal b)
         {
             return new(a.loch + b, a.locv + b);
         }
 
-        public static LingoPoint operator -(LingoPoint a, int b)
+        public static LingoPoint operator -(LingoPoint a, LingoDecimal b)
         {
             return new(a.loch - b, a.locv - b);
         }
 
-        public static LingoPoint operator *(LingoPoint a, int b)
+        public static LingoPoint operator *(LingoPoint a, LingoDecimal b)
         {
             return new(a.loch * b, a.locv * b);
         }
 
-        public static LingoPoint operator /(LingoPoint a, int b)
+        public static LingoPoint operator /(LingoPoint a, LingoDecimal b)
         {
             return new(a.loch / b, a.locv / b);
         }
