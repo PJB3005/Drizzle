@@ -80,6 +80,11 @@ namespace Drizzle.Lingo.Runtime
             return new LingoList(List.Select(i => DuplicateIfList(i)));
         }
 
+        public void sort()
+        {
+            List.Sort(LingoComparer.Instance);
+        }
+
         ILingoListDuplicate ILingoListDuplicate.duplicate()
         {
             return duplicate();
@@ -141,6 +146,51 @@ namespace Drizzle.Lingo.Runtime
         public static object? DuplicateIfList(object? obj)
         {
             return obj is ILingoListDuplicate dup ? dup.duplicate() : obj;
+        }
+
+        private sealed class LingoComparer : IComparer<object?>
+        {
+            public static readonly LingoComparer Instance = new ();
+
+            public int Compare(object? x, object? y)
+            {
+                if (x == y)
+                    return 0;
+
+                if (x == null)
+                    return -1;
+
+                if (y == null)
+                    return 1;
+
+                // Try a numeric compare if they're both numbers.
+                if (TryDecimal(x, out var decX) && TryDecimal(y, out var decY))
+                    return decX.CompareTo(decY);
+
+                // Compare by string.
+                var strX = x.ToString();
+                var strY = y.ToString();
+
+                return string.Compare(strX, strY, StringComparison.Ordinal);
+
+                bool TryDecimal(object? val, out LingoDecimal dec)
+                {
+                    if (val is LingoDecimal decC)
+                    {
+                        dec = decC;
+                        return true;
+                    }
+
+                    if (val is int i)
+                    {
+                        dec = i;
+                        return true;
+                    }
+
+                    dec = default;
+                    return false;
+                }
+            }
         }
     }
 }
