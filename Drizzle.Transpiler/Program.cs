@@ -648,6 +648,9 @@ namespace Drizzle.Transpiler
 
         private static string WritePropertyList(AstNode.PropertyList node, HandlerContext ctx)
         {
+            if (node.Values.Length == 0)
+                return "new LingoPropertyList()";
+
             var sb = new StringBuilder();
             sb.Append("new LingoPropertyList {");
             var first = true;
@@ -794,8 +797,11 @@ namespace Drizzle.Transpiler
 
         private static string WriteList(AstNode.List node, HandlerContext ctx)
         {
+            if (node.Values.Length == 0)
+                return "new LingoList()";
+
             var args = node.Values.Select(v => WriteExpression(v, ctx));
-            return $"new LingoList(new dynamic[] {{ {string.Join(',', args)} }})";
+            return $"new LingoList {{ {string.Join(',', args)} }}";
         }
 
         private static string WriteInteger(AstNode.Integer node, HandlerContext ctx)
