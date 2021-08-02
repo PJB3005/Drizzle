@@ -465,6 +465,8 @@ namespace Drizzle.Lingo.Runtime.Parser
 
                     return (
                         OneOf(
+                            Try(PropListEmpty),
+                            ListLike(expr),
                             NewCastLib(expr),
                             NewScript(expr),
                             MemberOfCastLib(expr),
@@ -477,8 +479,6 @@ namespace Drizzle.Lingo.Runtime.Parser
                             The(expr) /*.TraceBegin("TRYING THE")*/,
                             VariableName /*.TraceBegin("TRYING VAR")*/,
                             Parenthesized(expr) /*.TraceBegin("TRYING PARENS")*/,
-                            Try(PropListEmpty),
-                            ListLike(expr),
                             ParameterList(expr) /*.TraceBegin("TRYING PROPERTY LIST")*/
                         ).TraceBegin("TRYING TERM").TracePos(n => $"term: {DebugPrint.PrintAstNode(n)}"),
                         operatorTable
