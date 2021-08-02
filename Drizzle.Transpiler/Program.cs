@@ -443,7 +443,7 @@ namespace Drizzle.Transpiler
 
             if (node.Else != null && node.Else.Statements.Length > 0)
             {
-                var elseIf = node.Else.Statements[0] is AstNode.If;
+                var elseIf = node.Else.Statements.Length == 1 && node.Else.Statements[0] is AstNode.If;
 
                 ctx.Writer.Write("else ");
                 // If the else clause is another if it's an else-if chain
