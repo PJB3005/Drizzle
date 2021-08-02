@@ -194,6 +194,7 @@ namespace Drizzle.Lingo.Runtime.Parser
 
                 if (Else != null)
                 {
+                    sb.Append(Indent(indentation));
                     sb.Append("} Else {\n");
                     Else.DebugPrint(sb, indentation + 1);
                 }
