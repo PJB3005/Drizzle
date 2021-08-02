@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
 using Serilog;
 using Serilog.Core;
 using SixLabors.ImageSharp;
@@ -164,6 +166,17 @@ namespace Drizzle.Lingo.Runtime
         {
             Log.Warning("createmask(): Not implemented");
             return null;
+        }
+
+        public void ShowImage()
+        {
+            var tmp = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.png");
+            {
+                using var file = File.OpenWrite(tmp);
+                Image.SaveAsPng(file);
+            }
+
+            Process.Start(new ProcessStartInfo(tmp) { UseShellExecute = true });
         }
 
         public static LingoImage LoadFromPath(string path)
