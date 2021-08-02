@@ -194,7 +194,7 @@ namespace Drizzle.Lingo.Runtime.Parser
                 .Then(Parenthesized(subExpr /*.Trace(arg => $"arg: {arg}")*/.Separated(Tok(','))),
                     (ident, args) => (AstNode.Base)new AstNode.GlobalCall(ident, args.ToArray()));
 
-        private static Parser<char, (AstNode.Base, AstNode.Base?)> ListLikeElem(Parser<char, AstNode.Base> subExpr) =>
+        private static Parser<char, (AstNode.Base k, AstNode.Base? v)> ListLikeElem(Parser<char, AstNode.Base> subExpr) =>
             Map(
                 (a, b) => (a, b.HasValue ? b.Value : null),
                 subExpr,
@@ -221,8 +221,20 @@ namespace Drizzle.Lingo.Runtime.Parser
                     if (propList && linList)
                         throw new Exception("List contains mixed property/linear segments!");
                     if (propList)
-                        return new AstNode.PropertyList(
-                            elems.Select(ab => KeyValuePair.Create(ab.Item1, ab.Item2!)).ToArray());
+                    {
+                        var items = elems.Select(ab =>
+                        {
+                            var (k, v) = ab;
+                            // Symbols without # in a proplist get parsed as variable name, fix that.
+                            if (k is AstNode.VariableName vn)
+                                k = new AstNode.Symbol(vn.Name);
+
+                            return KeyValuePair.Create(k, v!);
+                        }).ToArray();
+
+                        return new AstNode.PropertyList(items);
+                    }
+
                     if (linList)
                         return new AstNode.List(elems.Select(ab => ab.Item1).ToArray());
                     return new AstNode.List(Array.Empty<AstNode.Base>());
