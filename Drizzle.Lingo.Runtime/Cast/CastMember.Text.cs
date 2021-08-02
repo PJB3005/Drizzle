@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Text;
 
 namespace Drizzle.Lingo.Runtime.Cast
 {
@@ -24,7 +25,20 @@ namespace Drizzle.Lingo.Runtime.Cast
 
         private void ImportFileImplText(string path)
         {
-            text = File.ReadAllText(path);
+            using var sr = new StreamReader(path);
+            var sb = new StringBuilder();
+
+            while (true)
+            {
+                var line = sr.ReadLine();
+                if (line == null)
+                    break;
+
+                sb.Append(line);
+                sb.Append('\r');
+            }
+
+            text = sb.ToString();
         }
     }
 }
