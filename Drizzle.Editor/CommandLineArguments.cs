@@ -17,7 +17,7 @@ namespace Drizzle.Editor
             while (enumerator.MoveNext())
             {
                 var arg = enumerator.Current;
-                if (arg == "--connect")
+                if (arg == "--render")
                 {
                     render = true;
                 }
