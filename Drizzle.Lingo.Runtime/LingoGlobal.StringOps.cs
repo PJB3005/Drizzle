@@ -1,23 +1,43 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace Drizzle.Lingo.Runtime
 {
     public sealed partial class LingoGlobal
     {
-        // TODO: Basically everything here requires caching.
-        public static int thenumberoflines_helper(string value)
+        // Cache these values because Lingo accesses them a lot and we want to avoid O(n^2) behavior here.
+        private static readonly ConditionalWeakTable<string, StringLineData> StringLineCache = new();
+
+        private static StringLineData GetCachedStringLineData(string str)
         {
-            // TODO: Requires caching
-            var count = 0;
-            foreach (var chr in value)
+            return StringLineCache.GetValue(str, CacheStringLineData);
+        }
+
+        private static StringLineData CacheStringLineData(string key)
+        {
+            var list = new List<int>();
+
+            for (var i = 0; i < key.Length; i++)
             {
-                if (chr == '\n')
-                    count += 1;
+                var chr = key[i];
+                // Lingo cares ONLY about CR, nothing else.
+                if (chr == '\r')
+                    list.Add(i);
             }
 
-            return count;
+            return new StringLineData
+            {
+                NewlineIndices = list.ToArray()
+            };
+        }
+
+        public static int thenumberoflines_helper(string value)
+        {
+            var cacheData = GetCachedStringLineData(value);
+            return cacheData.NewlineIndices.Length + 1;
         }
 
         public static string lineof_helper(int idx, string collection)
@@ -93,7 +113,29 @@ namespace Drizzle.Lingo.Runtime
             {
                 get
                 {
-                    var curLine = 1;
+                    if (value <= 0)
+                        return String;
+
+                    var cacheData = GetCachedStringLineData(String);
+                    var indices = cacheData.NewlineIndices;
+                    var idx = value - 1;
+
+                    if (idx > indices.Length)
+                        return "";
+
+                    var endIdx = String.Length;
+                    if (idx < indices.Length)
+                        endIdx = indices[idx];
+
+                    var startIdx = 0;
+                    if (idx > 0)
+                        startIdx = indices[idx-1] + 1;
+
+                    return String[startIdx..endIdx];
+
+                    /*var curLine = 1;
+
+
                     var sr = new StringReader(String);
 
                     while (sr.ReadLine() is { } line)
@@ -102,7 +144,7 @@ namespace Drizzle.Lingo.Runtime
                             return line;
                     }
 
-                    throw new IndexOutOfRangeException();
+                    throw new IndexOutOfRangeException();*/
                 }
             }
 
@@ -123,6 +165,11 @@ namespace Drizzle.Lingo.Runtime
         public string numtochar(int num)
         {
             return ((char)num).ToString();
+        }
+
+        private sealed class StringLineData
+        {
+            public int[] NewlineIndices;
         }
     }
 }
