@@ -4,6 +4,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Logging;
 using Avalonia.ReactiveUI;
 using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
 using SS14.Launcher;
 using LogEventLevel = Serilog.Events.LogEventLevel;
 
@@ -25,7 +26,9 @@ namespace Drizzle.Editor
             Logger.Sink = new AvaloniaSeriLogger(new LoggerConfiguration()
                 .MinimumLevel.Is(LogEventLevel.Warning)
                 .Enrich.FromLogContext()
-                .WriteTo.Console(outputTemplate: "[{Area}] {Message} ({SourceType} #{SourceHash})\n")
+                .WriteTo.Console(
+                    outputTemplate: "[{Area}] {Message} ({SourceType} #{SourceHash})\n",
+                    theme: AnsiConsoleTheme.Literate)
                 .CreateLogger());
 #endif
 
