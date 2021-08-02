@@ -5,9 +5,9 @@ namespace Drizzle.Editor.ViewModels
     {
         public MapEditorViewModel MapEditorVM { get; } = new();
 
-        public void Init()
+        public void Init(CommandLineArgs commandLineArgs)
         {
-            MapEditorVM.Init();
+            MapEditorVM.Init(commandLineArgs);
         }
     }
 }

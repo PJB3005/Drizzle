@@ -57,7 +57,7 @@ namespace Drizzle.Lingo.Runtime
             if (movieScriptType == null)
                 throw new Exception("Unable to find movie script type!");
 
-            MovieScriptInstance = (LingoScriptRuntimeBase) Activator.CreateInstance(movieScriptType)!;
+            MovieScriptInstance = (LingoScriptRuntimeBase)Activator.CreateInstance(movieScriptType)!;
             MovieScriptInstance.Init(MovieScriptInstance, Global);
 
             foreach (var scriptType in behaviorScripts)
@@ -96,7 +96,7 @@ namespace Drizzle.Lingo.Runtime
 
         private LingoScriptRuntimeBase InstantiateScriptType(Type type)
         {
-            var instance = (LingoScriptRuntimeBase) Activator.CreateInstance(type)!;
+            var instance = (LingoScriptRuntimeBase)Activator.CreateInstance(type)!;
             instance.Init(MovieScriptInstance, Global);
 
             return instance;
@@ -114,6 +114,16 @@ namespace Drizzle.Lingo.Runtime
             newMethod?.Invoke(instance, list.List.ToArray());
 
             return instance;
+        }
+
+        public T CreateScript<T>(params object?[] args) where T : LingoScriptRuntimeBase
+        {
+            var inst = InstantiateScriptType(typeof(T));
+
+            var newMethod = inst.GetType().GetMethod("new");
+            newMethod?.Invoke(inst, args);
+
+            return (T)inst;
         }
     }
 }

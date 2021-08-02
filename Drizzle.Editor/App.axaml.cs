@@ -22,14 +22,13 @@ namespace Drizzle.Editor
                 if (!CommandLineArgs.TryParse(desktop.Args, out var parsed))
                     Environment.Exit(1);
 
-                Locator.CurrentMutable.RegisterConstant(parsed);
                 var viewModel = new MainWindowViewModel();
                 desktop.MainWindow = new MainWindow
                 {
                     DataContext = viewModel,
                 };
 
-                viewModel.Init();
+                viewModel.Init(parsed);
             }
 
             base.OnFrameworkInitializationCompleted();

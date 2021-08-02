@@ -13,9 +13,13 @@ namespace Drizzle.Editor.ViewModels
             MapEditor = new MapEditorRuntime(Lingo.Runtime);
         }
 
-        public void Init()
+        public void Init(CommandLineArgs commandLineArgs)
         {
             Lingo.Init();
+
+            MapEditor.LoadProject = commandLineArgs.Project;
+            MapEditor.Render = commandLineArgs.Render;
+            MapEditor.Init();
         }
     }
 }
