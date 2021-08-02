@@ -23,7 +23,7 @@ namespace Drizzle.Lingo.Runtime
         public const string QUOTE = "\"";
         public const string RETURN = "\r";
         public const string SPACE = " ";
-        public const object VOID = null;
+        public const object? VOID = null;
 
         private Random _random = new();
 
