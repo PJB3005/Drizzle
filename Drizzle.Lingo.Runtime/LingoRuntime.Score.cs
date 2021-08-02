@@ -55,7 +55,7 @@ namespace Drizzle.Lingo.Runtime
             [90] = "massRenderLoop",
         };
 
-        private bool _doIncrementFrame = false;
+        private bool _doIncrementFrame = true;
         public int CurrentFrame { get; private set; } = 0;
         private int _lastFrame;
 
