@@ -41,6 +41,15 @@ namespace Drizzle.Lingo.Runtime
                 a.bottom + b.bottom);
         }
 
+        public static LingoRect operator -(LingoRect a, LingoRect b)
+        {
+            return new(
+                a.left - b.left,
+                a.top - b.top,
+                a.right - b.right,
+                a.bottom - b.bottom);
+        }
+
         public static LingoRect operator *(LingoRect a, LingoDecimal b)
         {
             return new(
@@ -48,6 +57,15 @@ namespace Drizzle.Lingo.Runtime
                 a.top * b,
                 a.right * b,
                 a.bottom * b);
+        }
+
+        public static LingoRect operator /(LingoRect a, LingoRect b)
+        {
+            return new(
+                a.left / b.left,
+                a.top / b.top,
+                a.right / b.right,
+                a.bottom / b.bottom);
         }
 
         public bool Equals(LingoRect other)
