@@ -157,8 +157,18 @@ namespace Drizzle.Lingo.Runtime
             set => _random = new Random((int)value);
         }
 
-        public LingoColor color(int r, int g, int b) => new(r, g, b);
-        public LingoColor color(int palIdx) => throw new NotImplementedException();
+        public LingoColor color(int r, int g, int b) => new(
+            Math.Clamp(r, 0, 255),
+            Math.Clamp(g, 0, 255),
+            Math.Clamp(b, 0, 255));
+
+        public LingoColor color(LingoDecimal r, LingoDecimal g, LingoDecimal b) => new(
+            Math.Clamp((int) r, 0, 255),
+            Math.Clamp((int) g, 0, 255),
+            Math.Clamp((int) b, 0, 255));
+
+        public LingoColor color(int palIdx) => palIdx;
+
         public LingoImage image(int w, int h, int bitDepth) => new LingoImage(w, h, bitDepth);
 
         public LingoImage image(LingoDecimal w, LingoDecimal h, int bitDepth) =>
@@ -240,7 +250,7 @@ namespace Drizzle.Lingo.Runtime
 
         public LingoSprite sprite(dynamic a)
         {
-            Log.Warning("sprite() not implemented");
+            // Log.Warning("sprite() not implemented");
             return new LingoSprite();
         }
 
