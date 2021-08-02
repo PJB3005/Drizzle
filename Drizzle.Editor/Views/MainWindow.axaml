@@ -16,8 +16,8 @@
     </Design.DataContext>
     
     <DockPanel>
-        <views:LingoStatus DockPanel.Dock="Bottom" DataContext="{Binding LingoVM}" />
-        <ContentControl Margin="4" Content="{Binding LingoVM.Frame}" />
+        <views:LingoStatus DockPanel.Dock="Bottom" DataContext="{Binding MapEditorVM.Lingo}" />
+        <ContentControl Margin="4" Content="{Binding MapEditorVM.Lingo.Frame}" />
     </DockPanel>
     
 </Window>

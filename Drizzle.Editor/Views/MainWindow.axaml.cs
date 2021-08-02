@@ -35,7 +35,7 @@ namespace Drizzle.Editor.Views
             if (!KeyMap.Map.TryGetValue(e.Key, out var code))
                 return;
 
-            vm.LingoVM.Runtime.KeysDown.Add(code);
+            vm.MapEditorVM.Lingo.Runtime.KeysDown.Add(code);
         }
 
         private void OnKeyUp(object? sender, KeyEventArgs e)
@@ -46,7 +46,7 @@ namespace Drizzle.Editor.Views
             if (!KeyMap.Map.TryGetValue(e.Key, out var code))
                 return;
 
-            vm.LingoVM.Runtime.KeysDown.Remove(code);
+            vm.MapEditorVM.Lingo.Runtime.KeysDown.Remove(code);
         }
     }
 }

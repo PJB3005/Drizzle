@@ -1,5 +1,4 @@
 ﻿using System;
-using Avalonia.Input;
 using Avalonia.Threading;
 using Drizzle.Editor.ViewModels.LingoFrames;
 using Drizzle.Lingo.Runtime;

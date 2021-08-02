@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <RootNamespace>Drizzle.Logic</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Drizzle.Lingo.Runtime\Drizzle.Lingo.Runtime.csproj" />
+        <ProjectReference Include="..\Drizzle.Ported\Drizzle.Ported.csproj" />
+    </ItemGroup>
+</Project>

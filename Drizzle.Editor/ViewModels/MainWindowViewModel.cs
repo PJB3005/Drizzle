@@ -1,11 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
+﻿
 namespace Drizzle.Editor.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
-        public LingoViewModel LingoVM { get; } = new();
+        public MapEditorViewModel MapEditorVM { get; } = new();
+
+        public void Init()
+        {
+            MapEditorVM.Init();
+        }
     }
 }
