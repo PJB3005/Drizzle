@@ -458,13 +458,13 @@ namespace Drizzle.Lingo.Runtime.Parser
                             .And(Operator.InfixL(Multiply /*.TraceBegin("Multiply")*/))
                             .And(Operator.InfixL(Divide /*.TraceBegin("Divide")*/))
                             .And(Operator.InfixL(Mod /*.TraceBegin("Mod")*/)),
+                        // Precedence 2
+                        Operator.InfixL(ConcatSpace.TraceBegin("Concat Space"))
+                            .And(Operator.InfixL(Concat.TraceBegin("Concat"))),
                         // Precedence 1
                         precedence1,
                         // Precedence 5 (yes lol)
                         Operator.Prefix(Not),
-                        // Precedence 2
-                        Operator.InfixL(ConcatSpace.TraceBegin("Concat Space"))
-                            .And(Operator.InfixL(Concat.TraceBegin("Concat"))),
                         // Precedence 3
                         Operator.InfixL(Subtract),
                         // Precedence 4
