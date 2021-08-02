@@ -151,7 +151,12 @@ namespace Drizzle.Lingo.Runtime
         public CastMember? member(object memberNameOrNum, object? castNameOrNum = null) =>
             LingoRuntime.GetCastMember(memberNameOrNum, castNameOrNum);
 
-        public int the_randomSeed { get; set; }
+        public LingoDecimal the_randomSeed
+        {
+            get => default;
+            set => _random = new Random((int)value);
+        }
+
         public LingoColor color(int r, int g, int b) => new(r, g, b);
         public LingoColor color(int palIdx) => throw new NotImplementedException();
         public LingoImage image(int w, int h, int bitDepth) => new LingoImage(w, h, bitDepth);
