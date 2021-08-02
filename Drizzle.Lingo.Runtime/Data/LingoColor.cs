@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Serilog;
 
 namespace Drizzle.Lingo.Runtime
 {
-    public struct LingoColor
+    public struct LingoColor : IEquatable<LingoColor>
     {
         private static readonly Dictionary<int, (int r, int g, int b)> Palette = new()
         {
@@ -31,6 +32,31 @@ namespace Drizzle.Lingo.Runtime
             }
 
             return new LingoColor(color.r, color.g, color.b);
+        }
+
+        public bool Equals(LingoColor other)
+        {
+            return red == other.red && green == other.green && blue == other.blue;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is LingoColor other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(red, green, blue);
+        }
+
+        public static bool operator ==(LingoColor left, LingoColor right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(LingoColor left, LingoColor right)
+        {
+            return !left.Equals(right);
         }
     }
 }
