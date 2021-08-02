@@ -24,7 +24,7 @@ namespace Drizzle.Lingo.Runtime
 
             public int frame => _global.LingoRuntime.CurrentFrame;
 
-            public string path => throw new NotImplementedException();
+            public string path => _global.the_moviePath;
 
             public dynamic stage => throw new NotImplementedException();
 
