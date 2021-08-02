@@ -31,6 +31,16 @@ namespace Drizzle.Lingo.Runtime
             Depth = depth;
         }
 
+        public void copypixels(LingoImage source, LingoList destQuad, LingoRect sourceRect)
+        {
+            copypixels(source, destQuad, sourceRect, new LingoPropertyList());
+        }
+
+        public void copypixels(LingoImage source, LingoList destQuad, LingoRect sourceRect, LingoPropertyList paramList)
+        {
+            Log.Warning("copyPixels() destquad: not implemented");
+        }
+
         public void copypixels(LingoImage source, LingoRect destRect, LingoRect sourceRect)
         {
             copypixels(source, destRect, sourceRect, new LingoPropertyList());
@@ -39,13 +49,16 @@ namespace Drizzle.Lingo.Runtime
         public void copypixels(LingoImage source, LingoRect destRect, LingoRect sourceRect, LingoPropertyList paramList)
         {
             if (paramList.length != 0)
-                throw new NotImplementedException("Advanced copy operations not implemented.");
+            {
+                //    Log.Warning("Advanced copypixels() not implemented");
+                //    throw new NotImplementedException("Advanced copy operations not implemented.");
+            }
 
             if (destRect.width != sourceRect.width || destRect.height != sourceRect.height)
             {
-                Log.Debug(
+                /*Log.Debug(
                     "copyPixels() stretching: {SrcW}x{SrcH} -> {DstW}x{DstH}",
-                    sourceRect.width, sourceRect.height, destRect.width, destRect.height);
+                    sourceRect.width, sourceRect.height, destRect.width, destRect.height);*/
             }
 
             var srcImg = source.Image;
@@ -53,8 +66,8 @@ namespace Drizzle.Lingo.Runtime
             var srcRect = Rectangle.FromLTRB(
                 Math.Clamp((int) sourceRect.left, 0, srcImg.Width),
                 Math.Clamp((int) sourceRect.top, 0, srcImg.Height),
-                Math.Min(srcImg.Width, (int) sourceRect.right),
-                Math.Min(srcImg.Height, (int) sourceRect.bottom));
+                Math.Clamp((int) sourceRect.right, 0, srcImg.Width),
+                Math.Clamp((int) sourceRect.bottom, 0, srcImg.Height));
 
             if (srcRect.Width == 0 || srcRect.Height == 0)
             {
@@ -92,14 +105,34 @@ namespace Drizzle.Lingo.Runtime
             });
         }
 
-        public dynamic getpixel(int x, int y)
+        public LingoColor getpixel(LingoPoint point)
         {
-            throw new NotImplementedException();
+            return getpixel(point.loch, point.locv);
         }
 
-        public dynamic getpixel(LingoPoint point)
+        public LingoColor getpixel(LingoDecimal x, LingoDecimal y)
         {
-            throw new NotImplementedException();
+            return getpixel((int) x, (int) y);
+        }
+
+        public LingoColor getpixel(int x, int y)
+        {
+            switch (Image)
+            {
+                case Image<Bgra32> bgra32:
+                {
+                    var bgra = bgra32[x, y];
+                    return new LingoColor(bgra.R, bgra.G, bgra.B);
+                }
+            }
+
+            // Log.Warning("getpixel unimplemented image depth: {ImageDepth}", Depth);
+            return default;
+        }
+
+        public void setpixel(LingoPoint point, LingoColor color)
+        {
+            setpixel(point.loch, point.locv, color);
         }
 
         public void setpixel(LingoDecimal x, LingoDecimal y, LingoColor color)
@@ -109,12 +142,17 @@ namespace Drizzle.Lingo.Runtime
 
         public void setpixel(int x, int y, LingoColor color)
         {
-            throw new NotImplementedException();
-        }
+            switch (Image)
+            {
+                case Image<Bgra32> bgra32:
+                {
+                    bgra32[x, y] = new Bgra32((byte)color.red, (byte)color.green, (byte)color.red, 255);
+                    return;
+                }
+            }
 
-        public void setpixel(LingoPoint point, LingoColor color)
-        {
-            setpixel(point.loch, point.locv, color);
+            // Log.Warning("setpixel unimplemented image depth: {ImageDepth}", Depth);
+            return;
         }
 
         public LingoImage duplicate()
@@ -124,7 +162,8 @@ namespace Drizzle.Lingo.Runtime
 
         public dynamic createmask()
         {
-            throw new NotImplementedException();
+            Log.Warning("createmask(): Not implemented");
+            return null;
         }
 
         public static LingoImage LoadFromPath(string path)
