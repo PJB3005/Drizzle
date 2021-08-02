@@ -23,8 +23,6 @@ namespace Drizzle.Lingo.Runtime
 
         private readonly LingoCastLib[] _castLibs = new LingoCastLib[5];
 
-        private bool _buildingCast;
-
         public CastMember? GetCastMember(object nameOrNum, object? cast=null)
         {
             var found = cast switch
@@ -57,7 +55,6 @@ namespace Drizzle.Lingo.Runtime
 
         private void LoadCast()
         {
-            _buildingCast = true;
             Log.Debug("Loading cast...");
 
             InitCastLibs();
@@ -88,9 +85,6 @@ namespace Drizzle.Lingo.Runtime
                     //    member!.name, member.Number, member.Cast);
                 }
             }
-
-            _buildingCast = false;
-            UpdateNameIndex();
 
             Log.Debug("Loaded {CastSize} cast members in {Time}", count, sw.Elapsed);
         }
@@ -139,17 +133,6 @@ namespace Drizzle.Lingo.Runtime
                 Log.Warning("Warning: unrecognized cast member type {CastFileName}", file);
 
             return member;
-        }
-
-        public void UpdateNameIndex()
-        {
-            if (_buildingCast)
-                return;
-
-            foreach (var castLib in _castLibs)
-            {
-                castLib.UpdateNameIndex();
-            }
         }
     }
 }

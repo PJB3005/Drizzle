@@ -12,6 +12,7 @@ namespace Drizzle.Lingo.Runtime
         public int Offset;
 
         public string name { get; }
+        private bool _nameIndexDirty;
 
         public dynamic member => throw new NotImplementedException();
 
@@ -23,16 +24,21 @@ namespace Drizzle.Lingo.Runtime
             _cast = new CastMember[1000];
             for (var i = 0; i < _cast.Length; i++)
             {
-                _cast[i] = new CastMember(runtime, i + 1 + Offset, name);
+                _cast[i] = new CastMember(runtime, this, i + 1 + Offset, name);
             }
         }
 
         public CastMember? GetMember(object nameOrNum)
         {
-            if (nameOrNum is string name
-                && _names.TryGetValue(name, out var castMember))
+            if (nameOrNum is string name)
             {
-                return _cast[castMember];
+                if (_nameIndexDirty)
+                    UpdateNameIndex();
+
+                if (_names.TryGetValue(name, out var castMember))
+                {
+                    return _cast[castMember];
+                }
             }
 
             if (nameOrNum is int num)
@@ -48,10 +54,13 @@ namespace Drizzle.Lingo.Runtime
             return null;
         }
 
-        public void UpdateNameIndex()
+        public void NameIndexDirty()
         {
-            // todo: maybe queue updates for this if it becomes a bottleneck.
+            _nameIndexDirty = true;
+        }
 
+        private void UpdateNameIndex()
+        {
             _names.Clear();
 
             for (var i = 0; i < _cast.Length; i++)
@@ -61,6 +70,8 @@ namespace Drizzle.Lingo.Runtime
                 if (castMember.name != null)
                     _names.TryAdd(castMember.name, i);
             }
+
+            _nameIndexDirty = false;
         }
     }
 }

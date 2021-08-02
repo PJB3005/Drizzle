@@ -5,6 +5,7 @@ namespace Drizzle.Lingo.Runtime.Cast
 {
     public sealed partial class CastMember
     {
+        private readonly LingoCastLib _castLib;
         private string? _name;
         public LingoRuntime Runtime { get; }
         public int Number { get; }
@@ -17,14 +18,15 @@ namespace Drizzle.Lingo.Runtime.Cast
             set
             {
                 _name = value;
-                Runtime.UpdateNameIndex();
+                _castLib.NameIndexDirty();
             }
         }
 
         public string Cast { get; }
 
-        public CastMember(LingoRuntime runtime, int number, string cast)
+        public CastMember(LingoRuntime runtime, LingoCastLib castLib, int number, string cast)
         {
+            _castLib = castLib;
             Runtime = runtime;
             Number = number;
             Cast = cast;
