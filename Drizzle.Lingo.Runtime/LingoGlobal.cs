@@ -169,7 +169,7 @@ namespace Drizzle.Lingo.Runtime
         {
             if (a?.GetType() != b?.GetType())
             {
-                Log.Warning("Invalid type comparison: {A} == {B}", a, b);
+                // Log.Warning("Invalid type comparison: {A} == {B}", a, b);
                 return 0;
             }
 
@@ -180,7 +180,7 @@ namespace Drizzle.Lingo.Runtime
         {
             if (a?.GetType() != b?.GetType())
             {
-                Log.Warning("Invalid type comparison: {A} <> {B}", a, b);
+                // Log.Warning("Invalid type comparison: {A} <> {B}", a, b);
                 return 1;
             }
 
