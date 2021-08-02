@@ -7,31 +7,31 @@ namespace Drizzle.Lingo.Runtime
 {
     public class LingoPropertyList : DynamicObject, ILingoListDuplicate
     {
-        public Dictionary<dynamic, dynamic?> Dict { get; }
+        public Dictionary<object, dynamic?> Dict { get; }
 
         public int length => Dict.Count;
 
-        public LingoPropertyList(Dictionary<dynamic, dynamic?> dict)
+        public LingoPropertyList(Dictionary<object, dynamic?> dict)
         {
             Dict = dict;
         }
 
         public LingoPropertyList()
         {
-            Dict = new Dictionary<dynamic, dynamic?>();
+            Dict = new Dictionary<object, dynamic?>();
         }
 
         public LingoPropertyList(int capacity)
         {
-            Dict = new Dictionary<dynamic, dynamic?>(capacity);
+            Dict = new Dictionary<object, dynamic?>(capacity);
         }
 
-        public LingoPropertyList(IEnumerable<KeyValuePair<dynamic, dynamic?>> source)
+        public LingoPropertyList(IEnumerable<KeyValuePair<object, dynamic?>> source)
         {
-            Dict = new Dictionary<dynamic, dynamic?>(source);
+            Dict = new Dictionary<object, dynamic?>(source);
         }
 
-        public dynamic? this[dynamic index]
+        public dynamic? this[object index]
         {
             get => Dict[index];
             set => Dict[index] = value;
@@ -40,7 +40,7 @@ namespace Drizzle.Lingo.Runtime
         public LingoPropertyList duplicate()
         {
             return new LingoPropertyList(
-                Dict.Select(kv => new KeyValuePair<dynamic, dynamic?>(kv.Key, LingoList.DuplicateIfList(kv.Value))));
+                Dict.Select(kv => new KeyValuePair<object, dynamic?>(kv.Key, LingoList.DuplicateIfList(kv.Value))));
         }
 
         ILingoListDuplicate ILingoListDuplicate.duplicate()
@@ -48,7 +48,7 @@ namespace Drizzle.Lingo.Runtime
             return duplicate();
         }
 
-        public void addprop(dynamic? key, dynamic? value)
+        public void addprop(object? key, object? value)
         {
             if (Dict.ContainsKey(key))
                 Log.Warning("addprop duplicate key: {Key}", key);
@@ -56,7 +56,7 @@ namespace Drizzle.Lingo.Runtime
             Dict[key] = value;
         }
 
-        public object? findpos(dynamic? key)
+        public object? findpos(object key)
         {
             // findpos is only used as a "does it exist in the list" check so this is fine.
             return Dict.ContainsKey(key) ? new object() : null;
