@@ -22,7 +22,7 @@ namespace Drizzle.Editor.ViewModels
         public void Init()
         {
             // Run lingo at 60 FPS for now.
-            _timer.Interval = TimeSpan.FromSeconds(1 / 60f);
+            _timer.Interval = TimeSpan.FromSeconds(1 / 999f);
             _timer.Tick += TimerTickLingo;
             _timer.Start();
 
