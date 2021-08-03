@@ -20,7 +20,7 @@ namespace Drizzle.Editor.ViewModels
         [Reactive] public int LastFrame { get; private set; }
         [Reactive] public string? LastFrameName { get; private set; }
 
-        public bool IsPaused { get; set; }
+        [Reactive] public bool IsPaused { get; set; }
         private bool _singleStep;
 
         public void Init(CommandLineArgs commandLineArgs)
