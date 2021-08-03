@@ -95,7 +95,7 @@ namespace Drizzle.Transpiler
 
         private static void Main(string[] args)
         {
-            var scripts = Directory.GetFiles(SourcesRoot)
+            var scripts = Directory.GetFiles(SourcesRoot, "*.ls")
                 .AsParallel()
                 .Select(n =>
                 {
@@ -480,7 +480,7 @@ namespace Drizzle.Transpiler
             var name = node.Variable;
             var loopTmp = $"tmp_{name}";
 
-            ctx.Writer.WriteLine($"for (int {loopTmp} = {start}; {loopTmp} <= {end}; {loopTmp}++) {{");
+            ctx.Writer.WriteLine($"for (int {loopTmp} = (int) ({start}); {loopTmp} <= {end}; {loopTmp}++) {{");
 
             if (ctx.Locals.Add(name))
                 ctx.DeclaredLocals.Add(name);
