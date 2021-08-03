@@ -154,15 +154,18 @@ on setUpLayer(layer)
             end if
           end if
           
-          --/ Add tiles to draw list based on some misc criteria.
+          --/ Add tiles to draw list.
           if gTEprops.tlMatrix[ps.locH][ps.locV][layer].tp = "tileHead" then
             dt = gTEprops.tlMatrix[ps.locH][ps.locV][layer].data
+            --/ Tile-tiles are added to last draw list if they have the tag for it. 
             if (gTiles[dt[1].locH].tls[dt[1].locV].tags.getPos("drawLast")<>0) then
               drawLastTiles.add([random(999), ps.locH, ps.locV])
             else
               drawLaterTiles.add([random(999), ps.locH, ps.locV])
             end if
           else if gTEprops.tlMatrix[ps.locH][ps.locV][layer].tp <> "tileBody" then
+            --/ don't render tileBody directly, that's done from the head.
+            --/ otherwise add to draw list.
             drawLaterTiles.add([random(999), ps.locH, ps.locV])
           end if
           
