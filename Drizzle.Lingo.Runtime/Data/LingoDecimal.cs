@@ -91,5 +91,23 @@ namespace Drizzle.Lingo.Runtime
         {
             return left.CompareTo(right) >= 0;
         }
+
+        public static bool TryAs(object? obj, out LingoDecimal dec)
+        {
+            if (obj is LingoDecimal decC)
+            {
+                dec = decC;
+                return true;
+            }
+
+            if (obj is int i)
+            {
+                dec = i;
+                return true;
+            }
+
+            dec = default;
+            return false;
+        }
     }
 }

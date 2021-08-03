@@ -164,7 +164,7 @@ namespace Drizzle.Lingo.Runtime
                     return 1;
 
                 // Try a numeric compare if they're both numbers.
-                if (TryDecimal(x, out var decX) && TryDecimal(y, out var decY))
+                if (LingoDecimal.TryAs(x, out var decX) && LingoDecimal.TryAs(y, out var decY))
                     return decX.CompareTo(decY);
 
                 // Compare by string.
@@ -172,24 +172,6 @@ namespace Drizzle.Lingo.Runtime
                 var strY = y.ToString();
 
                 return string.Compare(strX, strY, StringComparison.Ordinal);
-
-                bool TryDecimal(object? val, out LingoDecimal dec)
-                {
-                    if (val is LingoDecimal decC)
-                    {
-                        dec = decC;
-                        return true;
-                    }
-
-                    if (val is int i)
-                    {
-                        dec = i;
-                        return true;
-                    }
-
-                    dec = default;
-                    return false;
-                }
             }
         }
     }
