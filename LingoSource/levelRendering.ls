@@ -82,53 +82,70 @@ on setUpLayer(layer)
   -- end if
   
   
-  floorsL = []
+  -- floorsL = []
+  --/ drawLaterTiles and drawLastTiles contain lists of tiles that need drawing. Each entry is [random, x, y].
+  --/ the random value is so that sort() will shuffle the list, effectively.
+  --/ resulting in a random drawing order of tiles.
   drawLaterTiles = []
   drawLastTiles = []
   shortCutEntrences = []
   shortCuts = []
   -- depthPnt(pnt, dpt)
+  --/ Go over every visible tile.
   repeat with q = 1 to cols then
     repeat with c = 1 to rows then
       -- if((q >= gRenderCameraTilePos.locH)and(q < gRenderCameraTilePos.locH + cols)and(c >= gRenderCameraTilePos.locV)and(c < gRenderCameraTilePos.locV + rows))or(checkIfTileHasMaterialRenderTypeTiles(point(q,c), layer))then
       if(q+gRenderCameraTilePos.locH > 0)and(q+gRenderCameraTilePos.locH <= gLOprops.size.locH)and(c+gRenderCameraTilePos.locV > 0)and(c+gRenderCameraTilePos.locV <= gLOprops.size.locV)then
+        --/ absolute position (not camera relative)
         ps = point(q,c)+gRenderCameraTilePos
         
+        --/ tile type
         tp = gLEProps.matrix[ps.loch][ps.locV][layer][1]
         
-        
+        --/ Go over tile features for some behavior
         repeat with t in gLEProps.matrix[ps.locH][ps.locV][layer][2] then
           case t of
+            --/ Draw poles to mdlFrntImg if this tile has any.
             1:
+              --/ vertical pole
               rct = rect((q-1)*20, (c-1)*20, q*20, c*20)+rect(0, 8, 0, -8)--rect(gRenderCameraTilePos,gRenderCameraTilePos)*20
               mdlFrntImg.copyPixels(member("pxl").image, rct, member("pxl").image.rect, {color:poleCol})
             2:
+              --/ horizontal pole
               rct = rect((q-1)*20, (c-1)*20, q*20, c*20)+rect(8, 0, -8, 0)--rect(gRenderCameraTilePos,gRenderCameraTilePos)*20
               mdlFrntImg.copyPixels(member("pxl").image, rct, member("pxl").image.rect, {color:poleCol})
             3:
               -- rct = rect((q-1)*20, (c-1)*20, q*20, c*20)--+rect(0, 8, 0, -8)
               --   mdlFrntImg.copyPixels(member("hiveGrass").image, rct, member("hiveGrass").image.rect, {color:pltt[1]})
             4:
+              --/ shortcut entrance.
+              --/ Tile has a shortcut entrance, pretend it's solid wall for rendering so it looks filled.
               tp = 1
           end case
         end repeat
         
         --drawATile(q, c, layer)
         --  put gLEProps.matrix[q][c][layer][1]
+        --/ wait what 7 isn't a valid tile type ???
+        --/ not sure this code's being used.
         if (gLEProps.matrix[ps.locH][ps.locV][1][1] = 7)and(layer=1) then
           shortCutEntrences.add([random(1000), ps.locH, ps.locV])
         else
-          
+          --/ Check if tile has a shortcut
           if gLEProps.matrix[ps.locH][ps.locV][1][2].getPos(5)<>0 then
             if layer = 1 then
+              --/ tile must be solid.
               if gLEProps.matrix[ps.locH][ps.locV][1][1]=1 then
+                --/ shortcuts only valid on default or material tiles, I think.
                 if ["material", "default"].getPos(gTEprops.tlMatrix[ps.locH][ps.locV][layer].tp) <> 0 then
                   shortCuts.add(point(ps.locH,ps.locV))
                 end if
               end if 
             else if layer = 2 then
+              --/ IF first layer not solid and second layer solid
               if gLEProps.matrix[ps.locH][ps.locV][2][1]=1 then
                 if gLEProps.matrix[ps.locH][ps.locV][1][1]<>1 then
+                  --/ shortcuts only valid on default or material tiles, I think.
                   if ["material", "default"].getPos(gTEprops.tlMatrix[ps.locH][ps.locV][layer].tp) <> 0 then
                     shortCuts.add(point(ps.locH,ps.locV))
                   end if
@@ -137,6 +154,7 @@ on setUpLayer(layer)
             end if
           end if
           
+          --/ Add tiles to draw list based on some misc criteria.
           if gTEprops.tlMatrix[ps.locH][ps.locV][layer].tp = "tileHead" then
             dt = gTEprops.tlMatrix[ps.locH][ps.locV][layer].data
             if (gTiles[dt[1].locH].tls[dt[1].locV].tags.getPos("drawLast")<>0) then
@@ -155,8 +173,11 @@ on setUpLayer(layer)
     end repeat
   end repeat
   
-  
+  --/ shuffle list, see above comment about randomness.
   drawLaterTiles.sort()
+
+  --/ drawMaterials contains all tiles grouped by their material, as well as that material's render type.
+  --/ indxr has the names of the materials in drawMaterials so you can findpos to index into it.
   drawMaterials = []
   indxer = []
   repeat with q = 1 to gTiles[1].tls.count then
@@ -238,7 +259,7 @@ on setUpLayer(layer)
   
   
   
-  
+  --/ Render shortcuts
   --shortCuts.sort()
   repeat with tl in shortCuts then
     if (shortCuts.getPos(tl+point(-1,0))>0)and((shortCuts.getPos(tl+point(1,0))>0))then
@@ -295,7 +316,7 @@ on setUpLayer(layer)
   member("layer"&string(dpt)).image.copyPixels(frntImg, frntImg.rect, frntImg.rect, {#ink:36})
   
   
-  --ADD CRACKS
+  --/ ADD CRACKS
   d = 0
   if layer = 2 then
     d = 10
@@ -346,7 +367,7 @@ on setUpLayer(layer)
     end repeat
   end repeat
   
-  -- POLES ADDED AFTER CRACKS
+  --/ POLES ADDED AFTER CRACKS
   member("layer"&string(dpt+4)).image.copyPixels(mdlFrntImg, mdlFrntImg.rect, mdlFrntImg.rect, {#ink:36})
   --  --ADD POLES (AGAIN)
   --  repeat with q = 1 to 52 then

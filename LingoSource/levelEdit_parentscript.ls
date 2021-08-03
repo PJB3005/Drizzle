@@ -261,6 +261,7 @@ on newUpdate me
         me.updateToolText()
       "mirrorToggle":
         if (p.lastInput[3]=0) then
+          --/ This is effectively a not operator, fyi.
           p.mirror = 1-p.mirror
         end if
       "rock":
@@ -400,6 +401,7 @@ end
 
 on slopeTile me, ps
   nbs = ""
+  --/ Order is left-up-right-down
   repeat with dir in [point(-1, 0), point(0, -1), point(1, 0), point(0, 1)] then
     nbs = nbs & afaMvLvlEdit(ps+dir, p.workLayer)
   end repeat

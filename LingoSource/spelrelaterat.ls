@@ -29,7 +29,7 @@ on restrictWithFlip(val, low, high)
   end if
 end
 
-
+--/ Get the tile type of the tile on the specified position & layer.
 on afaMvLvlEdit(pos, layer)
   global gLEProps, gLOprops
   if pos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) then
