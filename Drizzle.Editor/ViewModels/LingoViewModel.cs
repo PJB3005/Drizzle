@@ -1,6 +1,7 @@
 ﻿using System;
 using Avalonia.Threading;
 using Drizzle.Editor.ViewModels.LingoFrames;
+using Drizzle.Editor.Views;
 using Drizzle.Lingo.Runtime;
 using Drizzle.Ported;
 using ReactiveUI;
@@ -19,8 +20,13 @@ namespace Drizzle.Editor.ViewModels
         [Reactive] public int LastFrame { get; private set; }
         [Reactive] public string? LastFrameName { get; private set; }
 
-        public void Init()
+        public bool IsPaused { get; set; }
+        private bool _singleStep;
+
+        public void Init(CommandLineArgs commandLineArgs)
         {
+            IsPaused = commandLineArgs.AutoPause;
+
             // Run lingo at 60 FPS for now.
             _timer.Interval = TimeSpan.FromSeconds(1 / 999f);
             _timer.Tick += TimerTickLingo;
@@ -31,6 +37,11 @@ namespace Drizzle.Editor.ViewModels
 
         private void TimerTickLingo(object? sender, EventArgs e)
         {
+            if (IsPaused && !_singleStep)
+                return;
+
+            _singleStep = false;
+
             Runtime.Tick();
 
             if (LastFrame != Runtime.CurrentFrame)
@@ -62,6 +73,16 @@ namespace Drizzle.Editor.ViewModels
             {
                 Log.Error(ex, "Exception in FrameVM update");
             }
+        }
+
+        public void SingleStep()
+        {
+            _singleStep = true;
+        }
+
+        public void OpenCastViewer()
+        {
+            new LingoCastViewer { DataContext = new LingoCastViewerViewModel(this) }.Show();
         }
 
         private LingoFrameViewModel? GetFrameViewModel()

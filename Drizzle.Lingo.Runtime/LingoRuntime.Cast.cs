@@ -23,6 +23,11 @@ namespace Drizzle.Lingo.Runtime
 
         private readonly LingoCastLib[] _castLibs = new LingoCastLib[5];
 
+        public LingoCastLib GetCastLib(string castName)
+        {
+            return _castLibNames[castName];
+        }
+
         public CastMember? GetCastMember(object nameOrNum, object? cast=null)
         {
             var found = cast switch

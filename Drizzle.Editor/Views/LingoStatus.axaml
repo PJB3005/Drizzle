@@ -6,8 +6,12 @@
         <vm:LingoViewModel/>
     </Design.DataContext>
     
-    <StackPanel Orientation="Horizontal">
-        <TextBlock Text="{Binding LastFrame,StringFormat=Current frame: {0}}" />
-        <TextBlock Margin="8 0" Text="{Binding LastFrameName,StringFormat=Behavior: {0}}" />
-    </StackPanel>
+    <DockPanel Margin="4" LastChildFill="False">
+        <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="{Binding LastFrame,StringFormat=Current frame: {0}}" />
+        <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Margin="8 0" Text="{Binding LastFrameName,StringFormat=Behavior: {0}}" />
+        
+        <Button DockPanel.Dock="Right" Content="Cast Viewer" Command="{Binding OpenCastViewer}" />
+        <Button DockPanel.Dock="Right" Margin="8 0" Content="Step" Command="{Binding SingleStep}" />
+        <CheckBox DockPanel.Dock="Right" VerticalAlignment="Center" Margin="8 0" IsChecked="{Binding IsPaused}" Content="Paused" />
+    </DockPanel>
 </UserControl>

@@ -1,0 +1,64 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:vm="clr-namespace:Drizzle.Editor.ViewModels"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:Drizzle.Editor.Views"
+        x:Class="Drizzle.Editor.Views.LingoCastViewer"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Drizzle.Editor" Width="1024" Height="768">
+
+    <Design.DataContext>
+        <!-- ReSharper disable once Xaml.ConstructorWarning -->
+        <vm:LingoCastViewerViewModel />
+    </Design.DataContext>
+
+    <DockPanel Margin="2">
+        <!-- Bottom -->
+        <DockPanel DockPanel.Dock="Bottom" LastChildFill="False">
+            <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="{Binding Status}" />
+            <Button DockPanel.Dock="Right" Content="Refresh" Command="{Binding Refresh}" />
+        </DockPanel>
+
+        <Grid ColumnDefinitions="300,5,*">
+            <TabControl Grid.Column="0" Items="{Binding Casts}">
+                <TabControl.ItemTemplate>
+                    <DataTemplate DataType="vm:LingoCastViewerCast">
+                        <TextBlock Text="{Binding CastLib.name}" />
+                    </DataTemplate>
+                </TabControl.ItemTemplate>
+                <TabControl.ContentTemplate>
+                    <DataTemplate DataType="vm:LingoCastViewerCast">
+                        <ListBox Items="{Binding Entries}" SelectedItem="{Binding $parent[views:LingoCastViewer].DataContext.SelectedCastMember}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="vm:CastMemberViewModel">
+                                    <Grid ColumnDefinitions="50,*">
+                                        <Image Grid.Column="0" Source="{Binding Thumbnail}" />
+                                        <TextBlock Grid.Column="1" Text="{Binding NameOrNumber}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DataTemplate>
+                </TabControl.ContentTemplate>
+            </TabControl>
+
+            <GridSplitter Grid.Column="1" ResizeDirection="Columns" />
+            <DockPanel Grid.Column="2"
+                       IsVisible="{Binding SelectedCastMember, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <DockPanel DockPanel.Dock="Bottom">
+                    <TextBlock DockPanel.Dock="Left">
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="{}Depth: {0} Size: {1}x{2}">
+                                <Binding Path="SelectedCastMember.CastMember.image.Depth" />
+                                <Binding Path="SelectedCastMember.CastMember.image.width" />
+                                <Binding Path="SelectedCastMember.CastMember.image.height" />
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+                </DockPanel>
+                <Panel Margin="4" Background="LightGray">
+                    <Image Source="{Binding CurrentImage}" />
+                </Panel>
+            </DockPanel>
+        </Grid>
+    </DockPanel>
+</Window>

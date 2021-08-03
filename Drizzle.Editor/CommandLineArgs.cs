@@ -4,12 +4,13 @@ using C = System.Console;
 
 namespace Drizzle.Editor
 {
-    public sealed record CommandLineArgs(bool Render, string? Project)
+    public sealed record CommandLineArgs(bool Render, string? Project, bool AutoPause)
     {
         public static bool TryParse(IReadOnlyList<string> args, [NotNullWhen(true)] out CommandLineArgs? parsed)
         {
             parsed = null;
             var render = false;
+            var autoPause = false;
             string? project = null;
 
             using var enumerator = args.GetEnumerator();
@@ -20,6 +21,10 @@ namespace Drizzle.Editor
                 if (arg == "--render")
                 {
                     render = true;
+                }
+                else if (arg == "--pause")
+                {
+                    autoPause = true;
                 }
                 else if (arg == "--project")
                 {
@@ -38,7 +43,7 @@ namespace Drizzle.Editor
                 }
             }
 
-            parsed = new CommandLineArgs(render, project);
+            parsed = new CommandLineArgs(render, project, autoPause);
 
             return true;
         }
@@ -49,6 +54,7 @@ namespace Drizzle.Editor
 Options:
   --project <project> Which project to load.
   --render            Immediately render the loaded project.
+  --pause             Automatically pause the lingo runtime on load to allow stepping.
 ");
         }
 

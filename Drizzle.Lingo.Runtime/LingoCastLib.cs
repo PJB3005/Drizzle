@@ -16,6 +16,8 @@ namespace Drizzle.Lingo.Runtime
 
         public dynamic member => throw new NotImplementedException();
 
+        public int NumMembers => _cast.Length;
+
         public LingoCastLib(LingoRuntime runtime, string name, int offset)
         {
             this.name = name;

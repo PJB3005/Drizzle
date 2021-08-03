@@ -15,7 +15,7 @@ namespace Drizzle.Editor.ViewModels
 
         public void Init(CommandLineArgs commandLineArgs)
         {
-            Lingo.Init();
+            Lingo.Init(commandLineArgs);
 
             MapEditor.LoadProject = commandLineArgs.Project;
             MapEditor.Render = commandLineArgs.Render;
