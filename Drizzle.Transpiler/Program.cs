@@ -518,6 +518,10 @@ namespace Drizzle.Transpiler
             {
                 ctx.Writer.Write("switch (");
                 ctx.Writer.Write(WriteExpression(node.Expression, ctx));
+                // If this is a string switch, .ToLower() it and switch on lowercase values.
+                // to avoid any case problems.
+                if (node.Cases.Length > 0 && node.Cases[0].exprs[0] is AstNode.String)
+                    ctx.Writer.Write(".ToLowerInvariant()");
                 ctx.Writer.WriteLine(") {");
 
                 foreach (var (exprs, block) in node.Cases)
@@ -525,7 +529,10 @@ namespace Drizzle.Transpiler
                     foreach (var expr in exprs)
                     {
                         ctx.Writer.Write("case ");
-                        ctx.Writer.Write(WriteExpression(expr, ctx));
+                        if (expr is AstNode.String str)
+                            ctx.Writer.Write(DoWriteString(str.Value.ToLowerInvariant()));
+                        else
+                            ctx.Writer.Write(WriteExpression(expr, ctx));
                         ctx.Writer.WriteLine(':');
                     }
 
@@ -745,7 +752,12 @@ namespace Drizzle.Transpiler
 
         private static string WriteString(AstNode.String node, HandlerContext ctx)
         {
-            var escaped = node.Value.Replace("\"", "\"\"");
+            return DoWriteString(node.Value);
+        }
+
+        private static string DoWriteString(string str)
+        {
+            var escaped = str.Replace("\"", "\"\"");
             return $"@\"{escaped}\"";
         }
 
