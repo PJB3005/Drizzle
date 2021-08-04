@@ -184,6 +184,12 @@ namespace Drizzle.Lingo.Runtime
             return _random.Next(1, max + 1);
         }
 
+        public int random(LingoDecimal max)
+        {
+            // todo: should this return int?
+            return random((int) max);
+        }
+
         public string @string(dynamic value) => value.ToString();
 
         public static bool op_eq_b(dynamic? a, dynamic? b)
