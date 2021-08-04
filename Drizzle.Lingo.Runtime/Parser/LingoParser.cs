@@ -194,7 +194,8 @@ namespace Drizzle.Lingo.Runtime.Parser
                 .Then(Parenthesized(subExpr /*.Trace(arg => $"arg: {arg}")*/.Separated(Tok(','))),
                     (ident, args) => (AstNode.Base)new AstNode.GlobalCall(ident, args.ToArray()));
 
-        private static Parser<char, (AstNode.Base k, AstNode.Base? v)> ListLikeElem(Parser<char, AstNode.Base> subExpr) =>
+        private static Parser<char, (AstNode.Base k, AstNode.Base? v)>
+            ListLikeElem(Parser<char, AstNode.Base> subExpr) =>
             Map(
                 (a, b) => (a, b.HasValue ? b.Value : null),
                 subExpr,
@@ -429,7 +430,7 @@ namespace Drizzle.Lingo.Runtime.Parser
                 _ =>
                 {
                     var expr = Rec(() => Expression);
-                    var precedence1 = Operator.InfixL(LessThanOrEqual)
+                    var compare = Operator.InfixL(LessThanOrEqual)
                         .And(Operator.InfixL(NotEqual))
                         .And(Operator.InfixL(LessThan))
                         .And(Operator.InfixL(GreaterThanOrEqual))
@@ -438,7 +439,7 @@ namespace Drizzle.Lingo.Runtime.Parser
                         .And(Operator.InfixL(Starts));
 
                     if (allowEquals)
-                        precedence1 = precedence1.And(Operator.InfixL(Equal));
+                        compare = compare.And(Operator.InfixL(Equal));
 
                     var operatorTable = new[]
                     {
@@ -454,19 +455,20 @@ namespace Drizzle.Lingo.Runtime.Parser
                         // Yeah lingo docs just lie about precedence don't worry about it.
                         Operator.Prefix(Negate.TraceBegin("trying negate")),
                         // Also precendece 4 (???)
+                        Operator.InfixL(Mod /*.TraceBegin("Mod")*/),
+                        Operator.InfixL(Multiply)
+                            .And(Operator.InfixL(Divide)),
                         Operator.InfixL(Add)
-                            .And(Operator.InfixL(Multiply /*.TraceBegin("Multiply")*/))
-                            .And(Operator.InfixL(Divide /*.TraceBegin("Divide")*/))
-                            .And(Operator.InfixL(Mod /*.TraceBegin("Mod")*/)),
+                            // Precedence 3
+                            .And(Operator.InfixL(Subtract)),
+
                         // Precedence 2
                         Operator.InfixL(ConcatSpace.TraceBegin("Concat Space"))
                             .And(Operator.InfixL(Concat.TraceBegin("Concat"))),
                         // Precedence 1
-                        precedence1,
+                        compare,
                         // Precedence 5 (yes lol)
                         Operator.Prefix(Not),
-                        // Precedence 3
-                        Operator.InfixL(Subtract),
                         // Precedence 4
                         Operator.InfixL(And /*.TraceBegin("And")*/)
                             .And(Operator.InfixL(Or /*.TraceBegin("Or")*/)),
