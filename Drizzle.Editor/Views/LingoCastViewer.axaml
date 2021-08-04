@@ -27,7 +27,8 @@
                 </TabControl.ItemTemplate>
                 <TabControl.ContentTemplate>
                     <DataTemplate DataType="vm:LingoCastViewerCast">
-                        <ListBox Items="{Binding Entries}" SelectedItem="{Binding $parent[views:LingoCastViewer].DataContext.SelectedCastMember}">
+                        <ListBox Items="{Binding Entries}"
+                                 SelectedItem="{Binding $parent[views:LingoCastViewer].DataContext.SelectedCastMember}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="vm:CastMemberViewModel">
                                     <Grid ColumnDefinitions="50,*">
@@ -44,7 +45,7 @@
             <GridSplitter Grid.Column="1" ResizeDirection="Columns" />
             <DockPanel Grid.Column="2"
                        IsVisible="{Binding SelectedCastMember, Converter={x:Static ObjectConverters.IsNotNull}}">
-                <DockPanel DockPanel.Dock="Bottom">
+                <DockPanel DockPanel.Dock="Bottom" LastChildFill="False">
                     <TextBlock DockPanel.Dock="Left">
                         <TextBlock.Text>
                             <MultiBinding StringFormat="{}Depth: {0} Size: {1}x{2}">
@@ -54,6 +55,8 @@
                             </MultiBinding>
                         </TextBlock.Text>
                     </TextBlock>
+                    <Button DockPanel.Dock="Right" Content="Open" Command="{Binding OpenImage}"
+                            IsEnabled="{Binding SelectedCastMember, Converter={x:Static ObjectConverters.IsNotNull}}" />
                 </DockPanel>
                 <Panel Margin="4" Background="LightGray">
                     <Image Source="{Binding CurrentImage}" />

@@ -60,6 +60,14 @@ namespace Drizzle.Editor.ViewModels
             }
         }
 
+        public void OpenImage()
+        {
+            if (SelectedCastMember == null)
+                return;
+
+            SelectedCastMember.CastMember.image!.ShowImage();
+        }
+
         private static unsafe Bitmap LingoImageToBitmap(LingoImage img, bool thumbnail)
         {
             var finalImg = img.Image;

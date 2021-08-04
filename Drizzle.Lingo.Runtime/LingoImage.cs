@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Numerics;
 using Serilog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -99,13 +100,7 @@ namespace Drizzle.Lingo.Runtime
 
         public void ShowImage()
         {
-            var tmp = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.png");
-            {
-                using var file = File.OpenWrite(tmp);
-                Image.SaveAsPng(file);
-            }
-
-            Process.Start(new ProcessStartInfo(tmp) { UseShellExecute = true });
+            Image.ShowImage();
         }
 
         public static LingoImage LoadFromPath(string path)
@@ -120,8 +115,8 @@ namespace Drizzle.Lingo.Runtime
             return depth switch
             {
                 1 or 2 or 4 or 8 => new Image<A8>(width, height),
-                16 => new Image<Bgra5551>(width, height),
-                32 => new Image<Bgra32>(width, height),
+                16 => new Image<Bgra5551>(width, height, new Bgra5551(Vector4.One)),
+                32 => new Image<Bgra32>(width, height, new Bgra32(255, 255, 255, 255)),
                 _ => throw new ArgumentException("Invalid image depth", nameof(depth))
             };
         }
