@@ -58,7 +58,7 @@ namespace Drizzle.Lingo.Runtime
             in CopyPixelsParameters parameters)
         {
             if (parameters.Ink == CopyPixelsInk.Darkest)
-                throw new NotImplementedException("Darkest ink not implemented");
+                Log.Warning("copypixels(): Darkest ink not implemented");
 
             // Float coordinates for the purposes of sampling.
             // TODO: Half-texel offset, probably.
