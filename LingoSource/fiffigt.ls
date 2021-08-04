@@ -64,9 +64,9 @@ on moveToPoint(pointA, pointB, theMovement)
   
   
   pointB = pointB-pointA
-  diag = diag(point(0,0), pointB)
-  if diag>0 then
-    dirVec = pointB/diag
+  diagonal = diag(point(0,0), pointB)
+  if diagonal>0 then
+    dirVec = pointB/diagonal
   else
     dirVec = point(0, 1)
   end if
@@ -441,10 +441,10 @@ end
 
 on rotatePntFromOrigo(pnt, org, rotat)
   realDir = lookAtPoint(org, pnt)
-  diag = diag(org, pnt)
+  diagonal = diag(org, pnt)
   newDir = realDir-rotat
   vec = degToVec(newDir)
-  rotatedPnt = org+(vec*diag)
+  rotatedPnt = org+(vec*diagonal)
   return rotatedPnt
 end
 
