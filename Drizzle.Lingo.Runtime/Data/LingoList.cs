@@ -107,21 +107,29 @@ namespace Drizzle.Lingo.Runtime
 
         public static LingoList operator +(LingoList a, dynamic b)
         {
+            if (b is LingoList lb)
+                return new(a.Zip(lb).Select(e => (dynamic)e.First + (dynamic)e.Second));
             return new(a.Select(e => (dynamic)e + b));
         }
 
         public static LingoList operator -(LingoList a, dynamic b)
         {
+            if (b is LingoList lb)
+                return new(a.Zip(lb).Select(e => (dynamic)e.First - (dynamic)e.Second));
             return new(a.Select(e => (dynamic)e - b));
         }
 
         public static LingoList operator *(LingoList a, dynamic b)
         {
+            if (b is LingoList lb)
+                return new(a.Zip(lb).Select(e => (dynamic)e.First * (dynamic)e.Second));
             return new(a.Select(e => (dynamic)e * b));
         }
 
         public static LingoList operator /(LingoList a, dynamic b)
         {
+            if (b is LingoList lb)
+                return new(a.Zip(lb).Select(e => (dynamic)e.First / (dynamic)e.Second));
             return new(a.Select(e => (dynamic)e / b));
         }
 
