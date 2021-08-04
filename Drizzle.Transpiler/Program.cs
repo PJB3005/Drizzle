@@ -769,6 +769,8 @@ namespace Drizzle.Transpiler
         {
             if (node.Property == "float")
                 return WriteGlobalCall("floatmember_helper", ctx, node.Expression);
+            if (node.Property == "integer")
+                return WriteGlobalCall("integermember_helper", ctx, node.Expression);
             if (node.Property == "char")
                 return WriteGlobalCall("charmember_helper", ctx, node.Expression);
             if (node.Property == "line")
