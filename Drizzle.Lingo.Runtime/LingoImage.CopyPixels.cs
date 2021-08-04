@@ -190,7 +190,7 @@ namespace Drizzle.Lingo.Runtime
 
             // Horizontal increment for sampling coordinates when the rasterizer iterates.
             var incSrcH = (srcBox.Z - srcBox.X) / (dstR - dstL);
-            var incSrcV = (srcBox.W - srcBox.Y) / (dstR - dstL);
+            var incSrcV = (srcBox.W - srcBox.Y) / (dstB - dstT);
 
             var sampler = new TSampler();
             var writer = new TWriter();
