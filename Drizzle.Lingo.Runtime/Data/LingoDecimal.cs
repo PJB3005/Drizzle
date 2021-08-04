@@ -9,7 +9,7 @@ namespace Drizzle.Lingo.Runtime
         // TODO: Implement Lingo arithmetic accurately. If we care.
         public double Value;
 
-        public int integer => (int) Value;
+        public int integer => (int) Math.Round(Value, MidpointRounding.AwayFromZero);
 
         public LingoDecimal(double value)
         {
@@ -40,7 +40,9 @@ namespace Drizzle.Lingo.Runtime
         public static LingoDecimal operator %(LingoDecimal a, LingoDecimal b) => new(a.Value % b.Value);
 
         public static implicit operator LingoDecimal(int x) => new(x);
+        public static implicit operator LingoDecimal(float x) => new(x);
         public static explicit operator int(LingoDecimal x) => (int) x.Value;
+        public static explicit operator float(LingoDecimal x) => (float) x.Value;
 
         public bool Equals(LingoDecimal other)
         {
