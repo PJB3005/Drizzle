@@ -75,6 +75,11 @@ namespace Drizzle.Lingo.Runtime
             List.Insert(number - 1, value);
         }
 
+        public void deleteone(object? value)
+        {
+            List.Remove(value);
+        }
+
         public LingoList duplicate()
         {
             return new LingoList(List.Select(i => DuplicateIfList(i)));
