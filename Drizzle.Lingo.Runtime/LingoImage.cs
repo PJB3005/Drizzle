@@ -47,18 +47,35 @@ namespace Drizzle.Lingo.Runtime
 
         public LingoColor getpixel(LingoDecimal x, LingoDecimal y)
         {
-            return getpixel((int) x, (int) y);
+            return getpixel((int)x, (int)y);
         }
 
         public LingoColor getpixel(int x, int y)
         {
-            switch (Image)
+            switch (Depth)
             {
-                case Image<Bgra32> bgra32:
+                case 32:
                 {
+                    var bgra32 = (Image<Bgra32>)Image;
                     var bgra = bgra32[x, y];
                     return new LingoColor(bgra.R, bgra.G, bgra.B);
                 }
+                case 16:
+                {
+                    var bgra5551 = (Image<Bgra5551>)Image;
+                    var rgba = new Rgba32();
+                    bgra5551[x, y].ToRgba32(ref rgba);
+                    return new LingoColor(rgba.R, rgba.G, rgba.B);
+                }
+                case 1:
+                {
+                    var l8 = (Image<L8>)Image;
+                    var val = l8[x, y];
+                    return val.PackedValue == 255 ? new LingoColor(255, 255, 255) : new LingoColor(0, 0, 0);
+                }
+                default:
+                    Log.Warning("getpixel(): Unimplemented image depth: {Depth}", Depth);
+                    return default;
             }
 
             // Log.Warning("getpixel unimplemented image depth: {ImageDepth}", Depth);
@@ -77,17 +94,33 @@ namespace Drizzle.Lingo.Runtime
 
         public void setpixel(int x, int y, LingoColor color)
         {
-            switch (Image)
+            switch (Depth)
             {
-                case Image<Bgra32> bgra32:
+                case 32:
                 {
+                    var bgra32 = (Image<Bgra32>)Image;
                     bgra32[x, y] = new Bgra32((byte)color.red, (byte)color.green, (byte)color.red, 255);
                     return;
                 }
+                case 16:
+                {
+                    var bgra5551 = (Image<Bgra5551>)Image;
+                    var val = new Bgra5551();
+                    val.FromRgba32(new Rgba32((byte)color.red, (byte)color.green, (byte)color.red, 255));
+                    bgra5551[x, y] = val;
+                    return;
+                }
+                case 1:
+                {
+                    var L8 = (Image<L8>)Image;
+                    var white = color.red != 0;
+                    L8[x, y] = white ? new L8(255) : new L8(0);
+                    return;
+                }
+                default:
+                    Log.Warning("setpixel(): Unimplemented image depth: {Depth}", Depth);
+                    break;
             }
-
-            // Log.Warning("setpixel unimplemented image depth: {ImageDepth}", Depth);
-            return;
         }
 
         public LingoImage duplicate()
@@ -103,6 +136,14 @@ namespace Drizzle.Lingo.Runtime
 
         public void ShowImage()
         {
+            if (Depth == 8)
+            {
+                var copy = new LingoImage(width, height, 32);
+                copy.copypixels(this, rect, rect);
+                copy.ShowImage();
+                return;
+            }
+
             Image.ShowImage();
         }
 
@@ -117,7 +158,7 @@ namespace Drizzle.Lingo.Runtime
         {
             return depth switch
             {
-                1 or 2 or 4 or 8 => new Image<A8>(width, height),
+                1 or 2 or 4 or 8 => new Image<L8>(width, height, depth == 1 ? new L8(255) : new L8(0)),
                 16 => new Image<Bgra5551>(width, height, new Bgra5551(Vector4.One)),
                 32 => new Image<Bgra32>(width, height, new Bgra32(255, 255, 255, 255)),
                 _ => throw new ArgumentException("Invalid image depth", nameof(depth))

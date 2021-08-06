@@ -187,6 +187,22 @@ namespace Drizzle.Lingo.Runtime
                         dstBox,
                         parameters);
                     break;
+                case 8:
+                    CopyPixelsRectGenSampler<L8, PixelWriterPalette8>(
+                        src,
+                        (Image<L8>)dst.Image,
+                        srcBox,
+                        dstBox,
+                        parameters);
+                    break;
+                case 1:
+                    CopyPixelsRectGenSampler<L8, PixelWriterBit>(
+                        src,
+                        (Image<L8>)dst.Image,
+                        srcBox,
+                        dstBox,
+                        parameters);
+                    break;
                 default:
                     // Not implemented.
                     break;
@@ -214,6 +230,22 @@ namespace Drizzle.Lingo.Runtime
                 case 16:
                     CopyPixelsRectCoreCopy<Bgra5551, PixelSamplerRgb<Bgra5551>, TDstData, TWriter>(
                         (Image<Bgra5551>)src.Image,
+                        dstImg,
+                        srcBox,
+                        dstBox,
+                        parameters);
+                    break;
+                case 8:
+                    CopyPixelsRectCoreCopy<L8, PixelSamplerPalette8, TDstData, TWriter>(
+                        (Image<L8>)src.Image,
+                        dstImg,
+                        srcBox,
+                        dstBox,
+                        parameters);
+                    break;
+                case 1:
+                    CopyPixelsRectCoreCopy<L8, PixelSamplerBit, TDstData, TWriter>(
+                        (Image<L8>)src.Image,
                         dstImg,
                         srcBox,
                         dstBox,
@@ -306,6 +338,12 @@ namespace Drizzle.Lingo.Runtime
                         dstBox,
                         parameters);
                     break;
+                case 1:
+                    CopyPixelsPxlRectCore<L8, PixelWriterBit>(
+                        (Image<L8>)dst.Image,
+                        dstBox,
+                        parameters);
+                    break;
                 default:
                     // Not implemented.
                     break;
@@ -366,6 +404,8 @@ namespace Drizzle.Lingo.Runtime
             void Write(Span<TPixel> dstDat, int rowMajorPos, Vector4 value);
         }
 
+        // Bgra32 and Bgra5551 image sampler/writer.
+        // Can use common generic code thanks to ImageSharp pixel helpers.
         private struct PixelSamplerRgb<TPixel> : IPixelSampler<TPixel>
             where TPixel : unmanaged, IPixel<TPixel>
         {
@@ -388,6 +428,71 @@ namespace Drizzle.Lingo.Runtime
             public void Write(Span<TPixel> dstDat, int rowMajorPos, Vector4 value)
             {
                 dstDat[rowMajorPos].FromVector4(value);
+            }
+        }
+
+        private struct PixelSamplerPalette8 : IPixelSampler<L8>
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+            public Vector4 Sample(ReadOnlySpan<L8> srcDat, int srcWidth, int srcHeight, Vector2 pos)
+            {
+                var x = (int)(pos.X * srcWidth);
+                var y = (int)(pos.Y * srcHeight);
+
+                var rowMajor = x + y * srcWidth;
+                var px = srcDat[rowMajor].PackedValue;
+                var lingoColor = (LingoColor)px;
+                return new Vector4(lingoColor.red / 255f, lingoColor.green / 255f, lingoColor.blue / 255f, 1);
+            }
+        }
+
+        private struct PixelWriterPalette8 : IPixelWriter<L8>
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+            public void Write(Span<L8> dstDat, int rowMajorPos, Vector4 value)
+            {
+                var r = (int)(value.X * 255);
+                var g = (int)(value.Y * 255);
+                var b = (int)(value.Z * 255);
+
+                if (r == 255 && g == 0 && b == 0)
+                {
+                    // Palette index of red.
+                    dstDat[rowMajorPos] = new L8(6);
+                }
+                else if (r == 0 && g == 0 && b == 0)
+                {
+                    // Black.
+                    dstDat[rowMajorPos] = new L8(255);
+                }
+                else
+                {
+                    // White.
+                    dstDat[rowMajorPos] = new L8(0);
+                }
+            }
+        }
+
+        private struct PixelSamplerBit : IPixelSampler<L8>
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+            public Vector4 Sample(ReadOnlySpan<L8> srcDat, int srcWidth, int srcHeight, Vector2 pos)
+            {
+                var x = Math.Clamp((int)(pos.X * srcWidth), 0, srcWidth-1);
+                var y = Math.Clamp((int)(pos.Y * srcHeight), 0, srcHeight-1);
+
+                var rowMajor = x + y * srcWidth;
+                var px = srcDat[rowMajor];
+                return px.PackedValue == 255 ? Vector4.One : new Vector4(0, 0, 0, 1);
+            }
+        }
+
+        private struct PixelWriterBit : IPixelWriter<L8>
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+            public void Write(Span<L8> dstDat, int rowMajorPos, Vector4 value)
+            {
+                dstDat[rowMajorPos] = value.X != 0 ? new L8(255) : new L8(0);
             }
         }
     }

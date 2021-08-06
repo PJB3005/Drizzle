@@ -9,6 +9,7 @@ namespace Drizzle.Lingo.Runtime
         private static readonly Dictionary<int, (int r, int g, int b)> Palette = new()
         {
             [0] = (255, 255, 255),
+            [6] = (255, 0, 0),
             [255] = (0, 0, 0)
         };
 
