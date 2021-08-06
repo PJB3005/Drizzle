@@ -23,6 +23,10 @@ namespace Drizzle.Lingo.Runtime
 
         private readonly LingoCastLib[] _castLibs = new LingoCastLib[5];
 
+        // This is intentionally case sensitive, see GetCastMemberAnyCast.
+        private readonly Dictionary<string, CastMember> _castMemberNameIndex = new();
+        private bool _castMemberNameIndexDirty;
+
         public LingoCastLib GetCastLib(string castName)
         {
             return _castLibNames[castName];
@@ -48,6 +52,18 @@ namespace Drizzle.Lingo.Runtime
 
         private CastMember? GetCastMemberAnyCast(object nameOrNum)
         {
+            if (nameOrNum is string name)
+            {
+                if (_castMemberNameIndexDirty)
+                    UpdateMemberNameIndex();
+
+                // NOTE: This is a case-sensitive lookup,
+                // since those are significantly more efficient than case-insensitive ones.
+                // If the lookup fails, we still go through the cast libs like normal since they do insensitive lookups.
+                if (_castMemberNameIndex.TryGetValue(name, out var member))
+                    return member;
+            }
+
             foreach (var castLib in _castLibs)
             {
                 var mem = castLib.GetMember(nameOrNum);
@@ -141,6 +157,31 @@ namespace Drizzle.Lingo.Runtime
                 Log.Warning("Warning: unrecognized cast member type {CastFileName}", file);
 
             return member;
+        }
+
+        private void UpdateMemberNameIndex()
+        {
+            _castMemberNameIndex.Clear();
+
+            foreach (var castLib in _castLibs)
+            {
+                for (var i = 0; i < castLib.NumMembers; i++)
+                {
+                    var member = castLib.GetMember(i);
+                    if (member?.name == null)
+                        continue;
+
+                    if (!_castMemberNameIndex.ContainsKey(member.name))
+                        _castMemberNameIndex.Add(member.name, member);
+                }
+            }
+
+            _castMemberNameIndexDirty = false;
+        }
+
+        public void NameIndexDirty()
+        {
+            _castMemberNameIndexDirty = true;
         }
     }
 }
