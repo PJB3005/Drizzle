@@ -107,3 +107,22 @@ Keys per category:
     - `"Temple Floor"`
     - `"Larger Sign"`
     - `"nonSolid"`
+
+## `gEffects`
+
+Contains definitions for available effects. Extremely simple, only contains effect *names*.
+
+Structure is a list containing `[#nm: categoryName, #efs: [effects]]`. Each entry in `efs` is `[#nm: name]`. Simple as that.
+
+## `gEEprops`
+
+Proplist for the effects editor, contains following data:
+
+- `#lastKeys` and `#Keys`: Double-buffered keys list used to implement first-frame-pressed key behavior.
+- `#lstMsPs`: last mouse pos
+- `#effects:` list of effects in the current level.
+- `#emPos`: 
+- `#editEffect`:
+- `#selectEditEffect`:
+- `#mode`:
+- `#brushSize`:
