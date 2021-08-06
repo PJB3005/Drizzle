@@ -208,7 +208,7 @@ namespace Drizzle.Lingo.Runtime
 
             var doBackgroundTransparent = parameters.Ink == CopyPixelsInk.BackgroundTransparent;
             var fgc = parameters.ForeColor;
-            var fg = new Vector4(fgc.red / 255f, fgc.green / 255f, fgc.red / 255f, 0f);
+            var fg = new Vector4(fgc.red / 255f, fgc.green / 255f, fgc.blue / 255f, 0f);
 
             var t = srcBox.Y;
             for (var y = dstT; y < dstB; y++)
@@ -223,10 +223,11 @@ namespace Drizzle.Lingo.Runtime
                     else
                         color = sampler.Sample(srcSpan, srcImgW, srcImgH, new Vector2(s, t));
 
-                    color += fg;
-
                     if (!doBackgroundTransparent || color != Vector4.One)
+                    {
+                        color += fg;
                         writer.Write(dstSpan, dstImgW * y + x, color);
+                    }
 
                     s += incSrcH;
                 }
