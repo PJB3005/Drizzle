@@ -17,6 +17,11 @@ namespace Drizzle.Lingo.Runtime
         public int width => Image.Width;
         public int height => Image.Height;
 
+        // So the editor does a *ton* of tiny copypixels() operations from the "pxl" cast member,
+        // which basically amounts to line/rect drawings in a silly way.
+        // Guess we're fast pathing this.
+        public bool IsPxl { get; set; }
+
         public LingoImage(int width, int height, int depth)
         {
             Image = NewImgForDepth(depth, width, height);

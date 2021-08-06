@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Serilog;
@@ -9,6 +10,16 @@ namespace Drizzle.Lingo.Runtime
 {
     public sealed partial class LingoImage
     {
+        /*
+             private static int CopiesPixelFast;
+   private static int CopiesEqualNonStretch;
+        private static int CopiesNonStretch;
+        private static int CopiesEqual;
+        private static int CopiesEqualTall;
+        private static int CopiesOther;
+
+        private static Dictionary<(int w, int h), int> Sizes = new();
+        */
 
         public void copypixels(LingoImage source, LingoList destQuad, LingoRect sourceRect, LingoPropertyList paramList)
         {
@@ -23,7 +34,7 @@ namespace Drizzle.Lingo.Runtime
                 Ink = CopyPixelsInk.Copy
             };
 
-            CopyPixelsImpl(source, destRect, sourceRect, parameters);
+            CopyPixelsImpl(source, this, destRect, sourceRect, parameters);
         }
 
         public void copypixels(LingoImage source, LingoRect destRect, LingoRect sourceRect, LingoPropertyList paramList)
@@ -48,15 +59,62 @@ namespace Drizzle.Lingo.Runtime
             if (paramList.Dict.ContainsKey(new LingoSymbol("mask")))
                 Log.Warning("copypixels(): Mask rendering not implemented");
 
-            CopyPixelsImpl(source, destRect, sourceRect, parameters);
+            CopyPixelsImpl(source, this, destRect, sourceRect, parameters);
         }
 
-        private void CopyPixelsImpl(
+        private static void CopyPixelsImpl(
             LingoImage source,
+            LingoImage dest,
             LingoRect destRect,
             LingoRect sourceRect,
             in CopyPixelsParameters parameters)
         {
+            Debug.Assert(!dest.IsPxl);
+
+            /*
+            if (destRect.width == sourceRect.width && destRect.height == sourceRect.height)
+            {
+                if (source.Depth == dest.Depth)
+                    CopiesEqualNonStretch += 1;
+                else
+                    CopiesNonStretch += 1;
+            }
+            else
+            {
+                if (source.Depth == dest.Depth)
+                {
+                    CopiesEqual += 1;
+                }
+                else
+                    CopiesOther += 1;
+            }
+
+            if (source.width == 1 && source.height == 1 && parameters.Ink != CopyPixelsInk.Copy)
+            {
+                var tup = ((int)destRect.width, (int)destRect.height);
+                if (!Sizes.ContainsKey(tup))
+                    Sizes[tup] = 0;
+
+                CollectionsMarshal.GetValueRefOrNullRef(Sizes, tup) += 1;
+            }
+            */
+
+            // Integer coordinates for the purpose of rasterization.
+            // TODO: if we clamp, scale source coordinates.
+            var dstL = Math.Clamp((int)destRect.left, 0, dest.width);
+            var dstT = Math.Clamp((int)destRect.top, 0, dest.height);
+            var dstR = Math.Clamp((int)destRect.right, 0, dest.width);
+            var dstB = Math.Clamp((int)destRect.bottom, 0, dest.height);
+
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            // todo: make sure to not apply this when mask is set.
+            if (source.IsPxl && parameters.Blend == 1 && parameters.Ink == CopyPixelsInk.Copy)
+            {
+                // CopiesPixelFast += 1;
+                CopyPixelsPxlRectGenWriter(dest, (dstL, dstT, dstR, dstB), parameters);
+                return;
+            }
+
             if (parameters.Ink == CopyPixelsInk.Darkest)
                 Log.Warning("copypixels(): Darkest ink not implemented");
 
@@ -70,14 +128,7 @@ namespace Drizzle.Lingo.Runtime
             // LTRB
             var srcBox = new Vector4(srcL, srcT, srcR, srcB);
 
-            // Integer coordinates for the purpose of rasterization.
-            // TODO: if we clamp, scale source coordinates.
-            var dstL = Math.Clamp((int)destRect.left, 0, width);
-            var dstT = Math.Clamp((int)destRect.top, 0, height);
-            var dstR = Math.Clamp((int)destRect.right, 0, width);
-            var dstB = Math.Clamp((int)destRect.bottom, 0, height);
-
-            CopyPixelsRectGenWriter(source, this, srcBox, (dstL, dstT, dstR, dstB), parameters);
+            CopyPixelsRectGenWriter(source, dest, srcBox, (dstL, dstT, dstR, dstB), parameters);
 
             /*var srcImg = source.Image;
 
@@ -233,6 +284,59 @@ namespace Drizzle.Lingo.Runtime
                 }
 
                 t += incSrcV;
+            }
+        }
+
+        private static void CopyPixelsPxlRectGenWriter(
+            LingoImage dst,
+            (int l, int t, int r, int b) dstBox,
+            in CopyPixelsParameters parameters)
+        {
+            switch (dst.Depth)
+            {
+                case 32:
+                    CopyPixelsPxlRectCore<Bgra32, PixelWriterRgb<Bgra32>>(
+                        (Image<Bgra32>)dst.Image,
+                        dstBox,
+                        parameters);
+                    break;
+                case 16:
+                    CopyPixelsPxlRectCore<Bgra5551, PixelWriterRgb<Bgra5551>>(
+                        (Image<Bgra5551>)dst.Image,
+                        dstBox,
+                        parameters);
+                    break;
+                default:
+                    // Not implemented.
+                    break;
+            }
+        }
+
+        private static void CopyPixelsPxlRectCore<TDstData, TWriter>(
+            Image<TDstData> dstImg,
+            (int l, int t, int r, int b) dstBox,
+            in CopyPixelsParameters parameters)
+            where TWriter : struct, IPixelWriter<TDstData>
+            where TDstData : unmanaged, IPixel<TDstData>
+        {
+            var (dstL, dstT, dstR, dstB) = dstBox;
+
+            if (!dstImg.TryGetSinglePixelSpan(out var dstSpan))
+                throw new InvalidOperationException("TryGetSinglePixelSpan failed");
+
+            var dstWidth = dstImg.Width;
+            var w = new TWriter();
+
+            // todo: remove round trip to Vector4 here please.
+            var fgc = parameters.ForeColor;
+            var fg = new Vector4(fgc.red / 255f, fgc.green / 255f, fgc.blue / 255f, 1f);
+
+            for (var y = dstT; y < dstB; y++)
+            {
+                for (var x = dstL; x < dstR; x++)
+                {
+                    w.Write(dstSpan, y * dstWidth + x, fg);
+                }
             }
         }
 

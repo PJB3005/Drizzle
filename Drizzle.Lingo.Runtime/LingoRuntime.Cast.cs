@@ -92,6 +92,9 @@ namespace Drizzle.Lingo.Runtime
             }
 
             Log.Debug("Loaded {CastSize} cast members in {Time}", count, sw.Elapsed);
+
+            // Set up pxl special case.
+            GetCastMember("pxl")!.image!.IsPxl = true;
         }
 
         private void InitCastLibs()
