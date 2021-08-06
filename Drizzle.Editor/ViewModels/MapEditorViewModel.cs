@@ -26,9 +26,8 @@ namespace Drizzle.Editor.ViewModels
 
         private void Update(int newFrame)
         {
-            if (MapEditor.AutoPauseOn == -1)
+            if (MapEditor.AutoPauseOn == newFrame)
                 Lingo.IsPaused = true;
         }
     }
 }
-

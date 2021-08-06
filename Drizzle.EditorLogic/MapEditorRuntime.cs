@@ -13,7 +13,7 @@ namespace Drizzle.Logic
         public string? LoadProject { get; set; }
         public bool Render { get; set; }
         public RenderStage RenderStage { get; set; } = RenderStage.NoPause;
-        public int AutoPauseOn { get; private set; }
+        public int AutoPauseOn { get; private set; } = -1;
 
         public MapEditorRuntime(LingoRuntime runtime)
         {
@@ -53,7 +53,7 @@ namespace Drizzle.Logic
                 RenderStage.RenderLayers => 50,
                 RenderStage.RenderProps => 53,
                 RenderStage.RenderEffects => 56,
-                RenderStage.RenderPropsAfterEffects => 63,
+                RenderStage.RenderPropsAfterEffects => 64,
                 RenderStage.RenderLights => 69,
                 RenderStage.RenderColors => 73,
                 _ => throw new ArgumentOutOfRangeException()
