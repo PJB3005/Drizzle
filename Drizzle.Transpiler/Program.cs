@@ -464,10 +464,7 @@ namespace Drizzle.Transpiler
             var loopTmp = $"tmp_{name}";
             ctx.Writer.WriteLine($"foreach (dynamic {loopTmp} in {expr}) {{");
 
-            if (ctx.Locals.Add(name))
-                ctx.DeclaredLocals.Add(name);
-
-            ctx.Writer.WriteLine($"{name.ToLower()} = {loopTmp};");
+            MakeLoopTmp(ctx, name, loopTmp);
             WriteStatementBlock(node.Block, ctx);
 
             ctx.Writer.WriteLine("}");
@@ -482,15 +479,20 @@ namespace Drizzle.Transpiler
 
             ctx.Writer.WriteLine($"for (int {loopTmp} = (int) ({start}); {loopTmp} <= {end}; {loopTmp}++) {{");
 
-            if (ctx.Locals.Add(name))
-                ctx.DeclaredLocals.Add(name);
-
-            ctx.Writer.WriteLine($"{name.ToLower()} = {loopTmp};");
+            MakeLoopTmp(ctx, name, loopTmp);
             WriteStatementBlock(node.Block, ctx);
 
             ctx.Writer.WriteLine("}");
 
             // ctx.LoopTempIdx--;
+        }
+
+        private static void MakeLoopTmp(HandlerContext ctx, string name, string loopTmp)
+        {
+            if (!IsGlobal(name, ctx) && ctx.Locals.Add(name))
+                ctx.DeclaredLocals.Add(name);
+
+            ctx.Writer.WriteLine($"{WriteVariableNameCore(name, ctx)} = {loopTmp};");
         }
 
         private static void WriteRepeatWhile(AstNode.RepeatWhile node, HandlerContext ctx)
@@ -682,7 +684,12 @@ namespace Drizzle.Transpiler
 
         private static string WriteVariableName(AstNode.VariableName variableName, HandlerContext ctx)
         {
-            var name = variableName.Name.ToLower();
+            return WriteVariableNameCore(variableName.Name, ctx);
+        }
+
+        private static string WriteVariableNameCore(string name, HandlerContext ctx)
+        {
+            name = name.ToLower();
 
             if (name == "me")
                 return "this";
