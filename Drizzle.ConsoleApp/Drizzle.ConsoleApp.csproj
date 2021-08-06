@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
@@ -13,7 +13,7 @@
 <!--
   <ItemGroup>
     <Reference Include="Pidgin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cf8803ee5be21175">
-      <HintPath>..\..\Pidgin\Pidgin\bin\Debug\net6.0\Pidgin.dll</HintPath>
+      <HintPath>..\..\Pidgin\Pidgin\bin\Debug\net5.0\Pidgin.dll</HintPath>
     </Reference>
   </ItemGroup>-->
 </Project>
