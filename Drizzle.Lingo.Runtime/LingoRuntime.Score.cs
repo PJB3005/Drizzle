@@ -66,9 +66,6 @@ namespace Drizzle.Lingo.Runtime
         {
             Debug.Assert(CurrentFrameBehavior == null);
 
-            if (_doIncrementFrame)
-                CurrentFrame += 1;
-
             _doIncrementFrame = true;
 
             var changedFrame = false;
@@ -79,37 +76,41 @@ namespace Drizzle.Lingo.Runtime
                 Log.Debug("Advancing to frame {CurrentFrame}", CurrentFrame);
             }
 
-            if (!ScoreFrameScripts.TryGetValue(CurrentFrame, out var frameScript))
+            if (ScoreFrameScripts.TryGetValue(CurrentFrame, out var frameScript))
+            {
+                if (changedFrame)
+                {
+                    Log.Debug("Current frame behavior script is {FrameBehaviorScript}", frameScript);
+                }
+
+                CurrentFrameBehavior = InstantiateBehaviorScript(frameScript);
+                LastFrameBehaviorName = frameScript;
+
+                var method = CurrentFrameBehavior.GetType().GetMethod("enterFrame",
+                    BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+                if (method != null)
+                {
+                    // Log.Debug("Invoking enterFrame handler");
+                    method.Invoke(CurrentFrameBehavior, Array.Empty<object?>());
+                }
+
+                method = CurrentFrameBehavior.GetType().GetMethod("exitFrame",
+                    BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+                if (method != null)
+                {
+                    // Log.Debug("Invoking exitFrame handler");
+                    method.Invoke(CurrentFrameBehavior, Array.Empty<object?>());
+                }
+
+                CurrentFrameBehavior = null;
+            }
+            else
             {
                 LastFrameBehaviorName = null;
-                return;
             }
 
-            if (changedFrame)
-            {
-                Log.Debug("Current frame behavior script is {FrameBehaviorScript}", frameScript);
-            }
-
-            CurrentFrameBehavior = InstantiateBehaviorScript(frameScript);
-            LastFrameBehaviorName = frameScript;
-
-            var method = CurrentFrameBehavior.GetType().GetMethod("enterFrame",
-                BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
-            if (method != null)
-            {
-                // Log.Debug("Invoking enterFrame handler");
-                method.Invoke(CurrentFrameBehavior, Array.Empty<object?>());
-            }
-
-            method = CurrentFrameBehavior.GetType().GetMethod("exitFrame",
-                BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
-            if (method != null)
-            {
-                // Log.Debug("Invoking exitFrame handler");
-                method.Invoke(CurrentFrameBehavior, Array.Empty<object?>());
-            }
-
-            CurrentFrameBehavior = null;
+            if (_doIncrementFrame)
+                CurrentFrame += 1;
         }
 
         public void ScoreGo(int newFrame)
