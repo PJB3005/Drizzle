@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using Drizzle.Lingo.Runtime;
 using Drizzle.Ported;
 using Serilog;
@@ -11,6 +12,8 @@ namespace Drizzle.Logic
 
         public string? LoadProject { get; set; }
         public bool Render { get; set; }
+        public RenderStage RenderStage { get; set; } = RenderStage.NoPause;
+        public int AutoPauseOn { get; private set; }
 
         public MapEditorRuntime(LingoRuntime runtime)
         {
@@ -42,8 +45,35 @@ namespace Drizzle.Logic
                 MovieScript.global_gviewrender = 1;
                 LingoRuntime.ScoreGo(43);
             }
+
+            var expectFrame = RenderStage switch
+            {
+                RenderStage.NoPause => -1,
+                RenderStage.Start => 44,
+                RenderStage.RenderLayers => 50,
+                RenderStage.RenderProps => 53,
+                RenderStage.RenderEffects => 56,
+                RenderStage.RenderPropsAfterEffects => 63,
+                RenderStage.RenderLights => 69,
+                RenderStage.RenderColors => 73,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            AutoPauseOn = expectFrame;
         }
 
         private MovieScript MovieScript => (MovieScript)LingoRuntime.MovieScriptInstance;
+    }
+
+    public enum RenderStage
+    {
+        Start,
+        RenderLayers,
+        RenderProps,
+        RenderEffects,
+        RenderPropsAfterEffects,
+        RenderLights,
+        RenderColors,
+        NoPause
     }
 }

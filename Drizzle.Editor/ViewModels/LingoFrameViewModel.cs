@@ -8,11 +8,12 @@ namespace Drizzle.Editor.ViewModels
     /// </summary>
     public abstract class LingoFrameViewModel : ViewModelBase
     {
-        public LingoRuntime Runtime { get; private set; }
+        public LingoRuntime Runtime => Lingo.Runtime;
+        public LingoViewModel Lingo { get; private set; }
 
-        public virtual void OnLoad(LingoRuntime runtime)
+        public virtual void OnLoad(LingoViewModel lingo)
         {
-            Runtime = runtime;
+            Lingo = lingo;
         }
 
         public virtual void OnUpdate()

@@ -1,6 +1,8 @@
-﻿using Avalonia;
+﻿using System;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Drizzle.Editor.ViewModels;
 
 namespace Drizzle.Editor.Views
 {
@@ -19,5 +21,14 @@ namespace Drizzle.Editor.Views
             AvaloniaXamlLoader.Load(this);
         }
 
+        private void OnClosed(object? sender, EventArgs e)
+        {
+            (DataContext as LingoCastViewerViewModel)?.Closed();
+        }
+
+        private void OpOpened(object? sender, EventArgs e)
+        {
+            (DataContext as LingoCastViewerViewModel)?.Opened();
+        }
     }
 }

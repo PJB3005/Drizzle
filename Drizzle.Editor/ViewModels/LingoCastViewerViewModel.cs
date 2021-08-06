@@ -6,6 +6,8 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Drizzle.Lingo.Runtime;
 using Drizzle.Lingo.Runtime.Cast;
+using DynamicData;
+using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using SixLabors.ImageSharp.PixelFormats;
@@ -29,6 +31,8 @@ namespace Drizzle.Editor.ViewModels
 
             Casts.Add(new LingoCastViewerCast(_lingo.Runtime.GetCastLib("Internal")));
             Casts.Add(new LingoCastViewerCast(_lingo.Runtime.GetCastLib("levelEditor")));
+
+            _lingo.Update += LingoUpdate;
         }
 
         [Reactive] public string Status { get; set; } = "A";
@@ -42,21 +46,24 @@ namespace Drizzle.Editor.ViewModels
         {
             foreach (var castModel in Casts)
             {
-                castModel.Entries.Clear();
-
-                var cast = castModel.CastLib;
-                for (var i = 1; i <= cast.NumMembers; i++)
+                castModel.UnfilteredEntries.Edit(e =>
                 {
-                    var member = cast.GetMember(i)!;
+                    e.Clear();
 
-                    if (member.Type != CastMemberType.Bitmap)
-                        continue;
+                    var cast = castModel.CastLib;
+                    for (var i = 1; i <= cast.NumMembers; i++)
+                    {
+                        var member = cast.GetMember(i)!;
 
-                    var bitmap = LingoImageToBitmap(member.image!, true);
-                    var entry = new CastMemberViewModel(bitmap, cast.name, member);
+                        if (member.Type != CastMemberType.Bitmap)
+                            continue;
 
-                    castModel.Entries.Add(entry);
-                }
+                        var bitmap = LingoImageToBitmap(member.image!, true);
+                        var entry = new CastMemberViewModel(bitmap, cast.name, member);
+
+                        e.Add(entry);
+                    }
+                });
             }
         }
 
@@ -91,6 +98,21 @@ namespace Drizzle.Editor.ViewModels
                     sizeof(Bgra32) * bgra.Width);
             }
         }
+
+        public void Closed()
+        {
+            _lingo.Update -= LingoUpdate;
+        }
+
+        private void LingoUpdate(int newFrame)
+        {
+            // Refresh();
+        }
+
+        public void Opened()
+        {
+            Refresh();
+        }
     }
 
     public sealed class LingoCastViewerCast : ViewModelBase
@@ -98,11 +120,28 @@ namespace Drizzle.Editor.ViewModels
         public LingoCastViewerCast(LingoCastLib castLib)
         {
             CastLib = castLib;
+
+            var searchSelect = this.WhenAnyValue(x => x.Search)
+                .Select<string?, Func<CastMemberViewModel, bool>>(search =>
+                    string.IsNullOrWhiteSpace(search)
+                        ? _ => true
+                        : x => x.Name != null && x.Name.Contains(search));
+
+            UnfilteredEntries
+                .Connect()
+                .Filter(searchSelect)
+                .Sort(SortExpressionComparer<CastMemberViewModel>.Ascending(x => x.Number))
+                .Bind(out ReadOnlyObservableCollection<CastMemberViewModel> entries)
+                .Subscribe();
+
+            Entries = entries;
         }
 
         public LingoCastLib CastLib { get; }
 
-        public ObservableCollection<CastMemberViewModel> Entries { get; } = new();
+        [Reactive] public string Search { get; set; } = "";
+        public SourceList<CastMemberViewModel> UnfilteredEntries { get; } = new();
+        public ReadOnlyObservableCollection<CastMemberViewModel> Entries { get; }
     }
 
     public sealed class CastMemberViewModel

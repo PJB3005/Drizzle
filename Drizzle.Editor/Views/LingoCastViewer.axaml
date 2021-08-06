@@ -4,7 +4,8 @@
         xmlns:views="clr-namespace:Drizzle.Editor.Views"
         x:Class="Drizzle.Editor.Views.LingoCastViewer"
         Icon="/Assets/avalonia-logo.ico"
-        Title="Drizzle.Editor" Width="1024" Height="768">
+        Title="Drizzle.Editor" Width="1024" Height="600"
+        Closed="OnClosed" Opened="OpOpened">
 
     <Design.DataContext>
         <!-- ReSharper disable once Xaml.ConstructorWarning -->
@@ -27,17 +28,21 @@
                 </TabControl.ItemTemplate>
                 <TabControl.ContentTemplate>
                     <DataTemplate DataType="vm:LingoCastViewerCast">
-                        <ListBox Items="{Binding Entries}"
-                                 SelectedItem="{Binding $parent[views:LingoCastViewer].DataContext.SelectedCastMember}">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate DataType="vm:CastMemberViewModel">
-                                    <Grid ColumnDefinitions="50,*">
-                                        <Image Grid.Column="0" Source="{Binding Thumbnail}" />
-                                        <TextBlock Grid.Column="1" Text="{Binding NameOrNumber}" />
-                                    </Grid>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
+                        <DockPanel>
+                            <TextBox DockPanel.Dock="Top" Text="{Binding Search}" Watermark="Search" />
+                            
+                            <ListBox Items="{Binding Entries}"
+                                     SelectedItem="{Binding $parent[views:LingoCastViewer].DataContext.SelectedCastMember}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate DataType="vm:CastMemberViewModel">
+                                        <Grid ColumnDefinitions="50,*">
+                                            <Image Grid.Column="0" Source="{Binding Thumbnail}" />
+                                            <TextBlock Grid.Column="1" Text="{Binding NameOrNumber}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </DockPanel>
                     </DataTemplate>
                 </TabControl.ContentTemplate>
             </TabControl>

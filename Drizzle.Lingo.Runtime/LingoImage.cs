@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IO;
 using System.Numerics;
 using Serilog;
 using SixLabors.ImageSharp;

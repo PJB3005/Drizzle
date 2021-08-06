@@ -23,4 +23,9 @@
         <ProjectReference Include="..\Drizzle.Ported\Drizzle.Ported.csproj" />
         <ProjectReference Include="..\Drizzle.EditorLogic\Drizzle.EditorLogic.csproj" />
     </ItemGroup>
+    <ItemGroup>
+      <Compile Update="Views\LingoFrames\FrameRenderEffectsView.axaml.cs">
+        <DependentUpon>FrameRenderEffectsView.axaml</DependentUpon>
+      </Compile>
+    </ItemGroup>
 </Project>

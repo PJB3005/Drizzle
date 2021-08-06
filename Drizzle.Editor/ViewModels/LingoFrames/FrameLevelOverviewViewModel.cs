@@ -1,16 +1,14 @@
-using Drizzle.Lingo.Runtime;
-
 namespace Drizzle.Editor.ViewModels.LingoFrames
 {
     public sealed class FrameLevelOverviewViewModel : LingoFrameViewModel
     {
         public string LevelName { get; private set; } = "";
 
-        public override void OnLoad(LingoRuntime runtime)
+        public override void OnLoad(LingoViewModel lingo)
         {
-            base.OnLoad(runtime);
+            base.OnLoad(lingo);
 
-            LevelName = runtime.GetCastMember("Level Name")!.text;
+            LevelName = lingo.Runtime.GetCastMember("Level Name")!.text;
         }
 
         public void Render()

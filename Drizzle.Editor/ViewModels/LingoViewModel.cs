@@ -15,13 +15,15 @@ namespace Drizzle.Editor.ViewModels
         public LingoRuntime Runtime { get; } = new(typeof(MovieScript).Assembly);
         private readonly DispatcherTimer _timer = new();
 
-        public LingoFrameViewModel? Frame { get; private set; }
+        [Reactive] public LingoFrameViewModel? Frame { get; private set; }
 
         [Reactive] public int LastFrame { get; private set; }
         [Reactive] public string? LastFrameName { get; private set; }
 
         [Reactive] public bool IsPaused { get; set; }
         private bool _singleStep;
+
+        public event Action<int>? Update;
 
         public void Init(CommandLineArgs commandLineArgs)
         {
@@ -49,20 +51,30 @@ namespace Drizzle.Editor.ViewModels
                 LastFrame = Runtime.CurrentFrame;
                 LastFrameName = Runtime.LastFrameBehaviorName;
 
-                Frame = GetFrameViewModel();
-                try
+                var frameType = GetFrameViewModelType();
+                if (frameType == null)
                 {
-                    Frame?.OnLoad(Runtime);
+                    if (Frame != null)
+                    {
+                        Frame = null;
+                        Log.Debug("Clearing frame VM");
+                    }
                 }
-                catch (Exception ex)
+                else
                 {
-                    Log.Error(ex, "Exception in FrameVM load");
-                    Frame = null;
+                    Frame = (LingoFrameViewModel)Activator.CreateInstance(frameType)!;
+                    try
+                    {
+                        Frame.OnLoad(this);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Exception in FrameVM load");
+                        Frame = null;
+                    }
+
+                    Log.Debug("Switching frame VM to {FrameViewModelName}", Frame?.GetType().Name);
                 }
-
-                Log.Debug("Switching frame VM to {FrameViewModelName}", Frame?.GetType().Name);
-
-                this.RaisePropertyChanged(nameof(Frame));
             }
 
             try
@@ -73,6 +85,8 @@ namespace Drizzle.Editor.ViewModels
             {
                 Log.Error(ex, "Exception in FrameVM update");
             }
+
+            Update?.Invoke(LastFrame);
         }
 
         public void SingleStep()
@@ -85,12 +99,13 @@ namespace Drizzle.Editor.ViewModels
             new LingoCastViewer { DataContext = new LingoCastViewerViewModel(this) }.Show();
         }
 
-        private LingoFrameViewModel? GetFrameViewModel()
+        private Type? GetFrameViewModelType()
         {
             return LastFrame switch
             {
-                3 => new FrameLoadLevelViewModel(),
-                10 => new FrameLevelOverviewViewModel(),
+                3 => typeof(FrameLoadLevelViewModel),
+                10 => typeof(FrameLevelOverviewViewModel),
+                55 or 54 => typeof(FrameRenderEffectsViewModel),
                 _ => null
             };
         }

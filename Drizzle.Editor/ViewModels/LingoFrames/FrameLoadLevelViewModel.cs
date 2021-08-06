@@ -16,9 +16,9 @@ namespace Drizzle.Editor.ViewModels.LingoFrames
 
         public ObservableCollection<string> ProjectsList { get; } = new();
 
-        public override void OnLoad(LingoRuntime runtime)
+        public override void OnLoad(LingoViewModel lingo)
         {
-            base.OnLoad(runtime);
+            base.OnLoad(lingo);
 
             var projects = (LingoList)MovieScript.global_projects;
             ProjectsList.AddRange(projects.Cast<string>());

@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Drizzle.Logic;
 using C = System.Console;
 
 namespace Drizzle.Editor
 {
-    public sealed record CommandLineArgs(bool Render, string? Project, bool AutoPause)
+    public sealed record CommandLineArgs(bool Render, string? Project, bool AutoPause, RenderStage RenderStage)
     {
         public static bool TryParse(IReadOnlyList<string> args, [NotNullWhen(true)] out CommandLineArgs? parsed)
         {
@@ -12,6 +14,7 @@ namespace Drizzle.Editor
             var render = false;
             var autoPause = false;
             string? project = null;
+            var renderStage = RenderStage.Start;
 
             using var enumerator = args.GetEnumerator();
 
@@ -36,6 +39,16 @@ namespace Drizzle.Editor
 
                     project = enumerator.Current;
                 }
+                else if (arg == "--render-stage")
+                {
+                    if (!enumerator.MoveNext())
+                    {
+                        C.WriteLine("Missing render stage.");
+                        return false;
+                    }
+
+                    renderStage = Enum.Parse<RenderStage>(enumerator.Current);
+                }
                 else if (arg == "--help")
                 {
                     PrintHelp();
@@ -43,7 +56,7 @@ namespace Drizzle.Editor
                 }
             }
 
-            parsed = new CommandLineArgs(render, project, autoPause);
+            parsed = new CommandLineArgs(render, project, autoPause, renderStage);
 
             return true;
         }
@@ -54,9 +67,9 @@ namespace Drizzle.Editor
 Options:
   --project <project> Which project to load.
   --render            Immediately render the loaded project.
+  --render-stage      Render stage to run to before pausing.
   --pause             Automatically pause the lingo runtime on load to allow stepping.
 ");
         }
-
     }
 }
