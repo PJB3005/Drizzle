@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Avalonia.Threading;
 using Drizzle.Editor.ViewModels.LingoFrames;
 using Drizzle.Editor.Views;
@@ -29,8 +30,11 @@ namespace Drizzle.Editor.ViewModels
         {
             IsPaused = commandLineArgs.AutoPause;
 
-            // Run lingo at 60 FPS for now.
-            _timer.Interval = TimeSpan.FromSeconds(1 / 999f);
+            // Avalonia doesn't actually tick the timer much faster than (what I hope) is monitor refresh, so...
+            // We just set this stupid high then time it manually.
+            // Yes I know this sucks for resource usage I didn't write the Lingo code.
+            // TODO: Make Lingo only have higher tempo while rendering.
+            _timer.Interval = TimeSpan.FromMilliseconds(1);
             _timer.Tick += TimerTickLingo;
             _timer.Start();
 
@@ -39,12 +43,19 @@ namespace Drizzle.Editor.ViewModels
 
         private void TimerTickLingo(object? sender, EventArgs e)
         {
-            if (IsPaused && !_singleStep)
-                return;
+            // Just run 16 lingo ticks every Avalonia tick.
+            // TODO: less hilariously stupid/simplistic timing.
+            for (var i = 0; i < 16; i++)
+            {
+                if (IsPaused && !_singleStep)
+                    return;
 
-            _singleStep = false;
+                _singleStep = false;
 
-            Runtime.Tick();
+                Runtime.Tick();
+
+                Update?.Invoke(Runtime.CurrentFrame);
+            }
 
             if (LastFrame != Runtime.CurrentFrame)
             {
@@ -85,8 +96,6 @@ namespace Drizzle.Editor.ViewModels
             {
                 Log.Error(ex, "Exception in FrameVM update");
             }
-
-            Update?.Invoke(LastFrame);
         }
 
         public void SingleStep()
