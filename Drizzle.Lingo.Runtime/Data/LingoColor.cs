@@ -59,5 +59,10 @@ namespace Drizzle.Lingo.Runtime
         {
             return !left.Equals(right);
         }
+
+        public override string ToString()
+        {
+            return $"color( {red}, {green}, {blue} )";
+        }
     }
 }
