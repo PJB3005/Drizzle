@@ -8,6 +8,8 @@ namespace Drizzle.Lingo.Runtime
 {
     public static class ImageSharpExt
     {
+        private const string KRITA = @"C:\Program Files\Krita (x64)\bin\krita.exe";
+
         public static void ShowImage(this Image img)
         {
             var tmp = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.png");
@@ -16,8 +18,11 @@ namespace Drizzle.Lingo.Runtime
                 img.SaveAsPng(file);
             }
 
-            Process.Start(new ProcessStartInfo(tmp) { UseShellExecute = true });
-
+            Process.Start(new ProcessStartInfo(KRITA)
+            {
+                UseShellExecute = true,
+                ArgumentList = { tmp }
+            });
         }
     }
 }
