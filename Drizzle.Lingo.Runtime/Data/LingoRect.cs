@@ -28,7 +28,9 @@ namespace Drizzle.Lingo.Runtime
             this.bottom = bottom;
         }
 
-        public LingoRect(LingoPoint lt, LingoPoint rb) : this(lt.loch, lt.locv, rb.loch, rb.locv)
+        // Yes, constructing a rect out of points rounds them.
+        public LingoRect(LingoPoint lt, LingoPoint rb)
+            : this(lt.loch.integer, lt.locv.integer, rb.loch.integer, rb.locv.integer)
         {
         }
 
