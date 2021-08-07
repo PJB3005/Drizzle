@@ -153,9 +153,9 @@ namespace Drizzle.Lingo.Runtime.Parser
                     }));
 
         private static readonly Parser<char, AstNode.Base> Symbol =
-            Tok(Char('#')
+            Char('#')
                 .Then(Identifier)
-                .Select(i => (AstNode.Base)new AstNode.Symbol(i.ToLowerInvariant())));
+                .Select(i => (AstNode.Base)new AstNode.Symbol(i.ToLowerInvariant()));
 
         private static readonly Parser<char, AstNode.Base> String =
             Tok(AnyCharExcept('"')
@@ -163,27 +163,8 @@ namespace Drizzle.Lingo.Runtime.Parser
                 .Between(Char('"'))
                 .Select(s => (AstNode.Base)new AstNode.String(s)));
 
-        private static readonly string[] AllConstants =
-        {
-            "TRUE",
-            "FALSE",
-            "VOID",
-            "EMPTY",
-            "BACKSPACE",
-            "ENTER",
-            "QUOTE",
-            "RETURN",
-            "SPACE",
-            "TAB",
-            "PI"
-        };
-
-        private static readonly Parser<char, AstNode.Base> Constant =
-            Tok(OneOf(AllConstants.Select(c => String(c)).Union(AllConstants.Select(c => String(c.ToLower()))))
-                .Select(c => (AstNode.Base)new AstNode.Constant(c)));
-
         private static readonly Parser<char, AstNode.Base> Literal =
-            OneOf(Number, Symbol, String, Try(Constant));
+            OneOf(Number, Symbol, String);
 
         private static readonly Parser<char, AstNode.Base> VariableName =
             Identifier.Select(i => (AstNode.Base)new AstNode.VariableName(i));
@@ -352,20 +333,9 @@ namespace Drizzle.Lingo.Runtime.Parser
         private static readonly Parser<char, Func<AstNode.Base, AstNode.Base, AstNode.Base>> Subtract =
             Binary(Try(Tok('-').Then(Lookahead(AnyCharExcept('-')))).ThenReturn(AstNode.BinaryOperatorType.Subtract));
 
-        private static readonly string[] KeywordFunctionNames =
-        {
-            "put",
-            "go",
-            "new"
-        };
-
-        private static Parser<char, AstNode.Base> KeywordFunction(Parser<char, AstNode.Base> expr) =>
-            OneOf(KeywordFunctionNames.Select(s => Try(String(s))))
-                .Before(ThisShouldBeAProperBound)
-                //.Trace(n => $"Trying keyword: {n}")
-                .Then(
-                    expr,
-                    (name, arg) => (AstNode.Base)new AstNode.GlobalCall(name, new[] { arg }));
+        private static Parser<char, AstNode.Base>
+            KeywordFunctionContent(string name, Parser<char, AstNode.Base> expr) =>
+            expr.Select(arg => (AstNode.Base)new AstNode.GlobalCall(name, new[] { arg }));
 
         private static Parser<char, AstNode.Base> The(Parser<char, AstNode.Base> subExpr) =>
             Try(String("the").Before(ThisShouldBeAProperBound))
@@ -383,21 +353,20 @@ namespace Drizzle.Lingo.Runtime.Parser
                     Identifier.Select(i => (AstNode.Base)new AstNode.The(i)))
                 );
 
-        private static Parser<char, AstNode.Base> NewCastLib(Parser<char, AstNode.Base> subExpr) =>
-            Try(Tok("new").Then(
-                subExpr.Before(Tok(',')).Before(Tok("castLib"))
-                    .Then(subExpr, (type, castLib) => (AstNode.Base)new AstNode.NewCastLib(type, castLib))
-                    .Parenthesized()
-            ));
-
-        private static Parser<char, AstNode.Base> NewScript(Parser<char, AstNode.Base> subExpr) =>
-            Try(Tok("new").Then(
-                Tok("script")
-                    .Then(subExpr)
-                    .Then(Tok(',').Then(subExpr.Separated(Tok(','))),
-                        (type, castLib) => (AstNode.Base)new AstNode.NewScript(type, castLib.ToArray()))
-                    .Parenthesized()
-            ));
+        private static Parser<char, AstNode.Base> NewContent(Parser<char, AstNode.Base> subExpr) =>
+            OneOf(
+                // new(script ...) or new(..., castLib x)
+                OneOf(
+                        Tok("script")
+                            .Then(subExpr)
+                            .Then(Tok(',').Then(subExpr.Separated(Tok(','))),
+                                (type, castLib) => (AstNode.Base)new AstNode.NewScript(type, castLib.ToArray())),
+                        subExpr
+                            .Before(Tok(',')).Before(Tok("castLib"))
+                            .Then(subExpr, (type, castLib) => (AstNode.Base)new AstNode.NewCastLib(type, castLib)))
+                    .Parenthesized(),
+                // new foo
+                KeywordFunctionContent("new", subExpr));
 
         private static Parser<char, AstNode.Base> ThingOf(Parser<char, AstNode.Base> subExpr) =>
             Map(
@@ -410,26 +379,51 @@ namespace Drizzle.Lingo.Runtime.Parser
                 subExpr.Before(Tok("of")),
                 Rec(() => ExpressionNoBinOps));
 
-        private static Parser<char, AstNode.Base> MemberOfCastLib(Parser<char, AstNode.Base> subExpr) =>
-            Try(Tok("member")
-                .Then(subExpr)
+        private static Parser<char, AstNode.Base> MemberOfCastLibContent(Parser<char, AstNode.Base> subExpr) =>
+            subExpr
                 .Before(Tok("of")).Before(Tok("castLib"))
                 .Then(subExpr,
-                    (member, castLib) => (AstNode.Base)new AstNode.GlobalCall("member", new[] { member, castLib })));
+                    (member, castLib) => (AstNode.Base)new AstNode.GlobalCall("member", new[] { member, castLib }));
+
+        // Parse every term that starts with some identifier-like thing.
+        private static Parser<char, AstNode.Base> WordTermParser(Parser<char, AstNode.Base> expr)
+        {
+            var @new = NewContent(expr);
+            var member = MemberOfCastLibContent(expr);
+            var kwFuncGo = KeywordFunctionContent("go", expr);
+            var kwFuncPut = KeywordFunctionContent("put", expr);
+
+            return Try(IdentifierUnchecked
+                .Bind(ident => ident switch
+                {
+                    "new" => @new,
+                    "member" => member,
+                    "go" => kwFuncGo,
+                    "put" => kwFuncPut,
+                    "TRUE" or "true" => Return<AstNode.Base>(new AstNode.Constant("TRUE")),
+                    "FALSE" or "false" => Return<AstNode.Base>(new AstNode.Constant("FALSE")),
+                    "VOID" or "void" => Return<AstNode.Base>(new AstNode.Constant("VOID")),
+                    "EMPTY" or "empty" => Return<AstNode.Base>(new AstNode.Constant("EMPTY")),
+                    "BACKSPACE" or "backspace" => Return<AstNode.Base>(new AstNode.Constant("BACKSPACE")),
+                    "ENTER" or "enter" => Return<AstNode.Base>(new AstNode.Constant("ENTER")),
+                    "QUOTE" or "quote" => Return<AstNode.Base>(new AstNode.Constant("QUOTE")),
+                    "RETURN" or "return" => Return<AstNode.Base>(new AstNode.Constant("RETURN")),
+                    "SPACE" or "space" => Return<AstNode.Base>(new AstNode.Constant("SPACE")),
+                    "TAB" or "tab" => Return<AstNode.Base>(new AstNode.Constant("TAB")),
+                    "PI" or "pi" => Return<AstNode.Base>(new AstNode.Constant("PI")),
+                    _ => Fail<AstNode.Base>()
+                }));
+        }
 
 
         private static Parser<char, AstNode.Base> ExpressionTerm(Parser<char, AstNode.Base> expr) =>
             OneOf(
+                Literal /*.TraceBegin("TRYING LITERAL")*/,
                 ListLike(expr),
-                NewCastLib(expr),
-                NewScript(expr),
-                MemberOfCastLib(expr),
-                Try(KeywordFunction(expr)) /*.TraceBegin("TRYING KEYWORD")*/
-                /*.Trace(g => $"found keyword: {DebugPrint.PrintAstNode(g)}")*/,
+                WordTermParser(expr),
                 Try(GlobalCall(expr)) /*.TraceBegin("TRYING GLOBAL CALL")*/
                 /*.Trace(g => $"Global call: {DebugPrint.PrintAstNode(g)}")*/,
                 ThingOf(expr),
-                Literal /*.TraceBegin("TRYING LITERAL")*/,
                 The(expr) /*.TraceBegin("TRYING THE")*/,
                 VariableName /*.TraceBegin("TRYING VAR")*/,
                 Parenthesized(expr) /*.TraceBegin("TRYING PARENS")*/,
