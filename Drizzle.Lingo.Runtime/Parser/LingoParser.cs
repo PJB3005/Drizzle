@@ -137,42 +137,20 @@ namespace Drizzle.Lingo.Runtime.Parser
             NnlWhiteSpace.SkipAtLeastOnce().Before(WhiteSpaceOrWrap);
 
         private static readonly Parser<char, AstNode.Base> Number =
-            Tok(Map((neg, preDec, dec) =>
-                {
-                    var isNegative = neg.HasValue;
-                    if (dec.HasValue)
-                    {
-                        var decValue = dec.Value;
-                        // Decimal number.
-                        Span<char> comb = stackalloc char[128];
-                        preDec.AsSpan().CopyTo(comb);
-                        comb[preDec.Length] = '.';
-                        decValue.AsSpan().CopyTo(comb[(preDec.Length + 1)..]);
-
-                        var d = double.Parse(comb[..(preDec.Length + decValue.Length + 1)]);
-                        if (isNegative)
-                            d = -d;
-
-                        return (AstNode.Base)new AstNode.Decimal(new LingoDecimal(d));
-                    }
-
-                    // Integer.
-                    var i = long.Parse(preDec);
-                    if (isNegative)
-                        i = -i;
-
-                    // Doesn't fit into int32? Decimal it is.
-                    if (i is > int.MaxValue or < int.MinValue)
-                        return new AstNode.Decimal(new LingoDecimal(i));
-
-                    return new AstNode.Integer((int) i);
-                },
+            Tok(
                 // Sign
-                Char('-').Optional(),
-                // Digits before the decimal point
-                Digit.AtLeastOnceString(),
-                // Decimal point and after.
-                Try(Char('.').Then(Digit.AtLeastOnceString())).Optional()));
+                Char('-').Optional()
+                    // Digits before the decimal point
+                    .Then(Digit.SkipAtLeastOnce())
+                    // Decimal point and after.
+                    .Then(Try(Char('.').Then(Digit.SkipAtLeastOnce())).Optional())
+                    .Slice((span, t) =>
+                    {
+                        if (int.TryParse(span, out var i))
+                            return (AstNode.Base) new AstNode.Integer(i);
+
+                        return new AstNode.Decimal(new LingoDecimal(double.Parse(span)));
+                    }));
 
         private static readonly Parser<char, AstNode.Base> Symbol =
             Tok(Char('#')
