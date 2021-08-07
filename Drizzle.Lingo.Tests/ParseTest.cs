@@ -16,7 +16,7 @@ namespace Drizzle.Lingo.Tests
 
         public static IEnumerable<string> GetSources()
         {
-            return Directory.EnumerateFiles(SourcesRoot, "*.ls").Select(Path.GetFileName);
+            return Directory.EnumerateFiles(SourcesRoot, "*.lingo").Select(Path.GetFileName);
         }
 
         [Test]

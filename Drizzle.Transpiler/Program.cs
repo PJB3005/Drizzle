@@ -95,7 +95,7 @@ namespace Drizzle.Transpiler
 
         private static void Main(string[] args)
         {
-            var scripts = Directory.GetFiles(SourcesRoot, "*.ls")
+            var scripts = Directory.GetFiles(SourcesRoot, "*.lingo")
                 .AsParallel()
                 .Select(n =>
                 {
