@@ -99,14 +99,14 @@ namespace Drizzle.Lingo.Runtime
                 case 32:
                 {
                     var bgra32 = (Image<Bgra32>)Image;
-                    bgra32[x, y] = new Bgra32((byte)color.red, (byte)color.green, (byte)color.red, 255);
+                    bgra32[x, y] = new Bgra32((byte)color.red, (byte)color.green, (byte)color.blue, 255);
                     return;
                 }
                 case 16:
                 {
                     var bgra5551 = (Image<Bgra5551>)Image;
                     var val = new Bgra5551();
-                    val.FromRgba32(new Rgba32((byte)color.red, (byte)color.green, (byte)color.red, 255));
+                    val.FromRgba32(new Rgba32((byte)color.red, (byte)color.green, (byte)color.blue, 255));
                     bgra5551[x, y] = val;
                     return;
                 }
