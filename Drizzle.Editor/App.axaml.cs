@@ -1,10 +1,14 @@
 using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Logging;
 using Avalonia.Markup.Xaml;
 using Drizzle.Editor.ViewModels;
 using Drizzle.Editor.Views;
-using Splat;
+using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
+using SS14.Launcher;
+using LogEventLevel = Serilog.Events.LogEventLevel;
 
 namespace Drizzle.Editor
 {
@@ -17,6 +21,16 @@ namespace Drizzle.Editor
 
         public override void OnFrameworkInitializationCompleted()
         {
+#if DEBUG
+            Logger.Sink = new AvaloniaSeriLogger(new LoggerConfiguration()
+                .MinimumLevel.Is(LogEventLevel.Warning)
+                .Enrich.FromLogContext()
+                .WriteTo.Console(
+                    outputTemplate: "[{Area}] {Message} ({SourceType} #{SourceHash})\n",
+                    theme: AnsiConsoleTheme.Literate)
+                .CreateLogger());
+#endif
+
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 if (!CommandLineArgs.TryParse(desktop.Args, out var parsed))
