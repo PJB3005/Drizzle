@@ -10,6 +10,7 @@ using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
@@ -80,9 +81,19 @@ namespace Drizzle.Editor.ViewModels
             var finalImg = img.Image;
 
             if (thumbnail)
-                finalImg = finalImg.Clone(op => op.Resize(50, 50));
+            {
+                var copyImg = new LingoImage(50, 50, 32);
+                copyImg.copypixels(img, copyImg.rect, img.rect);
+                finalImg = copyImg.Image;
+            }
+            else if (img.Depth != 32)
+            {
+                var copyImg = new LingoImage(img.width, img.height, 32);
+                copyImg.copypixels(img, img.rect, img.rect);
+                finalImg = copyImg.Image;
+            }
 
-            var bgra = finalImg.CloneAs<Bgra32>();
+            var bgra = (Image<Bgra32>)finalImg;
 
             if (!bgra.TryGetSinglePixelSpan(out var span))
                 throw new InvalidOperationException();
