@@ -100,11 +100,10 @@ namespace Drizzle.Lingo.Runtime
             */
 
             // Integer coordinates for the purpose of rasterization.
-            // TODO: if we clamp, scale source coordinates.
-            var dstL = Math.Clamp((int)destRect.left, 0, dest.width);
-            var dstT = Math.Clamp((int)destRect.top, 0, dest.height);
-            var dstR = Math.Clamp((int)destRect.right, 0, dest.width);
-            var dstB = Math.Clamp((int)destRect.bottom, 0, dest.height);
+            var dstL = destRect.left.integer;
+            var dstT = destRect.top.integer;
+            var dstR = destRect.right.integer;
+            var dstB = destRect.bottom.integer;
 
             // ReSharper disable once CompareOfFloatsByEqualityOperator
             // todo: make sure to not apply this when mask is set.
@@ -287,7 +286,7 @@ namespace Drizzle.Lingo.Runtime
             var srcImgW = srcImg.Width;
             var srcImgH = srcImg.Height;
             var dstImgW = dstImg.Width;
-            // var dstImgW = dstImg.Width;
+            var dstImgH = dstImg.Height;
 
             var doBackgroundTransparent = parameters.Ink == CopyPixelsInk.BackgroundTransparent;
             var fgc = parameters.ForeColor;
@@ -296,23 +295,29 @@ namespace Drizzle.Lingo.Runtime
             var t = srcBox.Y;
             for (var y = dstT; y < dstB; y++)
             {
-                var s = srcBox.X;
-
-                for (var x = dstL; x < dstR; x++)
+                if (y >= 0 && y < dstImgH)
                 {
-                    Vector4 color;
-                    if (s < 0 || s > 1 || t < 0 || t > 1)
-                        color = Vector4.One;
-                    else
-                        color = sampler.Sample(srcSpan, srcImgW, srcImgH, new Vector2(s, t));
+                    var s = srcBox.X;
 
-                    if (!doBackgroundTransparent || color != Vector4.One)
+                    for (var x = dstL; x < dstR; x++)
                     {
-                        color += fg;
-                        writer.Write(dstSpan, dstImgW * y + x, color);
-                    }
+                        if (x >= 0 && x < dstImgW)
+                        {
+                            Vector4 color;
+                            if (s < 0 || s > 1 || t < 0 || t > 1)
+                                color = Vector4.One;
+                            else
+                                color = sampler.Sample(srcSpan, srcImgW, srcImgH, new Vector2(s, t));
 
-                    s += incSrcH;
+                            if (!doBackgroundTransparent || color != Vector4.One)
+                            {
+                                color += fg;
+                                writer.Write(dstSpan, dstImgW * y + x, color);
+                            }
+                        }
+
+                        s += incSrcH;
+                    }
                 }
 
                 t += incSrcV;
@@ -358,6 +363,11 @@ namespace Drizzle.Lingo.Runtime
             where TDstData : unmanaged, IPixel<TDstData>
         {
             var (dstL, dstT, dstR, dstB) = dstBox;
+
+            dstL = Math.Clamp(dstL, 0, dstImg.Width);
+            dstT = Math.Clamp(dstT, 0, dstImg.Height);
+            dstR = Math.Clamp(dstR, 0, dstImg.Width);
+            dstB = Math.Clamp(dstB, 0, dstImg.Height);
 
             if (!dstImg.TryGetSinglePixelSpan(out var dstSpan))
                 throw new InvalidOperationException("TryGetSinglePixelSpan failed");
@@ -478,8 +488,8 @@ namespace Drizzle.Lingo.Runtime
             [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
             public Vector4 Sample(ReadOnlySpan<L8> srcDat, int srcWidth, int srcHeight, Vector2 pos)
             {
-                var x = Math.Clamp((int)(pos.X * srcWidth), 0, srcWidth-1);
-                var y = Math.Clamp((int)(pos.Y * srcHeight), 0, srcHeight-1);
+                var x = Math.Clamp((int)(pos.X * srcWidth), 0, srcWidth - 1);
+                var y = Math.Clamp((int)(pos.Y * srcHeight), 0, srcHeight - 1);
 
                 var rowMajor = x + y * srcWidth;
                 var px = srcDat[rowMajor];
