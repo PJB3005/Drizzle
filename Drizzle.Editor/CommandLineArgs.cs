@@ -14,7 +14,7 @@ namespace Drizzle.Editor
             var render = false;
             var autoPause = false;
             string? project = null;
-            var renderStage = RenderStage.Start;
+            var renderStage = RenderStage.NoPause;
 
             using var enumerator = args.GetEnumerator();
 
