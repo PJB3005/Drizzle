@@ -25,8 +25,6 @@ namespace Drizzle.Lingo.Runtime
         public const string SPACE = " ";
         public const object? VOID = null;
 
-        private Random _random = new();
-
         public string the_moviePath => LingoRuntime.MovieBasePath;
 
         public static int abs(int value) => Math.Abs(value);
@@ -156,12 +154,6 @@ namespace Drizzle.Lingo.Runtime
         public CastMember? member(object memberNameOrNum, object? castNameOrNum = null) =>
             LingoRuntime.GetCastMember(memberNameOrNum, castNameOrNum);
 
-        public LingoDecimal the_randomSeed
-        {
-            get => default;
-            set => _random = new Random((int)value);
-        }
-
         public LingoColor color(int r, int g, int b) => new(
             Math.Clamp(r, 0, 255),
             Math.Clamp(g, 0, 255),
@@ -178,17 +170,6 @@ namespace Drizzle.Lingo.Runtime
 
         public LingoImage image(LingoDecimal w, LingoDecimal h, int bitDepth) =>
             new LingoImage((int)w, (int)h, bitDepth);
-
-        public int random(int max)
-        {
-            return _random.Next(1, max + 1);
-        }
-
-        public int random(LingoDecimal max)
-        {
-            // todo: should this return int?
-            return random((int) max);
-        }
 
         public string @string(dynamic value) => value.ToString();
 
