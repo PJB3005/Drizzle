@@ -81,7 +81,7 @@ namespace Drizzle.Lingo.Runtime.Parser
                 .Labelled("white space or line wrap");
 
         private static Parser<char, T> Tok<T>(Parser<char, T> token)
-            => Try(token).Before(WhiteSpaceOrWrap);
+            => token.Before(WhiteSpaceOrWrap);
 
         private static Parser<char, string> Tok(string token)
             => Tok(String(token));
@@ -136,19 +136,43 @@ namespace Drizzle.Lingo.Runtime.Parser
         private static readonly Parser<char, Unit> ThisShouldBeAProperBound =
             NnlWhiteSpace.SkipAtLeastOnce().Before(WhiteSpaceOrWrap);
 
-        private static readonly Parser<char, AstNode.Base> Decimal =
-            Tok(
-                // Sign
-                Char('-').Optional()
-                    // Digits before the decimal point
-                    .Then(Digit.AtLeastOnceString(), (a, b) => a.HasValue ? a.Value + b : b)
-                    // Decimal point and after.
-                    .Then(Char('.').Then(Digit.AtLeastOnceString(), (a, b) => a + b),
-                        (a, b) => a + b)
-                    .Select(s => (AstNode.Base)new AstNode.Decimal(LingoDecimal.Parse(s))));
+        private static readonly Parser<char, AstNode.Base> Number =
+            Tok(Map((neg, preDec, dec) =>
+                {
+                    var isNegative = neg.HasValue;
+                    if (dec.HasValue)
+                    {
+                        var decValue = dec.Value;
+                        // Decimal number.
+                        Span<char> comb = stackalloc char[128];
+                        preDec.AsSpan().CopyTo(comb);
+                        comb[preDec.Length] = '.';
+                        decValue.AsSpan().CopyTo(comb[(preDec.Length + 1)..]);
 
-        private static readonly Parser<char, AstNode.Base> Integer =
-            Tok(Num.Select(i => (AstNode.Base)new AstNode.Integer(i)));
+                        var d = double.Parse(comb[..(preDec.Length + decValue.Length + 1)]);
+                        if (isNegative)
+                            d = -d;
+
+                        return (AstNode.Base)new AstNode.Decimal(new LingoDecimal(d));
+                    }
+
+                    // Integer.
+                    var i = long.Parse(preDec);
+                    if (isNegative)
+                        i = -i;
+
+                    // Doesn't fit into int32? Decimal it is.
+                    if (i is > int.MaxValue or < int.MinValue)
+                        return new AstNode.Decimal(new LingoDecimal(i));
+
+                    return new AstNode.Integer((int) i);
+                },
+                // Sign
+                Char('-').Optional(),
+                // Digits before the decimal point
+                Digit.AtLeastOnceString(),
+                // Decimal point and after.
+                Try(Char('.').Then(Digit.AtLeastOnceString())).Optional()));
 
         private static readonly Parser<char, AstNode.Base> Symbol =
             Tok(Char('#')
@@ -181,7 +205,7 @@ namespace Drizzle.Lingo.Runtime.Parser
                 .Select(c => (AstNode.Base)new AstNode.Constant(c)));
 
         private static readonly Parser<char, AstNode.Base> Literal =
-            OneOf(Try(Decimal), Integer, Symbol, String, Try(Constant));
+            OneOf(Number, Symbol, String, Try(Constant));
 
         private static readonly Parser<char, AstNode.Base> VariableName =
             Identifier.Select(i => (AstNode.Base)new AstNode.VariableName(i));
@@ -302,7 +326,7 @@ namespace Drizzle.Lingo.Runtime.Parser
             Unary(Tok('-').ThenReturn(AstNode.UnaryOperatorType.Negate));
 
         private static readonly Parser<char, Func<AstNode.Base, AstNode.Base>> Not =
-            Unary(Tok("not").ThenReturn(AstNode.UnaryOperatorType.Not));
+            Unary(Try(Tok("not")).ThenReturn(AstNode.UnaryOperatorType.Not));
 
         private static readonly Parser<char, Func<AstNode.Base, AstNode.Base, AstNode.Base>> LessThan =
             Binary(Tok('<').ThenReturn(AstNode.BinaryOperatorType.LessThan));
@@ -344,10 +368,10 @@ namespace Drizzle.Lingo.Runtime.Parser
             Binary(Tok('/').ThenReturn(AstNode.BinaryOperatorType.Divide));
 
         private static readonly Parser<char, Func<AstNode.Base, AstNode.Base, AstNode.Base>> And =
-            Binary(Tok("and").TraceBegin("trying binary and").ThenReturn(AstNode.BinaryOperatorType.And));
+            Binary(Try(Tok("and")).TraceBegin("trying binary and").ThenReturn(AstNode.BinaryOperatorType.And));
 
         private static readonly Parser<char, Func<AstNode.Base, AstNode.Base, AstNode.Base>> Or =
-            Binary(Tok("or").ThenReturn(AstNode.BinaryOperatorType.Or));
+            Binary(Try(Tok("or")).ThenReturn(AstNode.BinaryOperatorType.Or));
 
         private static readonly Parser<char, Func<AstNode.Base, AstNode.Base, AstNode.Base>> Mod =
             Binary(Tok("mod").ThenReturn(AstNode.BinaryOperatorType.Mod));
@@ -363,7 +387,7 @@ namespace Drizzle.Lingo.Runtime.Parser
         };
 
         private static Parser<char, AstNode.Base> KeywordFunction(Parser<char, AstNode.Base> expr) =>
-            OneOf(KeywordFunctionNames.Select(s => String(s)))
+            OneOf(KeywordFunctionNames.Select(s => Try(String(s))))
                 .Before(ThisShouldBeAProperBound)
                 //.Trace(n => $"Trying keyword: {n}")
                 .Then(
@@ -695,7 +719,7 @@ namespace Drizzle.Lingo.Runtime.Parser
                 ))
                 .Before(SkipWhiteSpaceAndLines).Before(Tok("end")).Before(Tok("case"));
 
-        private static readonly Parser<char, AstNode.Assignment> Assignment =
+        public static readonly Parser<char, AstNode.Assignment> Assignment =
             Map(
                 (var, expr) => new AstNode.Assignment(var, expr),
                 Tok(ExpressionNoEquals).Before(Tok('=')),
