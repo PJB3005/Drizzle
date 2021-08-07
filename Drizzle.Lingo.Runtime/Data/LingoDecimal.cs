@@ -27,7 +27,7 @@ namespace Drizzle.Lingo.Runtime
 
         public override string ToString()
         {
-            return Value.ToString();
+            return Value.ToString("F4");
         }
 
         public static LingoDecimal operator -(LingoDecimal dec) => new(-dec.Value);
