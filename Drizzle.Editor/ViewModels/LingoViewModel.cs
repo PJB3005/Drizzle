@@ -73,10 +73,10 @@ namespace Drizzle.Editor.ViewModels
                 }
                 else
                 {
-                    Frame = (LingoFrameViewModel)Activator.CreateInstance(frameType)!;
+                    var frame = (LingoFrameViewModel)Activator.CreateInstance(frameType)!;
                     try
                     {
-                        Frame.OnLoad(this);
+                        frame.OnLoad(this);
                     }
                     catch (Exception ex)
                     {
@@ -84,6 +84,7 @@ namespace Drizzle.Editor.ViewModels
                         Frame = null;
                     }
 
+                    Frame = frame;
                     Log.Debug("Switching frame VM to {FrameViewModelName}", Frame?.GetType().Name);
                 }
             }
