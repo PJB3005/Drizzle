@@ -147,7 +147,7 @@ namespace Drizzle.Lingo.Runtime.Parser
                     .Slice((span, t) =>
                     {
                         if (int.TryParse(span, out var i))
-                            return (AstNode.Base) new AstNode.Integer(i);
+                            return (AstNode.Base)new AstNode.Integer(i);
 
                         return new AstNode.Decimal(new LingoDecimal(double.Parse(span)));
                     }));
@@ -205,43 +205,46 @@ namespace Drizzle.Lingo.Runtime.Parser
 
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         private static Parser<char, AstNode.Base> ListLike(Parser<char, AstNode.Base> subExpr) =>
-            ListLikeElem(subExpr)
-                .Separated(Tok(','))
-                .Between(Tok('['), Tok(']'))
-                .Select<AstNode.Base>(elems =>
-                {
-                    var propList = false;
-                    var linList = false;
-
-                    foreach (var elem in elems)
+            OneOf(
+                Tok(':').ThenReturn(
+                    (AstNode.Base)new AstNode.PropertyList(
+                        Array.Empty<KeyValuePair<AstNode.Base, AstNode.Base>>())),
+                ListLikeElem(subExpr)
+                    .Separated(Tok(','))
+                    .Select<AstNode.Base>(elems =>
                     {
-                        if (elem.Item2 == null)
-                            linList = true;
-                        else
-                            propList = true;
-                    }
+                        var propList = false;
+                        var linList = false;
 
-                    if (propList && linList)
-                        throw new Exception("List contains mixed property/linear segments!");
-                    if (propList)
-                    {
-                        var items = elems.Select(ab =>
+                        foreach (var elem in elems)
                         {
-                            var (k, v) = ab;
-                            // Symbols without # in a proplist get parsed as variable name, fix that.
-                            if (k is AstNode.VariableName vn)
-                                k = new AstNode.Symbol(vn.Name);
+                            if (elem.Item2 == null)
+                                linList = true;
+                            else
+                                propList = true;
+                        }
 
-                            return KeyValuePair.Create(k, v!);
-                        }).ToArray();
+                        if (propList && linList)
+                            throw new Exception("List contains mixed property/linear segments!");
+                        if (propList)
+                        {
+                            var items = elems.Select(ab =>
+                            {
+                                var (k, v) = ab;
+                                // Symbols without # in a proplist get parsed as variable name, fix that.
+                                if (k is AstNode.VariableName vn)
+                                    k = new AstNode.Symbol(vn.Name);
 
-                        return new AstNode.PropertyList(items);
-                    }
+                                return KeyValuePair.Create(k, v!);
+                            }).ToArray();
 
-                    if (linList)
-                        return new AstNode.List(elems.Select(ab => ab.Item1).ToArray());
-                    return new AstNode.List(Array.Empty<AstNode.Base>());
-                });
+                            return new AstNode.PropertyList(items);
+                        }
+
+                        if (linList)
+                            return new AstNode.List(elems.Select(ab => ab.Item1).ToArray());
+                        return new AstNode.List(Array.Empty<AstNode.Base>());
+                    })).Between(Tok('['), Tok(']'));
 
         private static Parser<char, AstNode.Base> PropertyListCore(Parser<char, AstNode.Base> subExpr) =>
             OneOf(
@@ -258,14 +261,13 @@ namespace Drizzle.Lingo.Runtime.Parser
                     .Select(v => (AstNode.Base)new AstNode.PropertyList(v.ToArray()))
             );
 
-        private static Parser<char, AstNode.Base> PropListEmpty =
-            Tok('[').Then(Tok(':')).Then(Tok(']'))
-                .ThenReturn<AstNode.Base>(
-                    new AstNode.PropertyList(Array.Empty<KeyValuePair<AstNode.Base, AstNode.Base>>()));
-
         private static Parser<char, AstNode.Base> ParameterList(Parser<char, AstNode.Base> subExpr) =>
             PropertyListCore(subExpr)
                 .Between(Tok('{'), Tok('}'));
+
+        private static readonly Parser<char, Func<AstNode.Base, AstNode.Base>> MemberProp =
+            Tok('.').Then(Identifier)
+                .Select<Func<AstNode.Base, AstNode.Base>>(i => expr => new AstNode.MemberProp(expr, i));
 
         private static Parser<char, Func<AstNode.Base, AstNode.Base>> MemberCall(Parser<char, AstNode.Base> subExpr) =>
             Tok('.').Then(Identifier)
@@ -283,13 +285,6 @@ namespace Drizzle.Lingo.Runtime.Parser
                 .Then<AstNode.Base, Func<AstNode.Base, AstNode.Base>>(
                     subExpr, (start, end) => @base => new AstNode.MemberSlice(@base, start, end))
                 .Between(Tok('['), Tok(']'));
-
-
-        private static readonly Parser<char, Func<AstNode.Base, AstNode.Base>> MemberProp =
-            Tok('.').Then(Identifier)
-                /*.Before(Lookahead(AnyCharExcept('(')))*/
-                //.Trace(i => $"member: .{i}")
-                .Select<Func<AstNode.Base, AstNode.Base>>(i => expr => new AstNode.MemberProp(expr, i));
 
         private static Parser<char, Func<AstNode.Base, AstNode.Base>>
             Unary(Parser<char, AstNode.UnaryOperatorType> op) =>
@@ -425,7 +420,6 @@ namespace Drizzle.Lingo.Runtime.Parser
 
         private static Parser<char, AstNode.Base> ExpressionTerm(Parser<char, AstNode.Base> expr) =>
             OneOf(
-                Try(PropListEmpty),
                 ListLike(expr),
                 NewCastLib(expr),
                 NewScript(expr),
