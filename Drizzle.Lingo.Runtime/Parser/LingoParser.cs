@@ -423,9 +423,30 @@ namespace Drizzle.Lingo.Runtime.Parser
                     (member, castLib) => (AstNode.Base)new AstNode.GlobalCall("member", new[] { member, castLib })));
 
 
+        private static Parser<char, AstNode.Base> ExpressionTerm(Parser<char, AstNode.Base> expr) =>
+            OneOf(
+                Try(PropListEmpty),
+                ListLike(expr),
+                NewCastLib(expr),
+                NewScript(expr),
+                MemberOfCastLib(expr),
+                Try(KeywordFunction(expr)) /*.TraceBegin("TRYING KEYWORD")*/
+                /*.Trace(g => $"found keyword: {DebugPrint.PrintAstNode(g)}")*/,
+                Try(GlobalCall(expr)) /*.TraceBegin("TRYING GLOBAL CALL")*/
+                /*.Trace(g => $"Global call: {DebugPrint.PrintAstNode(g)}")*/,
+                ThingOf(expr),
+                Literal /*.TraceBegin("TRYING LITERAL")*/,
+                The(expr) /*.TraceBegin("TRYING THE")*/,
+                VariableName /*.TraceBegin("TRYING VAR")*/,
+                Parenthesized(expr) /*.TraceBegin("TRYING PARENS")*/,
+                ParameterList(expr) /*.TraceBegin("TRYING PROPERTY LIST")*/
+            );
+
         public static readonly Parser<char, AstNode.Base> Expression = ExpressionFunc(true, true);
         private static readonly Parser<char, AstNode.Base> ExpressionNoEquals = ExpressionFunc(false, true);
         private static readonly Parser<char, AstNode.Base> ExpressionNoBinOps = ExpressionFunc(false, false);
+
+        public static readonly Parser<char, AstNode.Base> ExpressionNoOps = ExpressionTerm(Rec(() => ExpressionNoOps));
 
         private static Parser<char, AstNode.Base> ExpressionFunc(bool allowEquals, bool allowBinOps) =>
             ExpressionParser.Build<char, AstNode.Base>(
@@ -480,23 +501,8 @@ namespace Drizzle.Lingo.Runtime.Parser
                         operatorTable = operatorTable.Where(t => !t.InfixLOps.Any()).ToArray();
 
                     return (
-                        OneOf(
-                            Try(PropListEmpty),
-                            ListLike(expr),
-                            NewCastLib(expr),
-                            NewScript(expr),
-                            MemberOfCastLib(expr),
-                            Try(KeywordFunction(expr)) /*.TraceBegin("TRYING KEYWORD")*/
-                            /*.Trace(g => $"found keyword: {DebugPrint.PrintAstNode(g)}")*/,
-                            Try(GlobalCall(expr)) /*.TraceBegin("TRYING GLOBAL CALL")*/
-                            /*.Trace(g => $"Global call: {DebugPrint.PrintAstNode(g)}")*/,
-                            ThingOf(expr),
-                            Literal /*.TraceBegin("TRYING LITERAL")*/,
-                            The(expr) /*.TraceBegin("TRYING THE")*/,
-                            VariableName /*.TraceBegin("TRYING VAR")*/,
-                            Parenthesized(expr) /*.TraceBegin("TRYING PARENS")*/,
-                            ParameterList(expr) /*.TraceBegin("TRYING PROPERTY LIST")*/
-                        ).TraceBegin("TRYING TERM").TracePos(n => $"term: {DebugPrint.PrintAstNode(n)}"),
+                        ExpressionTerm(expr)
+                            .TraceBegin("TRYING TERM").TracePos(n => $"term: {DebugPrint.PrintAstNode(n)}"),
                         operatorTable
                     );
                 }).TraceBegin("Trying expr") /*.Trace(expr => $"expr: {expr}")*/;

@@ -17,7 +17,9 @@ namespace Drizzle.Lingo.Runtime
             if (trimmed.IsEmpty)
                 return 0; // value() returns zero on empty string.
 
-            var parsedExpression = LingoParser.Expression.ParseOrThrow(trimmed);
+            // NOTE: This uses ExpressionNoOps, so expressions like "5 + 10" aren't gonna be parsed correctly.
+            // This is fine for the level editor, but if you ever do something funny, you've been warned.
+            var parsedExpression = LingoParser.ExpressionNoOps.ParseOrThrow(trimmed);
             return Interpreter.Evaluate(parsedExpression, LingoRuntime);
         }
     }
