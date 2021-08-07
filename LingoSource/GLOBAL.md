@@ -22,6 +22,8 @@ Type is property list, keys:
      * `4`: slope (top left)
      * `5`: slope (top right)
      * `6`: floor
+     * `7`: "shortcut" - I found this in a random cast member in the director project, it's probably unused.
+     * `8`: "nn" - I found this in a random cast member in the director project, it's probably unused.
      * `9`: glass (invisible wall)
   * FEATURES:
     * `1`: horizontal beam
