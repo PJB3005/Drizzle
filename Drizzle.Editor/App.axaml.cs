@@ -1,5 +1,6 @@
 using System;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Logging;
 using Avalonia.Markup.Xaml;
@@ -41,6 +42,7 @@ namespace Drizzle.Editor
                 {
                     DataContext = viewModel,
                 };
+                desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
 
                 viewModel.Init(parsed);
             }
