@@ -32,9 +32,14 @@ namespace Drizzle.Lingo.Runtime
         {
             Log.Debug("Initializing Lingo, pebbles save us all...");
 
+            InitNoCast();
+            LoadCast();
+        }
+
+        private void InitNoCast()
+        {
             Stopwatch.Start();
             Global.Init();
-            LoadCast();
             InitScript();
         }
 

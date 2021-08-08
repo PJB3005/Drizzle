@@ -20,6 +20,10 @@ namespace Drizzle.Lingo.Runtime
     [AttributeUsage(AttributeTargets.Field)]
     public sealed class LingoGlobalAttribute : Attribute
     {
+    }
 
+    [AttributeUsage(AttributeTargets.Field)]
+    public sealed class LingoPropertyAttribute : Attribute
+    {
     }
 }

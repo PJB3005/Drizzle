@@ -47,13 +47,22 @@ namespace Drizzle.Lingo.Runtime
 
             if (nameOrNum is int num)
             {
-                if (num > 0 && num <= _cast.Length)
-                    return _cast[num - 1];
-
-                var idx = num - Offset;
-                if (idx > 0 && idx < _cast.Length)
-                    return _cast[idx - 1];
+                var numMember = GetMember(num);
+                if (numMember != null)
+                    return numMember;
             }
+
+            return null;
+        }
+
+        public CastMember? GetMember(int num)
+        {
+            if (num > 0 && num <= _cast.Length)
+                return _cast[num - 1];
+
+            var idx = num - Offset;
+            if (idx > 0 && idx < _cast.Length)
+                return _cast[idx - 1];
 
             return null;
         }

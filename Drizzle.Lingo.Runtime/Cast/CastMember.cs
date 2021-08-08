@@ -83,6 +83,26 @@ namespace Drizzle.Lingo.Runtime.Cast
         {
             Debug.Assert(Type == type, "Wrong cast member type!");
         }
+
+        public void CloneFrom(CastMember other)
+        {
+            Type = other.Type;
+            name = other.name;
+
+            switch (Type)
+            {
+                case CastMemberType.Bitmap:
+                    _image = other._image!.duplicate();
+                    break;
+                case CastMemberType.Script:
+                    break;
+                case CastMemberType.Shape:
+                    break;
+                case CastMemberType.Text:
+                    _text = other._text;
+                    break;
+            }
+        }
     }
 
     public enum CastMemberType

@@ -259,7 +259,7 @@ namespace Drizzle.Transpiler
             foreach (var prop in script.Nodes.OfType<AstNode.Property>().SelectMany(p => p.Identifiers))
             {
                 props.Add(prop);
-                writer.WriteLine($"public dynamic {prop};");
+                writer.WriteLine($"[LingoProperty] public dynamic {prop};");
             }
 
             var quirks = Quirks.GetValueOrDefault(name);
