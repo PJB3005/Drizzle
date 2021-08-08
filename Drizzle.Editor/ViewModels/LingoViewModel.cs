@@ -54,48 +54,48 @@ namespace Drizzle.Editor.ViewModels
 
                 Runtime.Tick();
 
+                if (LastFrame != Runtime.CurrentFrame)
+                {
+                    LastFrame = Runtime.CurrentFrame;
+                    LastFrameName = Runtime.LastFrameBehaviorName;
+
+                    var frameType = GetFrameViewModelType();
+                    if (frameType == null)
+                    {
+                        if (Frame != null)
+                        {
+                            Frame = null;
+                            Log.Debug("Clearing frame VM");
+                        }
+                    }
+                    else
+                    {
+                        var frame = (LingoFrameViewModel)Activator.CreateInstance(frameType)!;
+                        try
+                        {
+                            frame.OnLoad(this);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, "Exception in FrameVM load");
+                            Frame = null;
+                        }
+
+                        Frame = frame;
+                        Log.Debug("Switching frame VM to {FrameViewModelName}", Frame?.GetType().Name);
+                    }
+                }
+
+                try
+                {
+                    Frame?.OnUpdate();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Exception in FrameVM update");
+                }
+
                 Update?.Invoke(Runtime.CurrentFrame);
-            }
-
-            if (LastFrame != Runtime.CurrentFrame)
-            {
-                LastFrame = Runtime.CurrentFrame;
-                LastFrameName = Runtime.LastFrameBehaviorName;
-
-                var frameType = GetFrameViewModelType();
-                if (frameType == null)
-                {
-                    if (Frame != null)
-                    {
-                        Frame = null;
-                        Log.Debug("Clearing frame VM");
-                    }
-                }
-                else
-                {
-                    var frame = (LingoFrameViewModel)Activator.CreateInstance(frameType)!;
-                    try
-                    {
-                        frame.OnLoad(this);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "Exception in FrameVM load");
-                        Frame = null;
-                    }
-
-                    Frame = frame;
-                    Log.Debug("Switching frame VM to {FrameViewModelName}", Frame?.GetType().Name);
-                }
-            }
-
-            try
-            {
-                Frame?.OnUpdate();
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Exception in FrameVM update");
             }
         }
 
