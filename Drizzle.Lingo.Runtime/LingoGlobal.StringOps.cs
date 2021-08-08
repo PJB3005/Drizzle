@@ -47,6 +47,13 @@ namespace Drizzle.Lingo.Runtime
 
         public static string charof_helper(int idx, string str)
         {
+            // This is such a cursed program god damn.
+            if (idx < 1)
+                return str;
+
+            if (idx > str.Length)
+                return "";
+
             return str[idx - 1].ToString();
         }
 
