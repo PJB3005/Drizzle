@@ -16,7 +16,7 @@ namespace Drizzle.Lingo.Runtime
 
         private static readonly Regex CastPathRegex = new Regex(@"([^_]+)_(\d+)_(.+)?\.([a-z]*)");
 
-        private static readonly string CastPath = Path.Join(MovieBasePath, "Export");
+        private static readonly string CastPath;
 
         private readonly Dictionary<string, LingoCastLib>
             _castLibNames = new(StringComparer.InvariantCultureIgnoreCase);
