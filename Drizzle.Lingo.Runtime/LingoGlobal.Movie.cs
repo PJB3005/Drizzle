@@ -22,7 +22,7 @@ namespace Drizzle.Lingo.Runtime
                 window = new Window(global);
             }
 
-            public int frame => _global.LingoRuntime.CurrentFrame;
+            public int frame => 0;
 
             public string path => _global.the_moviePath;
 
@@ -30,7 +30,7 @@ namespace Drizzle.Lingo.Runtime
 
             public void go(int newFrame)
             {
-                _global.LingoRuntime.ScoreGo(newFrame);
+                // score not implemented.
             }
         }
 

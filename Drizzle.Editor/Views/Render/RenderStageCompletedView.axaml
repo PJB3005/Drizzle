@@ -1,0 +1,13 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:render="clr-namespace:Drizzle.Editor.ViewModels.Render"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Drizzle.Editor.Views.Render.RenderStageCompletedView">
+    <Design.DataContext>
+        <render:RenderStageCompletedViewModel />
+    </Design.DataContext>
+
+    <TextBlock Text="Render completed" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center" />
+</UserControl>

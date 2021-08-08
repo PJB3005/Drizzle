@@ -10,7 +10,7 @@ using ReactiveUI.Fody.Helpers;
 
 namespace Drizzle.Editor.ViewModels.LingoFrames
 {
-    public sealed class FrameRenderEffectsViewModel : LingoFrameViewModel
+    /*public sealed class FrameRenderEffectsViewModel : LingoFrameViewModel
     {
         public ObservableCollection<RenderEffectViewModel> EffectsToRender { get; } = new();
         [Reactive] public RenderEffectViewModel? CurrentRenderingEffect { get; set; }
@@ -69,5 +69,5 @@ namespace Drizzle.Editor.ViewModels.LingoFrames
                     BackgroundColor = x ? Colors.Blue : Colors.Transparent;
                 });
         }
-    }
+    }*/
 }

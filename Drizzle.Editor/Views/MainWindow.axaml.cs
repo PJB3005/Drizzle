@@ -1,3 +1,4 @@
+using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -8,12 +9,27 @@ namespace Drizzle.Editor.Views
 {
     public partial class MainWindow : Window
     {
+        private MainWindowViewModel? _viewModel;
+
         public MainWindow()
         {
             InitializeComponent();
 #if DEBUG
             this.AttachDevTools();
 #endif
+        }
+
+        protected override void OnDataContextChanged(EventArgs e)
+        {
+            base.OnDataContextChanged(e);
+
+            if (_viewModel != null)
+                _viewModel.Parent = null;
+
+            _viewModel = DataContext as MainWindowViewModel;
+
+            if (_viewModel != null)
+                _viewModel.Parent = this;
         }
 
         private void InitializeComponent()
@@ -23,6 +39,7 @@ namespace Drizzle.Editor.Views
 
         private void OnKeyDown(object? sender, KeyEventArgs e)
         {
+            /*
             if (e.Key == Key.Escape)
             {
                 KeyboardDevice.Instance.SetFocusedElement(null, NavigationMethod.Unspecified, KeyModifiers.None);
@@ -36,17 +53,18 @@ namespace Drizzle.Editor.Views
                 return;
 
             vm.MapEditorVM.Lingo.Runtime.KeysDown.Add(code);
+        */
         }
 
         private void OnKeyUp(object? sender, KeyEventArgs e)
         {
-            if (DataContext is not MainWindowViewModel vm)
+            /*if (DataContext is not MainWindowViewModel vm)
                 return;
 
             if (!KeyMap.Map.TryGetValue(e.Key, out var code))
                 return;
 
-            vm.MapEditorVM.Lingo.Runtime.KeysDown.Remove(code);
+            vm.MapEditorVM.Lingo.Runtime.KeysDown.Remove(code);*/
         }
     }
 }

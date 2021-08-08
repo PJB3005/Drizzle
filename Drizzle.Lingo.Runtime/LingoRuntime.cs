@@ -80,19 +80,6 @@ namespace Drizzle.Lingo.Runtime
                 parentScripts.Count, behaviorScripts.Count);
         }
 
-        public void Tick()
-        {
-            try
-            {
-                TickAdvanceScore();
-            }
-            catch (Exception e)
-            {
-                Log.Error(e, "Exception in Lingo tick!");
-                Environment.Exit(1);
-            }
-        }
-
         private LingoScriptRuntimeBase InstantiateBehaviorScript(string name) =>
             InstantiateScriptType(_behaviorScripts[name]);
 

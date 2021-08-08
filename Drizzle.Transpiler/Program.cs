@@ -200,7 +200,7 @@ namespace Drizzle.Transpiler
 
             foreach (var glob in globalContext.AllGlobals)
             {
-                file.WriteLine($"public dynamic global_{glob.ToLower()};");
+                file.WriteLine($"[LingoGlobal] public dynamic global_{glob.ToLower()};");
             }
 
             file.WriteLine("}\n}");

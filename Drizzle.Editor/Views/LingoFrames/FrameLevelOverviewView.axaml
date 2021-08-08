@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:vmf="clr-namespace:Drizzle.Editor.ViewModels.LingoFrames"
              x:Class="Drizzle.Editor.Views.LingoFrames.FrameLevelOverviewView">
-    <Design.DataContext>
+    <!--<Design.DataContext>
         <vmf:FrameLevelOverviewViewModel />
     </Design.DataContext>
 
@@ -33,5 +33,5 @@
         <Grid ColumnDefinitions="*,*">
             
         </Grid>
-    </DockPanel>
+    </DockPanel>-->
 </UserControl>

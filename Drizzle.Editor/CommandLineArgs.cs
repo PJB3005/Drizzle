@@ -6,7 +6,7 @@ using C = System.Console;
 
 namespace Drizzle.Editor
 {
-    public sealed record CommandLineArgs(bool Render, string? Project, bool AutoPause, RenderStage RenderStage)
+    public sealed record CommandLineArgs(bool Render, string? Project, bool AutoPause, RenderStage? RenderStage)
     {
         public static bool TryParse(IReadOnlyList<string> args, [NotNullWhen(true)] out CommandLineArgs? parsed)
         {
@@ -14,7 +14,7 @@ namespace Drizzle.Editor
             var render = false;
             var autoPause = false;
             string? project = null;
-            var renderStage = RenderStage.NoPause;
+            RenderStage? renderStage = null;
 
             using var enumerator = args.GetEnumerator();
 

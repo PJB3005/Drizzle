@@ -149,6 +149,7 @@ namespace Drizzle.Lingo.Runtime
 
         public int the_milliseconds => _system.milliseconds;
         public string the_moviepath => the_moviePath;
+        public string the_dirseparator => Path.DirectorySeparatorChar.ToString();
         public int objectp(dynamic d) => throw new NotImplementedException();
 
         public CastMember? member(object memberNameOrNum, object? castNameOrNum = null) =>

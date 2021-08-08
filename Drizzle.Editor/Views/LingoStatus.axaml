@@ -2,7 +2,7 @@
              xmlns:vm="clr-namespace:Drizzle.Editor.ViewModels"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Drizzle.Editor.Views.LingoStatus">
-    <Design.DataContext>
+    <!--<Design.DataContext>
         <vm:LingoViewModel/>
     </Design.DataContext>
     
@@ -13,5 +13,5 @@
         <Button DockPanel.Dock="Right" Content="Cast Viewer" Command="{Binding OpenCastViewer}" />
         <Button DockPanel.Dock="Right" Margin="8 0" Content="Step" Command="{Binding SingleStep}" />
         <CheckBox DockPanel.Dock="Right" VerticalAlignment="Center" Margin="8 0" IsChecked="{Binding IsPaused}" Content="Paused" />
-    </DockPanel>
+    </DockPanel>-->
 </UserControl>

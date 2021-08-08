@@ -1,0 +1,42 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:render="clr-namespace:Drizzle.Editor.ViewModels.Render"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="Drizzle.Editor.Views.Render.RenderWindow"
+        Title="{Binding LevelName, StringFormat={}Rendering level: {0}}"
+        Icon="/Assets/avalonia-logo.ico"
+        Width="500" Height="300" Closed="TopLevel_OnClosed">
+    <Design.DataContext>
+        <!-- ReSharper disable once Xaml.ConstructorWarning -->
+        <render:RenderViewModel />
+    </Design.DataContext>
+
+    <DockPanel>
+        <DockPanel DockPanel.Dock="Bottom" Margin="4" LastChildFill="False">
+            <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center">
+                <TextBlock.Text>
+                    <MultiBinding StringFormat="{}Camera: {0}, Render stage: {1}">
+                        <Binding Path="CameraIndex" />
+                        <Binding Path="StageEnum" />
+                    </MultiBinding>
+                </TextBlock.Text>
+            </TextBlock>
+            
+            <Button DockPanel.Dock="Right" Content="Cast Viewer" Command="{Binding OpenCastViewer}" />
+            <Button DockPanel.Dock="Right" Margin="8 0" Content="Step" Command="{Binding SingleStep}" />
+
+            <CheckBox DockPanel.Dock="Right" VerticalAlignment="Center" Margin="8 0" IsChecked="{Binding IsPaused}"
+                      Content="Paused" />
+        </DockPanel>
+
+        <ProgressBar DockPanel.Dock="Bottom" Margin="1" Maximum="{Binding RenderProgressMax}"
+                     Value="{Binding RenderProgress}" />
+        <ProgressBar DockPanel.Dock="Bottom" Margin="1" IsIndeterminate="{Binding !RenderStageProgressAvailable}"
+                     Maximum="{Binding RenderStageProgressMax}"
+                     Value="{Binding RenderStageProgress}" />
+
+        <ContentControl Padding="2" Content="{Binding StageViewModel}" />
+    </DockPanel>
+</Window>
