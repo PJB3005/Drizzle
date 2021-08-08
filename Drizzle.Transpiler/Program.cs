@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -213,6 +213,7 @@ namespace Drizzle.Transpiler
             foreach (var (name, script) in scripts)
             {
                 var path = Path.Combine(SourcesDest, $"Movie.{name}.cs");
+                Directory.CreateDirectory(SourcesDest);
                 using var file = new StreamWriter(path);
 
                 OutputSingleMovieScript(name, script, file, ctx);
