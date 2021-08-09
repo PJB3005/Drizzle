@@ -47,5 +47,37 @@ namespace Drizzle.Lingo.Tests
                 }
             }
         }
+
+        [Test]
+        public void TestCopyPixelsMove1Bit()
+        {
+            // Like before, but with a 1 bit image. No border since that isn't possible on one bit.
+            var src = new LingoImage(128, 128, 1);
+            var dst = new LingoImage(128, 128, 1);
+
+            for (var y = 32; y < 96; y++)
+            {
+                for (var x = 32; x < 96; x++)
+                {
+                    var color = x % 2 == 0 ^ y % 2 == 0 ? 255 : 0;
+                    src.setpixel(x, y, color);
+                }
+            }
+
+            // copy
+            dst.copypixels(src, new LingoRect(16, 16, 80, 80), new LingoRect(32, 32, 96, 96));
+
+            // assert
+            for (var y = 0; y < 64; y++)
+            {
+                for (var x = 0; x < 64; x++)
+                {
+                    var srcPx = src.getpixel(x + 32, y + 32);
+                    var dstPx = dst.getpixel(x + 16, y + 16);
+
+                    Assert.That(srcPx, Is.EqualTo(dstPx));
+                }
+            }
+        }
     }
 }
