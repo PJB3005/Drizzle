@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Numerics;
 using Serilog;
 using SixLabors.ImageSharp;
@@ -33,6 +34,14 @@ namespace Drizzle.Lingo.Runtime
         {
             Image = image;
             Depth = depth;
+        }
+
+        public void SaveAsPng(Stream stream)
+        {
+            var img = GetImgSharpImage(out var canDispose);
+            img.SaveAsPng(stream);
+            if (canDispose)
+                img.Dispose();
         }
 
         public void copypixels(LingoImage source, LingoList destQuad, LingoRect sourceRect)
@@ -136,15 +145,10 @@ namespace Drizzle.Lingo.Runtime
 
         public void ShowImage()
         {
-            if (Depth == 8)
-            {
-                var copy = new LingoImage(width, height, 32);
-                copy.copypixels(this, rect, rect);
-                copy.ShowImage();
-                return;
-            }
-
-            Image.ShowImage();
+            var img = GetImgSharpImage(out var canDispose);
+            img.ShowImage();
+            if (canDispose)
+                img.Dispose();
         }
 
         public static LingoImage LoadFromPath(string path)
@@ -152,6 +156,20 @@ namespace Drizzle.Lingo.Runtime
             var img = Image.Load<Bgra32>(path);
             // TODO: loading of low-bit images.
             return new LingoImage(img, 32);
+        }
+
+        public Image GetImgSharpImage(out bool canDispose)
+        {
+            if (Depth == 8)
+            {
+                var copy = new LingoImage(width, height, 16);
+                copy.copypixels(this, rect, rect);
+                canDispose = true;
+                return copy.Image;
+            }
+
+            canDispose = false;
+            return Image;
         }
 
         private static Image NewImgForDepth(int depth, int width, int height)
