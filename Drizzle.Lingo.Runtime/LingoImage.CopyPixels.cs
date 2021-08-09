@@ -123,15 +123,6 @@ namespace Drizzle.Lingo.Runtime
             var srcR = (float)(sourceRect.right / source.width);
             var srcB = (float)(sourceRect.bottom / source.height);
 
-            // Half-texel offset so we sample the *center* of the pixels, not the edges.
-            var offsetH = (0.5f / source.width);
-            var offsetV = (0.5f / source.height);
-
-            srcL += offsetH;
-            srcT += offsetV;
-            srcR += offsetH;
-            srcB += offsetV;
-
             // LTRB
             var srcBox = new Vector4(srcL, srcT, srcR, srcB);
 
@@ -278,9 +269,18 @@ namespace Drizzle.Lingo.Runtime
         {
             var (dstL, dstT, dstR, dstB) = dstBox;
 
+            var srcW = srcBox.Z - srcBox.X;
+            var srcH = srcBox.W - srcBox.Y;
+            var dstW = dstR - dstL;
+            var dstH = dstB - dstT;
+
             // Horizontal increment for sampling coordinates when the rasterizer iterates.
-            var incSrcH = (srcBox.Z - srcBox.X) / (dstR - dstL);
-            var incSrcV = (srcBox.W - srcBox.Y) / (dstB - dstT);
+            var incSrcS = srcW / dstW;
+            var incSrcT = srcH / dstH;
+
+            // Half-texel offset so we sample the *center* of the pixels, not the edges.
+            var initS = srcW / (dstW * 2) + srcBox.X;
+            var initT = srcH / (dstH * 2) + srcBox.Y;
 
             var sampler = new TSampler();
             var writer = new TWriter();
@@ -297,35 +297,30 @@ namespace Drizzle.Lingo.Runtime
             var fgc = parameters.ForeColor;
             var fg = new Vector4(fgc.red / 255f, fgc.green / 255f, fgc.blue / 255f, 0f);
 
-            var t = srcBox.Y;
-            for (var y = dstT; y < dstB; y++)
+            var t = initT;
+            for (var y = dstT; y < dstB; y++, t += incSrcT)
             {
-                if (y >= 0 && y < dstImgH)
+                if (y < 0 || y >= dstImgH)
+                    continue;
+
+                var s = initS;
+                for (var x = dstL; x < dstR; x++, s += incSrcS)
                 {
-                    var s = srcBox.X;
+                    if (x < 0 || x >= dstImgW)
+                        continue;
 
-                    for (var x = dstL; x < dstR; x++)
+                    Vector4 color;
+                    if (s < 0 || s >= 1 || t < 0 || t >= 1)
+                        color = Vector4.One;
+                    else
+                        color = sampler.Sample(srcSpan, srcImgW, srcImgH, new Vector2(s, t));
+
+                    if (!doBackgroundTransparent || color != Vector4.One)
                     {
-                        if (x >= 0 && x < dstImgW)
-                        {
-                            Vector4 color;
-                            if (s < 0 || s >= 1 || t < 0 || t >= 1)
-                                color = Vector4.One;
-                            else
-                                color = sampler.Sample(srcSpan, srcImgW, srcImgH, new Vector2(s, t));
-
-                            if (!doBackgroundTransparent || color != Vector4.One)
-                            {
-                                color += fg;
-                                writer.Write(dstSpan, dstImgW * y + x, color);
-                            }
-                        }
-
-                        s += incSrcH;
+                        color += fg;
+                        writer.Write(dstSpan, dstImgW * y + x, color);
                     }
                 }
-
-                t += incSrcV;
             }
         }
 

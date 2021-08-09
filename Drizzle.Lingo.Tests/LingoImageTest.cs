@@ -79,5 +79,29 @@ namespace Drizzle.Lingo.Tests
                 }
             }
         }
+
+        [Test]
+        [TestCase(true)]
+        [TestCase(false)]
+        public void TestCopyPixelsPxl(bool pxlFlag)
+        {
+            var pxl = new LingoImage(1, 1, 32);
+            pxl.setpixel(0, 0, 255);
+            pxl.IsPxl = pxlFlag;
+            var dst = new LingoImage(128, 128, 1);
+
+            dst.copypixels(pxl, new LingoRect(32, 32, 96, 96), pxl.rect);
+
+            // assert
+            for (var y = 32; y < 96; y++)
+            {
+                for (var x = 32; x < 96; x++)
+                {
+                    var dstPx = dst.getpixel(x, y);
+
+                    Assert.That(dstPx, Is.EqualTo(new LingoColor(0, 0, 0)));
+                }
+            }
+        }
     }
 }
