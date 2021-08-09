@@ -1,0 +1,18 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:vm="clr-namespace:Drizzle.Editor.ViewModels"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:editorTabs="clr-namespace:Drizzle.Editor.ViewModels.EditorTabs"
+             x:Class="Drizzle.Editor.Views.EditorContentView">
+    <Design.DataContext>
+        <!-- ReSharper disable once Xaml.ConstructorWarning -->
+        <vm:EditorContentViewModel />
+    </Design.DataContext>
+    
+    <TabControl TabStripPlacement="Bottom" Items="{Binding EditorTabs}">
+        <TabControl.ItemTemplate>
+            <DataTemplate DataType="editorTabs:EditorTabViewModelBase">
+                <TextBlock Text="{Binding Title}" />
+            </DataTemplate>
+        </TabControl.ItemTemplate>
+    </TabControl>
+</UserControl>

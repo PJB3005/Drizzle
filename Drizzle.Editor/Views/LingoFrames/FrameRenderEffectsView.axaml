@@ -3,7 +3,7 @@
          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
          xmlns:vmf="clr-namespace:Drizzle.Editor.ViewModels.LingoFrames"
          x:Class="Drizzle.Editor.Views.LingoFrames.FrameRenderEffectsView">
-    <Design.DataContext>
+    <!--<Design.DataContext>
         <vmf:FrameRenderEffectsViewModel />
     </Design.DataContext>
 
@@ -24,5 +24,5 @@
         <StackPanel Orientation="Horizontal">
             <Button Content="Next effect" Command="{Binding NextEffect}" />
         </StackPanel>
-    </StackPanel>
+    </StackPanel>-->
 </Control>

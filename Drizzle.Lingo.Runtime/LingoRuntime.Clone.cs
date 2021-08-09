@@ -42,7 +42,7 @@ namespace Drizzle.Lingo.Runtime
             Log.Debug("Cloning globals...");
 
             var srcMovieScript = src.MovieScriptInstance;
-            var dstMovieScript = src.MovieScriptInstance;
+            var dstMovieScript = dst.MovieScriptInstance;
             foreach (var field in srcMovieScript.GetType().GetFields())
             {
                 if (!Attribute.IsDefined(field, typeof(LingoGlobalAttribute)))

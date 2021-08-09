@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:render="clr-namespace:Drizzle.Editor.ViewModels.Render"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Drizzle.Editor.Views.Render.RenderStageEffectsView">
+    <UserControl.Styles>
+        <Style Selector="StackPanel.Current">
+            <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush}" />
+        </Style>
+    </UserControl.Styles>
+    
+    <Design.DataContext>
+        <!-- ReSharper disable once Xaml.ConstructorWarning -->
+        <render:RenderStageEffectsViewModel />
+    </Design.DataContext>
+    
+    <StackPanel Orientation="Vertical" HorizontalAlignment="Left" Width="250">
+        <TextBlock Text="Rendering effects" />
+        <ItemsControl Name="EffectsList" Items="{Binding Effects}" Width="150" HorizontalAlignment="Left">
+            <!-- Item template is set in code behind to work around styling issues -->
+            <!-- Rider currently does not support Avalonia's new Classes.Foo="{Binding}" syntax.-->
+        </ItemsControl>
+    </StackPanel>
+
+</UserControl>

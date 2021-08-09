@@ -1,6 +1,6 @@
 namespace Drizzle.Editor.ViewModels.LingoFrames
 {
-    public sealed class FrameLevelOverviewViewModel : LingoFrameViewModel
+    /*public sealed class FrameLevelOverviewViewModel : LingoFrameViewModel
     {
         public string LevelName { get; private set; } = "";
 
@@ -16,5 +16,5 @@ namespace Drizzle.Editor.ViewModels.LingoFrames
             MovieScript.global_gviewrender = 1;
             Runtime.ScoreGo(43);
         }
-    }
+    }*/
 }

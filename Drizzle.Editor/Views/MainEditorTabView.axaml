@@ -1,0 +1,9 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:vm="clr-namespace:Drizzle.Editor.ViewModels"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Drizzle.Editor.Views.MainEditorTabView">
+    <Design.DataContext>
+        <!-- ReSharper disable once Xaml.ConstructorWarning -->
+        <vm:MainEditorTabViewModel />
+    </Design.DataContext>
+</UserControl>

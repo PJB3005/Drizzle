@@ -4,7 +4,8 @@ global c, keepLooping, afterEffects, gLastImported, gRenderTrashProps, gCurrentl
 on exitFrame me
   c = 1
   keepLooping = 1
-  afterEffects = (_movie.frame > 51)
+  --Set by LevelRenderer.cs now.
+  --afterEffects = (_movie.frame > 51)
   gLastImported = ""
   gCurrentlyRenderingTrash = false
   if(gRenderTrashProps.count > 0)and(afterEffects=0)then

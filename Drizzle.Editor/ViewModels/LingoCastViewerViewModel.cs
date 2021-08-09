@@ -18,6 +18,7 @@ namespace Drizzle.Editor.ViewModels
 {
     public sealed class LingoCastViewerViewModel : ViewModelBase
     {
+        /*
         private readonly LingoViewModel _lingo;
 
         public ObservableCollection<LingoCastViewerCast> Casts { get; } = new();
@@ -124,6 +125,7 @@ namespace Drizzle.Editor.ViewModels
         {
             Refresh();
         }
+    */
     }
 
     public sealed class LingoCastViewerCast : ViewModelBase

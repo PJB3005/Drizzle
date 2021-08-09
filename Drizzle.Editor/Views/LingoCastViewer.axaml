@@ -4,16 +4,16 @@
         xmlns:views="clr-namespace:Drizzle.Editor.Views"
         x:Class="Drizzle.Editor.Views.LingoCastViewer"
         Icon="/Assets/avalonia-logo.ico"
-        Title="Drizzle.Editor" Width="1024" Height="600"
-        Closed="OnClosed" Opened="OpOpened">
+        Title="Drizzle.Editor" Width="1024" Height="600"><!--Closed="OnClosed" Opened="OpOpened"-->
 
+    <!--
     <Design.DataContext>
-        <!-- ReSharper disable once Xaml.ConstructorWarning -->
+        ~1~ ReSharper disable once Xaml.ConstructorWarning @1@
         <vm:LingoCastViewerViewModel />
     </Design.DataContext>
 
     <DockPanel Margin="2">
-        <!-- Bottom -->
+        ~1~ Bottom @1@
         <DockPanel DockPanel.Dock="Bottom" LastChildFill="False">
             <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="{Binding Status}" />
             <Button DockPanel.Dock="Right" Content="Refresh" Command="{Binding Refresh}" />
@@ -69,4 +69,5 @@
             </DockPanel>
         </Grid>
     </DockPanel>
+-->
 </Window>
