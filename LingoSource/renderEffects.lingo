@@ -168,8 +168,8 @@ on initEffect me
   repeat with op in gEEprops.effects[r].options then
     case op[1] of 
       "Color":
-        colr = [color(255, 0, 255), color(0, 255, 255), color(0, 255, 0)][["Color1", "Color2", "Dead"].getPos(op[3])]
-        gdLayer = ["A", "B", "C"][["Color1", "Color2", "Dead"].getPos(op[3])]
+        colr = [color(255, 0, 255), color(0, 255, 255), color(0, 255, 0)][ ["Color1", "Color2", "Dead"].getPos(op[3])]
+        gdLayer = ["A", "B", "C"][ ["Color1", "Color2", "Dead"].getPos(op[3])]
       "Seed":
         the randomSeed = op[3]
       "3D":
