@@ -118,11 +118,19 @@ namespace Drizzle.Lingo.Runtime
                 Log.Warning("copypixels(): Darkest ink not implemented");
 
             // Float coordinates for the purposes of sampling.
-            // TODO: Half-texel offset, probably.
             var srcL = (float)(sourceRect.left / source.width);
             var srcT = (float)(sourceRect.top / source.height);
             var srcR = (float)(sourceRect.right / source.width);
             var srcB = (float)(sourceRect.bottom / source.height);
+
+            // Half-texel offset so we sample the *center* of the pixels, not the edges.
+            var offsetH = (0.5f / source.width);
+            var offsetV = (0.5f / source.height);
+
+            srcL += offsetH;
+            srcT += offsetV;
+            srcR += offsetH;
+            srcB += offsetV;
 
             // LTRB
             var srcBox = new Vector4(srcL, srcT, srcR, srcB);
@@ -304,7 +312,7 @@ namespace Drizzle.Lingo.Runtime
                         if (x >= 0 && x < dstImgW)
                         {
                             Vector4 color;
-                            if (s < 0 || s > 1 || t < 0 || t > 1)
+                            if (s < 0 || s >= 1 || t < 0 || t >= 1)
                                 color = Vector4.One;
                             else
                                 color = sampler.Sample(srcSpan, srcImgW, srcImgH, new Vector2(s, t));
