@@ -18,6 +18,7 @@ namespace Drizzle.Lingo.Runtime
 
         public int width { get; }
         public int height { get; }
+        public int depth => Depth;
 
         // So the editor does a *ton* of tiny copypixels() operations from the "pxl" cast member,
         // which basically amounts to line/rect drawings in a silly way.

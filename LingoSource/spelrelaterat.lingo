@@ -238,7 +238,12 @@ end
 
 
 on makeSilhoutteFromImg(img, inverted)
-  
+  --/ I don't even know if this function gets used with anything with a depth != 32
+  --/ but if it does let's just guard this since makeSilhouette can't handle anything else.
+  if img.depth = 32 or img.depth = 1 then
+    return img.makeSilhouette(inverted)
+  end if
+
   inv = image(img.width, img.height, 1)
   inv.copyPixels(member("pxl").image, img.rect, rect(0,0,1,1), {#color:255})
   inv.copyPixels(img,img.rect,img.rect, {#ink:36, #color:color(255,255,255)})

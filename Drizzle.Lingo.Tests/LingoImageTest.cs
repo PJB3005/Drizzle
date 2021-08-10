@@ -103,5 +103,32 @@ namespace Drizzle.Lingo.Tests
                 }
             }
         }
+
+        [Test]
+        public void TestMakeSilhouette()
+        {
+            var src = new LingoImage(32, 32, 32);
+            for (var y = 8; y < 24; y++)
+            {
+                for (var x = 8; x < 24; x++)
+                {
+                    src.setpixel(x, y, 255);
+                }
+            }
+
+            var silhouette = src.makesilhouette(1);
+
+            for (var y = 0; y < 32; y++)
+            {
+                for (var x = 0; x < 32; x++)
+                {
+                    var px = silhouette.getpixel(x, y);
+                    var shouldBeInSilhouette = x is >= 8 and < 24 && y is >= 8 and < 24;
+                    LingoColor expectedPixel = shouldBeInSilhouette ? 0 : 255;
+
+                    Assert.That(px, Is.EqualTo(expectedPixel));
+                }
+            }
+        }
     }
 }
