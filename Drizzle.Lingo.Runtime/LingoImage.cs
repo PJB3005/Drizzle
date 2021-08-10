@@ -162,7 +162,7 @@ namespace Drizzle.Lingo.Runtime
         {
             var newBuf = GC.AllocateUninitializedArray<byte>(ImageBuffer.Length);
             ImageBuffer.AsSpan().CopyTo(newBuf);
-            return new LingoImage(newBuf, width, height, Depth);
+            return new LingoImage(newBuf, width, height, Depth) { IsPxl = IsPxl };
         }
 
         public dynamic createmask()
