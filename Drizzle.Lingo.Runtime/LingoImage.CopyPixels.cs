@@ -127,38 +127,6 @@ namespace Drizzle.Lingo.Runtime
             var srcBox = new Vector4(srcL, srcT, srcR, srcB);
 
             CopyPixelsRectGenWriter(source, dest, srcBox, (dstL, dstT, dstR, dstB), parameters);
-
-            /*var srcImg = source.Image;
-
-            var srcCropped = srcImg.Clone(ctx => ctx.Crop(srcRect));
-
-            if (sourceRect.right > srcImg.Width
-                || sourceRect.bottom > srcImg.Height
-                || sourceRect.left < 0
-                || sourceRect.top < 0)
-            {
-                Log.Debug("copyPixels() doing out-of bounds read");
-
-                var padImage = NewImgForDepth(Depth, (int)sourceRect.width, (int)sourceRect.height);
-
-                padImage.Mutate(
-                    ctx =>
-                    {
-                        var point = new Point(Math.Max(0, (int)-sourceRect.left), Math.Max(0, (int)-sourceRect.top));
-                        ctx.DrawImage(srcCropped, point, opacity: 1f);
-                    });
-
-                srcCropped = padImage;
-            }
-
-            Image.Mutate(c =>
-            {
-                var srcScaled = srcCropped.Clone(s =>
-                    s.Resize((int)destRect.width, (int)destRect.height, new NearestNeighborResampler()));
-
-                c.DrawImage(srcScaled, new Point((int)destRect.left, (int)destRect.top), PixelColorBlendingMode.Overlay,
-                    1);
-            });*/
         }
 
         private static void CopyPixelsRectGenWriter(
@@ -362,6 +330,8 @@ namespace Drizzle.Lingo.Runtime
             where TWriter : struct, IPixelWriter<TDstData>
             where TDstData : unmanaged
         {
+            var writer = new TWriter();
+            var dstSpan = MemoryMarshal.Cast<byte, TDstData>(dst.ImageBuffer);
             var (dstL, dstT, dstR, dstB) = dstBox;
 
             dstL = Math.Clamp(dstL, 0, dst.width);
@@ -369,20 +339,24 @@ namespace Drizzle.Lingo.Runtime
             dstR = Math.Clamp(dstR, 0, dst.width);
             dstB = Math.Clamp(dstB, 0, dst.height);
 
-            var dstSpan = MemoryMarshal.Cast<byte, TDstData>(dst.ImageBuffer);
-
-            var dstWidth = dst.width;
-            var w = new TWriter();
-
             // todo: remove round trip to Vector4 here please.
             var fgc = parameters.ForeColor;
             var fg = new Vector4(fgc.red / 255f, fgc.green / 255f, fgc.blue / 255f, 1f);
+
+            if (dstL == 0 && dstT == 0 && dstR == dst.width && dstB == dst.height)
+            {
+                // Writing to the whole image with pxl is commonly used as a fill operation.
+                writer.Fill(dstSpan, fg);
+                return;
+            }
+
+            var dstWidth = dst.width;
 
             for (var y = dstT; y < dstB; y++)
             {
                 for (var x = dstL; x < dstR; x++)
                 {
-                    w.Write(dstSpan, y * dstWidth + x, fg);
+                    writer.Write(dstSpan, y * dstWidth + x, fg);
                 }
             }
         }
@@ -411,6 +385,7 @@ namespace Drizzle.Lingo.Runtime
         private interface IPixelWriter<TPixel>
         {
             void Write(Span<TPixel> dstDat, int rowMajorPos, Vector4 value);
+            void Fill(Span<TPixel> dstDat, Vector4 value);
         }
 
         // Bgra32 and Bgra5551 image sampler/writer.
@@ -437,6 +412,13 @@ namespace Drizzle.Lingo.Runtime
             {
                 dstDat[rowMajorPos].FromVector4(value);
             }
+
+            public void Fill(Span<TPixel> dstDat, Vector4 value)
+            {
+                var px = new TPixel();
+                px.FromVector4(value);
+                dstDat.Fill(px);
+            }
         }
 
         private struct PixelSamplerPalette8 : IPixelSampler<L8>
@@ -458,25 +440,31 @@ namespace Drizzle.Lingo.Runtime
             [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
             public void Write(Span<L8> dstDat, int rowMajorPos, Vector4 value)
             {
+                dstDat[rowMajorPos] = ToPalettized(value);
+            }
+
+            public void Fill(Span<L8> dstDat, Vector4 value)
+            {
+                dstDat.Fill(ToPalettized(value));
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+            private static L8 ToPalettized(Vector4 value)
+            {
                 var r = (int)(value.X * 255);
                 var g = (int)(value.Y * 255);
                 var b = (int)(value.Z * 255);
 
+                // Red.
                 if (r == 255 && g == 0 && b == 0)
-                {
-                    // Palette index of red.
-                    dstDat[rowMajorPos] = new L8(6);
-                }
-                else if (r == 0 && g == 0 && b == 0)
-                {
-                    // Black.
-                    dstDat[rowMajorPos] = new L8(255);
-                }
-                else
-                {
-                    // White.
-                    dstDat[rowMajorPos] = new L8(0);
-                }
+                    return new L8(6);
+
+                // Black.
+                if (r == 0 && g == 0 && b == 0)
+                    return new L8(255);
+
+                // White.
+                return new L8(0);
             }
         }
 
@@ -497,6 +485,11 @@ namespace Drizzle.Lingo.Runtime
             public void Write(Span<int> dstDat, int rowMajorPos, Vector4 value)
             {
                 DoBitWrite(dstDat, rowMajorPos, value.X != 0);
+            }
+
+            public void Fill(Span<int> dstDat, Vector4 value)
+            {
+                dstDat.Fill(value.X != 0 ? -1 : 0);
             }
         }
 
