@@ -1,4 +1,5 @@
-﻿using SixLabors.ImageSharp;
+﻿using System.IO;
+using SixLabors.ImageSharp;
 
 namespace Drizzle.Lingo.Runtime.Xtra
 {
@@ -14,7 +15,9 @@ namespace Drizzle.Lingo.Runtime.Xtra
             var img = (LingoImage)props["image"]!;
             var fileName = (string)props["filename"]!;
 
-            img.Image.SaveAsPng(fileName);
+            using var file = File.OpenWrite(fileName);
+            img.SaveAsPng(file);
+
             return 1;
         }
     }

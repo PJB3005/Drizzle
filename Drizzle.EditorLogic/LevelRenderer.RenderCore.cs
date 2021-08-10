@@ -49,8 +49,8 @@ namespace Drizzle.Logic
                     "Levels",
                     $"{Movie.global_gloadedname}_{camIndex}.png");
 
-                var img = (Image<Bgra32>)_runtime.GetCastMember("finalImage")!.image!.Image;
-                img.SaveAsPng(fileName);
+                var file = File.OpenWrite(fileName);
+                _runtime.GetCastMember("finalImage")!.image!.SaveAsPng(file);
 
                 _countCamerasDone += 1;
             }
@@ -192,8 +192,12 @@ namespace Drizzle.Logic
 
         private void RenderColors()
         {
-            RenderStartFrame(RenderStage.RenderColors);
-            _runtime.CreateScript<renderColors>().exitframe();
+            var script = _runtime.CreateScript<renderColors>();
+            while (Movie.global_keeplooping == 1)
+            {
+                RenderStartFrame(RenderStage.RenderColors);
+                script.newframe();
+            }
         }
 
         private void RenderFinished()

@@ -24,5 +24,13 @@ namespace Drizzle.Lingo.Runtime
                 ArgumentList = { tmp }
             });
         }
+
+        public static Span<T> GetSinglePixelSpan<T>(this Image<T> img) where T : unmanaged, IPixel<T>
+        {
+            if (!img.TryGetSinglePixelSpan(out var span))
+                throw new InvalidOperationException("Unable to get single pixel span!");
+
+            return span;
+        }
     }
 }

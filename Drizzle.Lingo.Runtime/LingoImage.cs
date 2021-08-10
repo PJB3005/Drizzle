@@ -1,21 +1,24 @@
 ﻿using System;
-using System.Numerics;
+using System.Diagnostics;
+using System.IO;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Serilog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
 
 namespace Drizzle.Lingo.Runtime
 {
     public sealed partial class LingoImage
     {
         public int Depth { get; }
-        public Image Image { get; }
+        public byte[] ImageBuffer { get; }
 
-        public LingoRect rect => new LingoRect(0, 0, Image.Width, Image.Height);
+        public LingoRect rect => new LingoRect(0, 0, width, height);
 
-        public int width => Image.Width;
-        public int height => Image.Height;
+        public int width { get; }
+        public int height { get; }
+        public int depth => Depth;
 
         // So the editor does a *ton* of tiny copypixels() operations from the "pxl" cast member,
         // which basically amounts to line/rect drawings in a silly way.
@@ -24,15 +27,37 @@ namespace Drizzle.Lingo.Runtime
 
         public LingoImage(int width, int height, int depth)
         {
-            Image = NewImgForDepth(depth, width, height);
-
+            this.width = width;
+            this.height = height;
             Depth = depth;
+
+            ImageBuffer = NewImgBufferForDepth(width, height, depth);
         }
 
-        public LingoImage(Image image, int depth)
+        public LingoImage(Image<Bgra32> image)
         {
-            Image = image;
+            width = image.Width;
+            height = image.Height;
+            Depth = 32;
+
+            ImageBuffer = NewImgBufferForDepth(image.Width, image.Height, 32);
+            var span = image.GetSinglePixelSpan();
+            span.CopyTo(MemoryMarshal.Cast<byte, Bgra32>(ImageBuffer));
+        }
+
+        private LingoImage(byte[] buffer, int width, int height, int depth)
+        {
+            this.width = width;
+            this.height = height;
             Depth = depth;
+
+            ImageBuffer = buffer;
+        }
+
+        public void SaveAsPng(Stream stream)
+        {
+            using var img = GetImgSharpImage();
+            img.SaveAsPng(stream);
         }
 
         public void copypixels(LingoImage source, LingoList destQuad, LingoRect sourceRect)
@@ -40,38 +65,42 @@ namespace Drizzle.Lingo.Runtime
             copypixels(source, destQuad, sourceRect, new LingoPropertyList());
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public LingoColor getpixel(LingoPoint point)
         {
             return getpixel(point.loch, point.locv);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public LingoColor getpixel(LingoDecimal x, LingoDecimal y)
         {
             return getpixel((int)x, (int)y);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public LingoColor getpixel(int x, int y)
         {
+            var idx = y * width + x;
             switch (Depth)
             {
                 case 32:
                 {
-                    var bgra32 = (Image<Bgra32>)Image;
-                    var bgra = bgra32[x, y];
-                    return new LingoColor(bgra.R, bgra.G, bgra.B);
+                    var buf = MemoryMarshal.Cast<byte, Bgra32>(ImageBuffer);
+                    ref var val = ref buf[idx];
+                    return new LingoColor(val.R, val.G, val.B);
                 }
                 case 16:
                 {
-                    var bgra5551 = (Image<Bgra5551>)Image;
+                    var buf = MemoryMarshal.Cast<byte, Bgra5551>(ImageBuffer);
+                    ref var val = ref buf[idx];
                     var rgba = new Rgba32();
-                    bgra5551[x, y].ToRgba32(ref rgba);
+                    val.ToRgba32(ref rgba);
                     return new LingoColor(rgba.R, rgba.G, rgba.B);
                 }
                 case 1:
                 {
-                    var l8 = (Image<L8>)Image;
-                    var val = l8[x, y];
-                    return val.PackedValue == 255 ? new LingoColor(255, 255, 255) : new LingoColor(0, 0, 0);
+                    var buf = MemoryMarshal.Cast<byte, int>(ImageBuffer);
+                    return DoBitRead(buf, idx) ? new LingoColor(255, 255, 255) : default;
                 }
                 default:
                     Log.Warning("getpixel(): Unimplemented image depth: {Depth}", Depth);
@@ -82,39 +111,45 @@ namespace Drizzle.Lingo.Runtime
             return default;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public void setpixel(LingoPoint point, LingoColor color)
         {
             setpixel(point.loch, point.locv, color);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public void setpixel(LingoDecimal x, LingoDecimal y, LingoColor color)
         {
             setpixel((int)x, (int)y, color);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public void setpixel(int x, int y, LingoColor color)
         {
+            var idx = y * width + x;
             switch (Depth)
             {
                 case 32:
                 {
-                    var bgra32 = (Image<Bgra32>)Image;
-                    bgra32[x, y] = new Bgra32((byte)color.red, (byte)color.green, (byte)color.blue, 255);
+                    var buf = MemoryMarshal.Cast<byte, Bgra32>(ImageBuffer);
+                    ref var val = ref buf[idx];
+                    val = new Bgra32((byte)color.red, (byte)color.green, (byte)color.blue, 255);
                     return;
                 }
                 case 16:
                 {
-                    var bgra5551 = (Image<Bgra5551>)Image;
-                    var val = new Bgra5551();
+                    var buf = MemoryMarshal.Cast<byte, Bgra5551>(ImageBuffer);
+                    ref var val = ref buf[idx];
                     val.FromRgba32(new Rgba32((byte)color.red, (byte)color.green, (byte)color.blue, 255));
-                    bgra5551[x, y] = val;
                     return;
                 }
                 case 1:
                 {
-                    var L8 = (Image<L8>)Image;
+                    var buf = MemoryMarshal.Cast<byte, int>(ImageBuffer);
                     var white = color.red != 0;
-                    L8[x, y] = white ? new L8(255) : new L8(0);
+
+                    DoBitWrite(buf, idx, white);
+
                     return;
                 }
                 default:
@@ -125,7 +160,9 @@ namespace Drizzle.Lingo.Runtime
 
         public LingoImage duplicate()
         {
-            return new LingoImage(Image.Clone(_ => { }), Depth);
+            var newBuf = GC.AllocateUninitializedArray<byte>(ImageBuffer.Length);
+            ImageBuffer.AsSpan().CopyTo(newBuf);
+            return new LingoImage(newBuf, width, height, Depth) { IsPxl = IsPxl };
         }
 
         public dynamic createmask()
@@ -136,33 +173,77 @@ namespace Drizzle.Lingo.Runtime
 
         public void ShowImage()
         {
-            if (Depth == 8)
-            {
-                var copy = new LingoImage(width, height, 32);
-                copy.copypixels(this, rect, rect);
-                copy.ShowImage();
-                return;
-            }
-
-            Image.ShowImage();
+            using var img = GetImgSharpImage();
+            img.ShowImage();
         }
 
         public static LingoImage LoadFromPath(string path)
         {
             var img = Image.Load<Bgra32>(path);
-            // TODO: loading of low-bit images.
-            return new LingoImage(img, 32);
+            // TODO: loading of low-bit images, maybe.
+            return new LingoImage(img);
         }
 
-        private static Image NewImgForDepth(int depth, int width, int height)
+        public Image GetImgSharpImage()
         {
-            return depth switch
+            var img = this;
+            if (img.Depth is 8 or 1)
             {
-                1 or 2 or 4 or 8 => new Image<L8>(width, height, depth == 1 ? new L8(255) : new L8(0)),
-                16 => new Image<Bgra5551>(width, height, new Bgra5551(Vector4.One)),
-                32 => new Image<Bgra32>(width, height, new Bgra32(255, 255, 255, 255)),
-                _ => throw new ArgumentException("Invalid image depth", nameof(depth))
-            };
+                var copy = new LingoImage(width, height, 16);
+                copy.copypixels(this, rect, rect);
+                img = copy;
+            }
+
+            Image imgSharp;
+            Span<byte> imgSharpSpan;
+            if (img.Depth == 16)
+            {
+                var bgra5551 = new Image<Bgra5551>(img.width, img.height);
+                imgSharp = bgra5551;
+                imgSharpSpan = MemoryMarshal.Cast<Bgra5551, byte>(bgra5551.GetSinglePixelSpan());
+            }
+            else
+            {
+                Debug.Assert(img.Depth == 32);
+                var bgra32 = new Image<Bgra32>(img.width, img.height);
+                imgSharp = bgra32;
+                imgSharpSpan = MemoryMarshal.Cast<Bgra32, byte>(bgra32.GetSinglePixelSpan());
+            }
+
+            img.ImageBuffer.CopyTo(imgSharpSpan);
+
+            return imgSharp;
+        }
+
+        private static byte[] NewImgBufferForDepth(int width, int height, int depth)
+        {
+            if (depth is 2 or 4)
+                throw new NotSupportedException();
+
+            int size;
+            if (depth == 1)
+            {
+                var bits = width * height;
+                size = (bits + 7) >> 3;
+                // Round up to 4 bytes so we can do 32-bit wide operations safely.
+                var rem = size & 3;
+                if (rem != 0)
+                    size += 4 - rem;
+            }
+            else
+            {
+                size = width * height * (depth >> 3);
+            }
+
+            // 8-bit palettized needs to be initialized to 0 (0 == white).
+            if (depth == 8)
+                return new byte[size];
+
+            // all other formats initialize to all 1s (white).
+            // Use AllocateUninitializedArray
+            var buf = GC.AllocateUninitializedArray<byte>(size);
+            buf.AsSpan().Fill(255);
+            return buf;
         }
     }
 }
