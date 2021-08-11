@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using Serilog;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -105,6 +107,12 @@ namespace Drizzle.Lingo.Runtime
             var dstR = destRect.right.integer;
             var dstB = destRect.bottom.integer;
 
+            if (dstL > dest.width || dstT > dest.height || dstR < 0 || dstB < 0)
+            {
+                Log.Debug("copyPixels(): ignoring complete out-of-bounds write.");
+                return;
+            }
+
             // ReSharper disable once CompareOfFloatsByEqualityOperator
             // todo: make sure to not apply this when mask is set.
             if (source.IsPxl && parameters.Blend == 1 && parameters.Ink == CopyPixelsInk.Copy)
@@ -138,7 +146,7 @@ namespace Drizzle.Lingo.Runtime
             switch (dst.Depth)
             {
                 case 32:
-                    CopyPixelsRectGenSampler<Bgra32, PixelWriterRgb<Bgra32>>(
+                    CopyPixelsRectGenSampler<Bgra32, PixelOpsBgra32>(
                         src,
                         dst,
                         srcBox,
@@ -146,7 +154,7 @@ namespace Drizzle.Lingo.Runtime
                         parameters);
                     break;
                 case 16:
-                    CopyPixelsRectGenSampler<Bgra5551, PixelWriterRgb<Bgra5551>>(
+                    CopyPixelsRectGenSampler<Bgra5551, PixelOpsBgra5551>(
                         src,
                         dst,
                         srcBox,
@@ -154,7 +162,7 @@ namespace Drizzle.Lingo.Runtime
                         parameters);
                     break;
                 case 8:
-                    CopyPixelsRectGenSampler<L8, PixelWriterPalette8>(
+                    CopyPixelsRectGenSampler<L8, PixelOpsPalette8>(
                         src,
                         dst,
                         srcBox,
@@ -162,7 +170,7 @@ namespace Drizzle.Lingo.Runtime
                         parameters);
                     break;
                 case 1:
-                    CopyPixelsRectGenSampler<int, PixelWriterBit>(
+                    CopyPixelsRectGenSampler<int, PixelOpsBit>(
                         src,
                         dst,
                         srcBox,
@@ -180,13 +188,13 @@ namespace Drizzle.Lingo.Runtime
             Vector4 srcBox,
             (int l, int t, int r, int b) dstBox,
             in CopyPixelsParameters parameters)
-            where TWriter : struct, IPixelWriter<TDstData>
+            where TWriter : struct, IPixelOps<TDstData>
             where TDstData : unmanaged
         {
             switch (src.Depth)
             {
                 case 32:
-                    CopyPixelsRectCoreCopy<Bgra32, PixelSamplerRgb<Bgra32>, TDstData, TWriter>(
+                    CopyPixelsRectCoreCopy<Bgra32, PixelOpsBgra32, TDstData, TWriter>(
                         src,
                         dst,
                         srcBox,
@@ -194,7 +202,7 @@ namespace Drizzle.Lingo.Runtime
                         parameters);
                     break;
                 case 16:
-                    CopyPixelsRectCoreCopy<Bgra5551, PixelSamplerRgb<Bgra5551>, TDstData, TWriter>(
+                    CopyPixelsRectCoreCopy<Bgra5551, PixelOpsBgra5551, TDstData, TWriter>(
                         src,
                         dst,
                         srcBox,
@@ -202,7 +210,7 @@ namespace Drizzle.Lingo.Runtime
                         parameters);
                     break;
                 case 8:
-                    CopyPixelsRectCoreCopy<L8, PixelSamplerPalette8, TDstData, TWriter>(
+                    CopyPixelsRectCoreCopy<L8, PixelOpsPalette8, TDstData, TWriter>(
                         src,
                         dst,
                         srcBox,
@@ -210,7 +218,7 @@ namespace Drizzle.Lingo.Runtime
                         parameters);
                     break;
                 case 1:
-                    CopyPixelsRectCoreCopy<int, PixelSamplerBit, TDstData, TWriter>(
+                    CopyPixelsRectCoreCopy<int, PixelOpsBit, TDstData, TWriter>(
                         src,
                         dst,
                         srcBox,
@@ -224,19 +232,214 @@ namespace Drizzle.Lingo.Runtime
         }
 
         // Struct generics for static dispatch.
-        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         private static void CopyPixelsRectCoreCopy<TSrcData, TSampler, TDstData, TWriter>(
             LingoImage src, LingoImage dst,
             Vector4 srcBox,
             (int l, int t, int r, int b) dstBox,
             in CopyPixelsParameters parameters)
-            where TSampler : struct, IPixelSampler<TSrcData>
+            where TSampler : struct, IPixelOps<TSrcData>
             where TSrcData : unmanaged
-            where TWriter : struct, IPixelWriter<TDstData>
+            where TWriter : struct, IPixelOps<TDstData>
+            where TDstData : unmanaged
+        {
+            if (Avx2.IsSupported)
+                CopyPixelsRectCoreCopyAvx2<TSrcData, TSampler, TDstData, TWriter>(
+                    src, dst,
+                    srcBox, dstBox,
+                    parameters);
+            else
+                CopyPixelsRectCoreCopyScalar<TSrcData, TSampler, TDstData, TWriter>(
+                    src, dst,
+                    srcBox, dstBox,
+                    parameters);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        private static void CopyPixelsRectCoreCopyScalar<TSrcData, TSampler, TDstData, TWriter>(
+            LingoImage src, LingoImage dst,
+            Vector4 srcBox,
+            (int l, int t, int r, int b) dstBox,
+            in CopyPixelsParameters parameters)
+            where TSampler : struct, IPixelOps<TSrcData>
+            where TSrcData : unmanaged
+            where TWriter : struct, IPixelOps<TDstData>
             where TDstData : unmanaged
         {
             var (dstL, dstT, dstR, dstB) = dstBox;
 
+            var (initS, initT, incSrcS, incSrcT) =
+                CopyPixelsRectCoreCopyCalcSampleCoords(srcBox, dstL, dstT, dstR, dstB);
+
+            var srcImgW = src.width;
+            var srcImgH = src.height;
+            var dstImgW = dst.width;
+            var dstImgH = dst.height;
+
+            var doBackgroundTransparent = parameters.Ink == CopyPixelsInk.BackgroundTransparent;
+            var fgc = parameters.ForeColor;
+
+            CopyPixelsRectCoreCopyClampDst(ref dstL, ref dstR, ref initS, incSrcS, dstImgW);
+            CopyPixelsRectCoreCopyClampDst(ref dstT, ref dstB, ref initT, incSrcT, dstImgH);
+
+            ReadOnlySpan<TSrcData> srcSpan = MemoryMarshal.Cast<byte, TSrcData>(src.ImageBuffer);
+            var dstSpan = MemoryMarshal.Cast<byte, TDstData>(dst.ImageBuffer);
+
+            var sampler = new TSampler();
+            var writer = new TWriter();
+
+            var t = initT;
+            for (var y = dstT; y < dstB; y++, t += incSrcT)
+            {
+                var imgRow = (int)(t * srcImgH) * srcImgW;
+                var s = initS;
+                for (var x = dstL; x < dstR; x++, s += incSrcS)
+                {
+                    int color;
+                    if (s < 0 || s >= 1 || t < 0 || t >= 1)
+                        color = LingoColor.PackWhite;
+                    else
+                    {
+                        var imgX = (int)(s * srcImgW);
+
+                        color = sampler.Sample(srcSpan, imgRow + imgX);
+                    }
+
+                    if (!doBackgroundTransparent || color != LingoColor.PackWhite)
+                    {
+                        var unpacked = LingoColor.BitUnpack(color);
+                        int r = unpacked.RedByte;
+                        int g = unpacked.GreenByte;
+                        int b = unpacked.BlueByte;
+
+                        r = Math.Min(0xFF, r + fgc.RedByte);
+                        g = Math.Min(0xFF, g + fgc.GreenByte);
+                        b = Math.Min(0xFF, b + fgc.BlueByte);
+
+                        writer.Write(dstSpan, dstImgW * y + x, new LingoColor(r, g, b).BitPack);
+                    }
+                }
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        private static void CopyPixelsRectCoreCopyAvx2<TSrcData, TSampler, TDstData, TWriter>(
+            LingoImage src, LingoImage dst,
+            Vector4 srcBox,
+            (int l, int t, int r, int b) dstBox,
+            in CopyPixelsParameters parameters)
+            where TSampler : struct, IPixelOps<TSrcData>
+            where TSrcData : unmanaged
+            where TWriter : struct, IPixelOps<TDstData>
+            where TDstData : unmanaged
+        {
+            var (dstL, dstT, dstR, dstB) = dstBox;
+
+            var (initS, initT, incSrcS, incSrcT) =
+                CopyPixelsRectCoreCopyCalcSampleCoords(srcBox, dstL, dstT, dstR, dstB);
+
+            var sampler = new TSampler();
+            var writer = new TWriter();
+
+            ReadOnlySpan<TSrcData> srcSpan = MemoryMarshal.Cast<byte, TSrcData>(src.ImageBuffer);
+            var dstSpan = MemoryMarshal.Cast<byte, TDstData>(dst.ImageBuffer);
+
+            var srcImgW = src.width;
+            var srcImgH = src.height;
+            var dstImgW = dst.width;
+            var dstImgH = dst.height;
+
+            CopyPixelsRectCoreCopyClampDst(ref dstL, ref dstR, ref initS, incSrcS, dstImgW);
+            CopyPixelsRectCoreCopyClampDst(ref dstT, ref dstB, ref initT, incSrcT, dstImgH);
+
+            var doBackgroundTransparent = parameters.Ink == CopyPixelsInk.BackgroundTransparent;
+            var fgc = parameters.ForeColor;
+            var fgVec = Vector256.Create(fgc.BitPack).AsByte();
+
+            var vecIncS = Avx.Multiply(Vector256.Create(0f, 1f, 2f, 3f, 4f, 5f, 6f, 7f), Vector256.Create(incSrcS));
+
+            var posMask = Vector256.Create(0, 1, 2, 3, 4, 5, 6, 7);
+            var widthVec = Vector256.Create(dstR);
+
+            var t = initT;
+            for (var y = dstT; y < dstB; y++, t += incSrcT)
+            {
+                var imgRow = (int)(t * srcImgH) * srcImgW;
+                var s = initS;
+                for (var x = dstL; x < dstR; x += 8, s += incSrcS * 8)
+                {
+                    var pos = Avx2.Add(posMask, Vector256.Create(x));
+                    var writeMask = Avx2.CompareGreaterThan(widthVec, pos);
+                    // if (gt == Vector256<int>.Zero)
+                    //    continue;
+
+                    // Color vectors on AVX contain BGRA32 data per lane.
+
+                    Vector256<int> color;
+                    if (t is < 0 or >= 1)
+                        color = Vector256<int>.AllBitsSet;
+                    else
+                    {
+                        var vecS = Avx.Add(Vector256.Create(s), vecIncS);
+                        var coord = Avx.ConvertToVector256Int32WithTruncation(
+                            Avx.Multiply(vecS, Vector256.Create((float)srcImgW)));
+
+                        var lowerCoord = coord.GetLower();
+                        var l0 = DoSample(sampler, srcSpan, srcImgW, imgRow, lowerCoord.GetElement(0));
+                        var l1 = DoSample(sampler, srcSpan, srcImgW, imgRow, lowerCoord.GetElement(1));
+                        var l2 = DoSample(sampler, srcSpan, srcImgW, imgRow, lowerCoord.GetElement(2));
+                        var l3 = DoSample(sampler, srcSpan, srcImgW, imgRow, lowerCoord.GetElement(3));
+                        var lowerSample = Vector128.Create(l0, l1, l2, l3);
+
+                        var upperCoord = coord.GetUpper();
+                        var u0 = DoSample(sampler, srcSpan, srcImgW, imgRow, upperCoord.GetElement(0));
+                        var u1 = DoSample(sampler, srcSpan, srcImgW, imgRow, upperCoord.GetElement(1));
+                        var u2 = DoSample(sampler, srcSpan, srcImgW, imgRow, upperCoord.GetElement(2));
+                        var u3 = DoSample(sampler, srcSpan, srcImgW, imgRow, upperCoord.GetElement(3));
+                        var upperSample = Vector128.Create(u0, u1, u2, u3);
+
+                        color = Vector256.Create(lowerSample, upperSample);
+                    }
+
+                    // Don't write if sampled color is white (== transparent)
+                    if (doBackgroundTransparent)
+                        writeMask = Avx2.AndNot(Avx2.CompareEqual(color, Vector256<int>.AllBitsSet), writeMask);
+
+                    color = Avx2.AddSaturate(color.AsByte(), fgVec).AsInt32();
+                    writer.Write8(dstSpan, dstImgW * y + x, color, writeMask);
+                }
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+            static int DoSample(TSampler sampler, ReadOnlySpan<TSrcData> srcSpan, int srcImgW, int imgRow, int imgX)
+            {
+                if (imgX < 0 || imgX >= srcImgW)
+                    return LingoColor.PackWhite;
+
+                return sampler.Sample(srcSpan, imgRow + imgX);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        private static void CopyPixelsRectCoreCopyClampDst(
+            ref int dst0,
+            ref int dst1,
+            ref float initTex,
+            float incSrcTex,
+            int dstImg)
+        {
+            if (dst0 < 0)
+            {
+                initTex += -dst0 * incSrcTex;
+                dst0 = 0;
+            }
+
+            dst1 = Math.Min(dst1, dstImg);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        private static (float initS, float initT, float incSrcS, float incSrcT) CopyPixelsRectCoreCopyCalcSampleCoords(
+            Vector4 srcBox, int dstL, int dstT, int dstR, int dstB)
+        {
             var srcW = srcBox.Z - srcBox.X;
             var srcH = srcBox.W - srcBox.Y;
             var dstW = dstR - dstL;
@@ -250,46 +453,7 @@ namespace Drizzle.Lingo.Runtime
             var initS = srcW / (dstW * 2) + srcBox.X;
             var initT = srcH / (dstH * 2) + srcBox.Y;
 
-            var sampler = new TSampler();
-            var writer = new TWriter();
-
-            var srcSpan = MemoryMarshal.Cast<byte, TSrcData>(src.ImageBuffer);
-            var dstSpan = MemoryMarshal.Cast<byte, TDstData>(dst.ImageBuffer);
-
-            var srcImgW = src.width;
-            var srcImgH = src.height;
-            var dstImgW = dst.width;
-            var dstImgH = dst.height;
-
-            var doBackgroundTransparent = parameters.Ink == CopyPixelsInk.BackgroundTransparent;
-            var fgc = parameters.ForeColor;
-            var fg = new Vector4(fgc.red / 255f, fgc.green / 255f, fgc.blue / 255f, 0f);
-
-            var t = initT;
-            for (var y = dstT; y < dstB; y++, t += incSrcT)
-            {
-                if (y < 0 || y >= dstImgH)
-                    continue;
-
-                var s = initS;
-                for (var x = dstL; x < dstR; x++, s += incSrcS)
-                {
-                    if (x < 0 || x >= dstImgW)
-                        continue;
-
-                    Vector4 color;
-                    if (s < 0 || s >= 1 || t < 0 || t >= 1)
-                        color = Vector4.One;
-                    else
-                        color = sampler.Sample(srcSpan, srcImgW, srcImgH, new Vector2(s, t));
-
-                    if (!doBackgroundTransparent || color != Vector4.One)
-                    {
-                        color += fg;
-                        writer.Write(dstSpan, dstImgW * y + x, color);
-                    }
-                }
-            }
+            return (initS, initT, incSrcS, incSrcT);
         }
 
         private static void CopyPixelsPxlRectGenWriter(
@@ -300,19 +464,19 @@ namespace Drizzle.Lingo.Runtime
             switch (dst.Depth)
             {
                 case 32:
-                    CopyPixelsPxlRectCore<Bgra32, PixelWriterRgb<Bgra32>>(
+                    CopyPixelsPxlRectCore<Bgra32, PixelOpsBgra32>(
                         dst,
                         dstBox,
                         parameters);
                     break;
                 case 16:
-                    CopyPixelsPxlRectCore<Bgra5551, PixelWriterRgb<Bgra5551>>(
+                    CopyPixelsPxlRectCore<Bgra5551, PixelOpsBgra5551>(
                         dst,
                         dstBox,
                         parameters);
                     break;
                 case 1:
-                    CopyPixelsPxlRectCore<int, PixelWriterBit>(
+                    CopyPixelsPxlRectCore<int, PixelOpsBit>(
                         dst,
                         dstBox,
                         parameters);
@@ -323,11 +487,12 @@ namespace Drizzle.Lingo.Runtime
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         private static void CopyPixelsPxlRectCore<TDstData, TWriter>(
             LingoImage dst,
             (int l, int t, int r, int b) dstBox,
             in CopyPixelsParameters parameters)
-            where TWriter : struct, IPixelWriter<TDstData>
+            where TWriter : struct, IPixelOps<TDstData>
             where TDstData : unmanaged
         {
             var writer = new TWriter();
@@ -341,12 +506,12 @@ namespace Drizzle.Lingo.Runtime
 
             // todo: remove round trip to Vector4 here please.
             var fgc = parameters.ForeColor;
-            var fg = new Vector4(fgc.red / 255f, fgc.green / 255f, fgc.blue / 255f, 1f);
+            var packed = fgc.BitPack;
 
             if (dstL == 0 && dstT == 0 && dstR == dst.width && dstB == dst.height)
             {
                 // Writing to the whole image with pxl is commonly used as a fill operation.
-                writer.Fill(dstSpan, fg);
+                writer.Fill(dstSpan, packed);
                 return;
             }
 
@@ -356,7 +521,7 @@ namespace Drizzle.Lingo.Runtime
             {
                 for (var x = dstL; x < dstR; x++)
                 {
-                    writer.Write(dstSpan, y * dstWidth + x, fg);
+                    writer.Write(dstSpan, y * dstWidth + x, packed);
                 }
             }
         }
@@ -377,90 +542,135 @@ namespace Drizzle.Lingo.Runtime
             Darkest = 39
         }
 
-        private interface IPixelSampler<TPixel>
+        private interface IPixelOps<TPixel>
         {
-            Vector4 Sample(ReadOnlySpan<TPixel> srcDat, int srcWidth, int srcHeight, Vector2 pos);
+            int Sample(ReadOnlySpan<TPixel> srcDat, int rowMajorPos);
+            void Write(Span<TPixel> dstDat, int rowMajorPos, int value);
+            void Write8(Span<TPixel> dstDat, int rowMajorPos0, Vector256<int> pixelData, Vector256<int> writeMask);
+            void Fill(Span<TPixel> dstDat, int value);
         }
 
-        private interface IPixelWriter<TPixel>
-        {
-            void Write(Span<TPixel> dstDat, int rowMajorPos, Vector4 value);
-            void Fill(Span<TPixel> dstDat, Vector4 value);
-        }
-
-        // Bgra32 and Bgra5551 image sampler/writer.
-        // Can use common generic code thanks to ImageSharp pixel helpers.
-        private struct PixelSamplerRgb<TPixel> : IPixelSampler<TPixel>
-            where TPixel : unmanaged, IPixel<TPixel>
+        private struct PixelOpsBgra32 : IPixelOps<Bgra32>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-            public Vector4 Sample(ReadOnlySpan<TPixel> srcDat, int srcWidth, int srcHeight, Vector2 pos)
+            public int Sample(ReadOnlySpan<Bgra32> srcDat, int rowMajorPos)
             {
-                var (x, y) = DoStandardSample(pos, srcWidth, srcHeight);
+                ref readonly var px = ref srcDat[rowMajorPos];
+                return Unsafe.As<Bgra32, int>(ref Unsafe.AsRef(px));
+            }
 
-                var rowMajor = x + y * srcWidth;
-                var px = srcDat[rowMajor];
-                return px.ToVector4();
+            [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+            public void Write(Span<Bgra32> dstDat, int rowMajorPos, int value)
+            {
+                dstDat[rowMajorPos] = Unsafe.As<int, Bgra32>(ref value);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+            public unsafe void Write8(Span<Bgra32> dstDat, int rowMajorPos0, Vector256<int> pixelData,
+                Vector256<int> writeMask)
+            {
+                fixed (Bgra32* ptr = &dstDat[rowMajorPos0])
+                {
+                    var iPtr = (int*)ptr;
+                    Avx2.MaskStore(iPtr, writeMask, pixelData);
+                }
+            }
+
+            public void Fill(Span<Bgra32> dstDat, int value)
+            {
+                dstDat.Fill(Unsafe.As<int, Bgra32>(ref value));
             }
         }
 
-        private struct PixelWriterRgb<TPixel> : IPixelWriter<TPixel>
-            where TPixel : unmanaged, IPixel<TPixel>
+        private struct PixelOpsBgra5551 : IPixelOps<Bgra5551>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-            public void Write(Span<TPixel> dstDat, int rowMajorPos, Vector4 value)
+            public int Sample(ReadOnlySpan<Bgra5551> srcDat, int rowMajorPos)
             {
-                dstDat[rowMajorPos].FromVector4(value);
+                // TODO: Make this fast.
+                var bgra5551 = srcDat[rowMajorPos];
+                var bgra = new Bgra32();
+                bgra.FromBgra5551(bgra5551);
+                return (int)bgra.PackedValue;
             }
 
-            public void Fill(Span<TPixel> dstDat, Vector4 value)
+            [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+            public void Write(Span<Bgra5551> dstDat, int rowMajorPos, int value)
             {
-                var px = new TPixel();
-                px.FromVector4(value);
+                dstDat[rowMajorPos].FromBgra32(Unsafe.As<int, Bgra32>(ref value));
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+            public unsafe void Write8(
+                Span<Bgra5551> dstDat,
+                int rowMajorPos0,
+                Vector256<int> pixelData,
+                Vector256<int> writeMask)
+            {
+                // TODO: Make this fast.
+                var dstReg = dstDat.Slice(rowMajorPos0, 8);
+                for (var i = 0; i < dstReg.Length; i++)
+                {
+                    var elem = pixelData.GetElement(i);
+                    dstReg[i].FromBgra32(Unsafe.As<int, Bgra32>(ref elem));
+                }
+            }
+
+            public void Fill(Span<Bgra5551> dstDat, int value)
+            {
+                var px = new Bgra5551();
+                px.FromBgra32(Unsafe.As<int, Bgra32>(ref value));
                 dstDat.Fill(px);
             }
         }
 
-        private struct PixelSamplerPalette8 : IPixelSampler<L8>
+        private struct PixelOpsPalette8 : IPixelOps<L8>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-            public Vector4 Sample(ReadOnlySpan<L8> srcDat, int srcWidth, int srcHeight, Vector2 pos)
+            public int Sample(ReadOnlySpan<L8> srcDat, int rowMajorPos)
             {
-                var (x, y) = DoStandardSample(pos, srcWidth, srcHeight);
-
-                var rowMajor = x + y * srcWidth;
-                var px = srcDat[rowMajor].PackedValue;
+                var px = srcDat[rowMajorPos].PackedValue;
                 var lingoColor = (LingoColor)px;
-                return new Vector4(lingoColor.red / 255f, lingoColor.green / 255f, lingoColor.blue / 255f, 1);
+                return lingoColor.BitPack;
             }
-        }
 
-        private struct PixelWriterPalette8 : IPixelWriter<L8>
-        {
             [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-            public void Write(Span<L8> dstDat, int rowMajorPos, Vector4 value)
+            public void Write(Span<L8> dstDat, int rowMajorPos, int value)
             {
                 dstDat[rowMajorPos] = ToPalettized(value);
             }
 
-            public void Fill(Span<L8> dstDat, Vector4 value)
+            [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+            public void Write8(Span<L8> dstDat, int rowMajorPos0, Vector256<int> pixelData, Vector256<int> writeMask)
+            {
+                // todo: make this fast.
+
+                dstDat = dstDat[rowMajorPos0..];
+                dstDat = dstDat[..Math.Min(8, dstDat.Length)];
+
+                for (var i = 0; i < dstDat.Length; i++)
+                {
+                    if (writeMask.GetElement(i) == 0)
+                        continue;
+
+                    dstDat[i] = ToPalettized(pixelData.GetElement(i));
+                }
+            }
+
+            public void Fill(Span<L8> dstDat, int value)
             {
                 dstDat.Fill(ToPalettized(value));
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-            private static L8 ToPalettized(Vector4 value)
+            private static L8 ToPalettized(int color)
             {
-                var r = (int)(value.X * 255);
-                var g = (int)(value.Y * 255);
-                var b = (int)(value.Z * 255);
-
                 // Red.
-                if (r == 255 && g == 0 && b == 0)
+                if (color == LingoColor.PackRed)
                     return new L8(6);
 
                 // Black.
-                if (r == 0 && g == 0 && b == 0)
+                if (color == LingoColor.PackBlack)
                     return new L8(255);
 
                 // White.
@@ -468,38 +678,64 @@ namespace Drizzle.Lingo.Runtime
             }
         }
 
-        private struct PixelSamplerBit : IPixelSampler<int>
+        private struct PixelOpsBit : IPixelOps<int>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-            public Vector4 Sample(ReadOnlySpan<int> srcDat, int srcWidth, int srcHeight, Vector2 pos)
+            public int Sample(ReadOnlySpan<int> srcDat, int rowMajorPos)
             {
-                var (x, y) = DoStandardSample(pos, srcWidth, srcHeight);
-                var rowMajor = x + y * srcWidth;
-                return DoBitRead(srcDat, rowMajor) ? Vector4.One : new Vector4(0, 0, 0, 1);
+                return DoBitRead(srcDat, rowMajorPos) ? LingoColor.PackWhite : LingoColor.PackBlack;
             }
-        }
 
-        private struct PixelWriterBit : IPixelWriter<int>
-        {
             [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-            public void Write(Span<int> dstDat, int rowMajorPos, Vector4 value)
+            public void Write(Span<int> dstDat, int rowMajorPos, int value)
             {
-                DoBitWrite(dstDat, rowMajorPos, value.X != 0);
+                DoBitWrite(dstDat, rowMajorPos, value != LingoColor.PackBlack);
             }
 
-            public void Fill(Span<int> dstDat, Vector4 value)
+            [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+            public void Write8(Span<int> dstDat, int rowMajorPos0, Vector256<int> pixelData, Vector256<int> writeMask)
             {
-                dstDat.Fill(value.X != 0 ? -1 : 0);
+                // todo: do these writes on int instead idk.
+                var bytes = MemoryMarshal.Cast<int, byte>(dstDat);
+
+                var isBlack = Avx2.CompareEqual(pixelData, Vector256.Create(LingoColor.PackBlack));
+                var bits = ~Avx.MoveMask(isBlack.AsSingle());
+                var writeMaskBit = Avx.MoveMask(writeMask.AsSingle());
+
+                var pos = rowMajorPos0 >> 3;
+                var posRem = rowMajorPos0 & 7;
+
+                if (posRem == 0)
+                {
+                    // Aligned yay.
+                    ref var dst = ref bytes[pos];
+
+                    dst &= (byte)~writeMaskBit;
+                    dst |= (byte)bits;
+                }
+                else
+                {
+                    // 1010_1010
+                    //
+                    // 32       40
+                    // 4    <   5   >
+                    // 0000_0000 0000_0000
+                    ref var dstA = ref bytes[pos];
+
+                    dstA &= (byte)(~writeMaskBit << posRem);
+                    dstA |= (byte)(bits << posRem);
+
+                    ref var dstB = ref bytes[pos + 1];
+
+                    dstB &= (byte)(~writeMaskBit >> (8 - posRem));
+                    dstB |= (byte)(bits >> (8 - posRem));
+                }
             }
-        }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static (int x, int y) DoStandardSample(Vector2 pos, int srcWidth, int srcHeight)
-        {
-            var x = Math.Clamp((int)(pos.X * srcWidth), 0, srcWidth - 1);
-            var y = Math.Clamp((int)(pos.Y * srcHeight), 0, srcHeight - 1);
-
-            return (x, y);
+            public void Fill(Span<int> dstDat, int value)
+            {
+                dstDat.Fill(value != LingoColor.PackBlack ? -1 : 0);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
