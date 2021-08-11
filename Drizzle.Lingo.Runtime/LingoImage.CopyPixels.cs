@@ -360,17 +360,18 @@ namespace Drizzle.Lingo.Runtime
             var posMask = Vector256.Create(0, 1, 2, 3, 4, 5, 6, 7);
             var widthVec = Vector256.Create(dstR);
 
+            var initVecS = Vector256.Create(initS);
+            var incVecS = Vector256.Create(incSrcS * 8);
+
             var t = initT;
             for (var y = dstT; y < dstB; y++, t += incSrcT)
             {
                 var imgRow = (int)(t * srcImgH) * srcImgW;
-                var s = initS;
-                for (var x = dstL; x < dstR; x += 8, s += incSrcS * 8)
+                var s = initVecS;
+                for (var x = dstL; x < dstR; x += 8, s = Avx.Add(s, incVecS))
                 {
                     var pos = Avx2.Add(posMask, Vector256.Create(x));
                     var writeMask = Avx2.CompareGreaterThan(widthVec, pos);
-                    // if (gt == Vector256<int>.Zero)
-                    //    continue;
 
                     // Color vectors on AVX contain BGRA32 data per lane.
 
@@ -379,7 +380,7 @@ namespace Drizzle.Lingo.Runtime
                         color = Vector256<int>.AllBitsSet;
                     else
                     {
-                        var vecS = Avx.Add(Vector256.Create(s), vecIncS);
+                        var vecS = Avx.Add(s, vecIncS);
                         var coord = Avx.ConvertToVector256Int32WithTruncation(
                             Avx.Multiply(vecS, Vector256.Create((float)srcImgW)));
 
