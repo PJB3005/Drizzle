@@ -136,6 +136,11 @@ namespace Drizzle.Editor.ViewModels
             new LingoCastViewer { DataContext = new LingoCastViewerViewModel(this) }.Show();
         }
 
+        public void RunGC()
+        {
+            GC.Collect();
+        }
+
         public async Task Exec(Action<LingoRuntime> action)
         {
             var runtime = await _zygoteInitialized;
