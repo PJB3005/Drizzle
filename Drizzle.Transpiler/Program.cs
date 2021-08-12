@@ -104,9 +104,14 @@ namespace Drizzle.Transpiler
                 .Select(n =>
                 {
                     using var reader = new StreamReader(n);
-                    var script = LingoParser.Script.ParseOrThrow(reader);
+                    var script = LingoParser.Script.Parse(reader);
+                    if (!script.Success)
+                    {
+                        throw new Exception($"Parsing failed in file {n}\n{script.Error!.RenderErrorMessage()}");
+                    }
+
                     var name = Path.GetFileNameWithoutExtension(n);
-                    return (name, script);
+                    return (name, script: script.Value);
                 })
                 .ToDictionary(n => n.name, n => n.script);
 
