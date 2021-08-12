@@ -37,7 +37,7 @@
                 <MenuItem Header="Cast Viewer (Project)" Command="{Binding CastViewerProject}" HotKey="Ctrl+F10"
                           InputGesture="Ctrl+F10"
                           IsEnabled="{Binding SelectedTab,Converter={x:Static ObjectConverters.IsNotNull}}" />
-                <MenuItem Header="Cast Viewer (Project)" Command="{Binding RunGC}" HotKey="Ctrl+F11"
+                <MenuItem Header="Run GC" Command="{Binding RunGC}" HotKey="Ctrl+F11"
                           InputGesture="Ctrl+F11" />
             </MenuItem>
         </Menu>
