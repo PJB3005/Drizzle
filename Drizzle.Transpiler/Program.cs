@@ -86,16 +86,20 @@ namespace Drizzle.Transpiler
             }
         };
 
-        private static readonly string SourcesRoot = Path.Combine("..", "..", "..", "..", "LingoSource");
-
-        private static readonly string SourcesDest =
-            Path.Combine("..", "..", "..", "..", "Drizzle.Ported", "Translated");
-
         private const string OutputNamespace = "Drizzle.Ported";
 
         private static void Main(string[] args)
         {
-            var scripts = Directory.GetFiles(SourcesRoot, "*.lingo")
+            var sourcesRoot = Path.Combine("..", "..", "..", "..", "LingoSource");
+            var sourcesDest = Path.Combine("..", "..", "..", "..", "Drizzle.Ported", "Translated");
+
+            if (args.Length == 2)
+            {
+                sourcesRoot = args[0];
+                sourcesDest = args[1];
+            }
+
+            var scripts = Directory.GetFiles(sourcesRoot, "*.lingo")
                 .AsParallel()
                 .Select(n =>
                 {
@@ -119,7 +123,7 @@ namespace Drizzle.Transpiler
                 .Select(h => h.Name)
                 .ToHashSet(StringComparer.InvariantCultureIgnoreCase);
 
-            var globalContext = new GlobalContext(movieHandlers);
+            var globalContext = new GlobalContext(movieHandlers, sourcesDest);
 
             OutputMovieScripts(movieScripts, globalContext);
             OutputParentScripts(parentScripts, globalContext);
@@ -134,7 +138,7 @@ namespace Drizzle.Transpiler
         {
             foreach (var (name, script) in scripts)
             {
-                var path = Path.Combine(SourcesDest, $"Behavior.{name}.cs");
+                var path = Path.Combine(ctx.SourcesDest, $"Behavior.{name}.cs");
                 using var file = new StreamWriter(path);
 
                 OutputSingleBehaviorScript(name, script, file, ctx);
@@ -164,7 +168,7 @@ namespace Drizzle.Transpiler
         {
             foreach (var (name, script) in scripts)
             {
-                var path = Path.Combine(SourcesDest, $"Parent.{name}.cs");
+                var path = Path.Combine(ctx.SourcesDest, $"Parent.{name}.cs");
                 using var file = new StreamWriter(path);
 
                 OutputSingleParentScript(name, script, file, ctx);
@@ -188,9 +192,9 @@ namespace Drizzle.Transpiler
             writer.WriteLine("}\n}");
         }
 
-        private static void OutputMovieGlobals(GlobalContext globalContext)
+        private static void OutputMovieGlobals(GlobalContext ctx)
         {
-            var path = Path.Combine(SourcesDest, "Movie._globals.cs");
+            var path = Path.Combine(ctx.SourcesDest, "Movie._globals.cs");
             using var file = new StreamWriter(path);
 
             WriteFileHeader(file);
@@ -198,7 +202,7 @@ namespace Drizzle.Transpiler
             file.WriteLine($"//\n// Movie globals\n//");
             file.WriteLine("public sealed partial class MovieScript {");
 
-            foreach (var glob in globalContext.AllGlobals)
+            foreach (var glob in ctx.AllGlobals)
             {
                 file.WriteLine($"[LingoGlobal] public dynamic global_{glob.ToLower()};");
             }
@@ -212,8 +216,8 @@ namespace Drizzle.Transpiler
         {
             foreach (var (name, script) in scripts)
             {
-                var path = Path.Combine(SourcesDest, $"Movie.{name}.cs");
-                Directory.CreateDirectory(SourcesDest);
+                var path = Path.Combine(ctx.SourcesDest, $"Movie.{name}.cs");
+                Directory.CreateDirectory(ctx.SourcesDest);
                 using var file = new StreamWriter(path);
 
                 OutputSingleMovieScript(name, script, file, ctx);
@@ -1016,13 +1020,15 @@ namespace Drizzle.Transpiler
 
         private sealed class GlobalContext
         {
-            public GlobalContext(HashSet<string> movieHandlers)
+            public GlobalContext(HashSet<string> movieHandlers, string sourcesDest)
             {
                 MovieHandlers = movieHandlers;
+                SourcesDest = sourcesDest;
             }
 
             public HashSet<string> AllGlobals { get; } = new(StringComparer.InvariantCultureIgnoreCase);
             public HashSet<string> MovieHandlers { get; }
+            public string SourcesDest { get; }
         }
 
         private sealed class ScriptContext

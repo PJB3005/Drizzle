@@ -22,7 +22,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Run transpiler
-      run: dotnet run --project Drizzle.Transpiler/Drizzle.Transpiler.csproj
+      run: dotnet run --project Drizzle.Transpiler/Drizzle.Transpiler.csproj -- LingoSource Drizzle.Ported/Translated
     - name: Build
       run: dotnet build --no-restore
     - name: Test
