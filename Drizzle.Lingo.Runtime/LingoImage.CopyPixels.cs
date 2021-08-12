@@ -10,7 +10,7 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace Drizzle.Lingo.Runtime
 {
-    public sealed partial class LingoImage
+    public sealed unsafe partial class LingoImage
     {
         /*
              private static int CopiesPixelFast;
@@ -22,6 +22,37 @@ namespace Drizzle.Lingo.Runtime
 
         private static Dictionary<(int w, int h), int> Sizes = new();
         */
+
+        // Not used by the editor (but there is a similar lingo API)
+        // Mostly just for unit tests right now.
+        // Maybe optimizations for the editor later.
+        public void fill(LingoColor color)
+        {
+            switch (Depth)
+            {
+                case 32:
+                    FillCore<PixelOpsBgra32, Bgra32>(this, color);
+                    break;
+                case 16:
+                    FillCore<PixelOpsBgra5551, Bgra5551>(this, color);
+                    break;
+                case 8:
+                    FillCore<PixelOpsPalette8, L8>(this, color);
+                    break;
+                case 1:
+                    FillCore<PixelOpsBit, int>(this, color);
+                    break;
+            }
+        }
+
+        private static void FillCore<TWriter, TDstData>(LingoImage dst, LingoColor color)
+            where TWriter : struct, IPixelOps<TDstData>
+            where TDstData : struct
+        {
+            var dstSpan = MemoryMarshal.Cast<byte, TDstData>(dst.ImageBuffer);
+            new TWriter().Fill(dstSpan, color.BitPack);
+        }
+
 
         public void copypixels(LingoImage source, LingoList destQuad, LingoRect sourceRect, LingoPropertyList paramList)
         {
@@ -115,7 +146,8 @@ namespace Drizzle.Lingo.Runtime
 
             // ReSharper disable once CompareOfFloatsByEqualityOperator
             // todo: make sure to not apply this when mask is set.
-            if (source.IsPxl && parameters.Blend == 1 && parameters.Ink == CopyPixelsInk.Copy)
+            if (source.IsPxl && parameters.Blend == 1 &&
+                parameters.Ink is CopyPixelsInk.Copy or CopyPixelsInk.BackgroundTransparent)
             {
                 // CopiesPixelFast += 1;
                 CopyPixelsPxlRectGenWriter(dest, (dstL, dstT, dstR, dstB), parameters);
@@ -276,6 +308,8 @@ namespace Drizzle.Lingo.Runtime
             var dstImgH = dst.height;
 
             var doBackgroundTransparent = parameters.Ink == CopyPixelsInk.BackgroundTransparent;
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            var doBlend = parameters.Blend != 1;
             var fgc = parameters.ForeColor;
 
             CopyPixelsRectCoreCopyClampDst(ref dstL, ref dstR, ref initS, incSrcS, dstImgW);
@@ -304,19 +338,34 @@ namespace Drizzle.Lingo.Runtime
                         color = sampler.Sample(srcSpan, imgRow + imgX);
                     }
 
-                    if (!doBackgroundTransparent || color != LingoColor.PackWhite)
+                    if (doBackgroundTransparent && color == LingoColor.PackWhite)
+                        continue;
+
+                    var unpacked = LingoColor.BitUnpack(color);
+                    int r = unpacked.RedByte;
+                    int g = unpacked.GreenByte;
+                    int b = unpacked.BlueByte;
+
+                    r = Math.Min(0xFF, r + fgc.RedByte);
+                    g = Math.Min(0xFF, g + fgc.GreenByte);
+                    b = Math.Min(0xFF, b + fgc.BlueByte);
+
+                    var dstPos = dstImgW * y + x;
+                    if (doBlend)
                     {
-                        var unpacked = LingoColor.BitUnpack(color);
-                        int r = unpacked.RedByte;
-                        int g = unpacked.GreenByte;
-                        int b = unpacked.BlueByte;
+                        var unpackedDst = LingoColor.BitUnpack(writer.Sample(dstSpan, dstPos));
 
-                        r = Math.Min(0xFF, r + fgc.RedByte);
-                        g = Math.Min(0xFF, g + fgc.GreenByte);
-                        b = Math.Min(0xFF, b + fgc.BlueByte);
+                        var blendSrc = new Vector4(r, g, b, 0);
+                        var blendDst = new Vector4(unpackedDst.RedByte, unpackedDst.GreenByte, unpackedDst.BlueByte, 0);
 
-                        writer.Write(dstSpan, dstImgW * y + x, new LingoColor(r, g, b).BitPack);
+                        var final = blendSrc * parameters.Blend + blendDst * (1 - parameters.Blend);
+
+                        r = (int)final.X;
+                        g = (int)final.Y;
+                        b = (int)final.Z;
                     }
+
+                    writer.Write(dstSpan, dstPos, new LingoColor(r, g, b).BitPack);
                 }
             }
         }
@@ -352,6 +401,8 @@ namespace Drizzle.Lingo.Runtime
             CopyPixelsRectCoreCopyClampDst(ref dstT, ref dstB, ref initT, incSrcT, dstImgH);
 
             var doBackgroundTransparent = parameters.Ink == CopyPixelsInk.BackgroundTransparent;
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            var doBlend = parameters.Blend != 1;
             var fgc = parameters.ForeColor;
             var fgVec = Vector256.Create(fgc.BitPack).AsByte();
 
@@ -405,8 +456,22 @@ namespace Drizzle.Lingo.Runtime
                     if (doBackgroundTransparent)
                         writeMask = Avx2.AndNot(Avx2.CompareEqual(color, Vector256<int>.AllBitsSet), writeMask);
 
+                    // Add foreground color.
                     color = Avx2.AddSaturate(color.AsByte(), fgVec).AsInt32();
-                    writer.Write8(dstSpan, dstImgW * y + x, color, writeMask);
+
+                    var dstPos = dstImgW * y + x;
+
+                    if (doBlend)
+                    {
+                        var blendVec = Vector256.Create(parameters.Blend);
+                        var dstColor = writer.Read8(dstSpan, dstPos, writeMask);
+
+                        var res = DoBlend8Avx2(color.AsByte(), dstColor.AsByte(), blendVec);
+
+                        color = res.AsInt32();
+                    }
+
+                    writer.Write8(dstSpan, dstPos, color, writeMask);
                 }
             }
 
@@ -417,6 +482,112 @@ namespace Drizzle.Lingo.Runtime
                     return LingoColor.PackWhite;
 
                 return sampler.Sample(srcSpan, imgRow + imgX);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        private static Vector256<byte> DoBlend8Avx2(Vector256<byte> src, Vector256<byte> dst, Vector256<float> blend)
+        {
+            var res = Vector256.Create(0xFF_00_00_00).AsByte();
+
+            var blendInv = Avx.Subtract(Vector256.Create(1f), blend);
+
+            var bMask = Vector256.Create(
+                0, 255, 255, 255,
+                4, 255, 255, 255,
+                8, 255, 255, 255,
+                12, 255, 255, 255,
+                0, 255, 255, 255,
+                4, 255, 255, 255,
+                8, 255, 255, 255,
+                12, 255, 255, 255);
+
+            var srcBlue = Avx2.Shuffle(src, bMask);
+            var dstBlue = Avx2.Shuffle(dst, bMask);
+
+            var resBlue = DoSingleBlend(srcBlue, dstBlue, blend, blendInv);
+
+            var bInvMask = Vector256.Create(
+                0, 255, 255, 255,
+                4, 255, 255, 255,
+                8, 255, 255, 255,
+                12, 255, 255, 255,
+                0, 255, 255, 255,
+                4, 255, 255, 255,
+                8, 255, 255, 255,
+                12, 255, 255, 255);
+
+            res = Avx2.Or(res, Avx2.Shuffle(resBlue, bInvMask));
+
+            var gMask = Vector256.Create(
+                1, 255, 255, 255,
+                5, 255, 255, 255,
+                9, 255, 255, 255,
+                13, 255, 255, 255,
+                1, 255, 255, 255,
+                5, 255, 255, 255,
+                9, 255, 255, 255,
+                13, 255, 255, 255);
+
+            var srcGreen = Avx2.Shuffle(src, gMask);
+            var dstGreen = Avx2.Shuffle(dst, gMask);
+
+            var resGreen = DoSingleBlend(srcGreen, dstGreen, blend, blendInv);
+
+            var gInvMask = Vector256.Create(
+                255, 0, 255, 255,
+                255, 4, 255, 255,
+                255, 8, 255, 255,
+                255, 12, 255, 255,
+                255, 0, 255, 255,
+                255, 4, 255, 255,
+                255, 8, 255, 255,
+                255, 12, 255, 255);
+
+            res = Avx2.Or(res, Avx2.Shuffle(resGreen, gInvMask));
+
+            var rMask = Vector256.Create(
+                2, 255, 255, 255,
+                6, 255, 255, 255,
+                10, 255, 255, 255,
+                14, 255, 255, 255,
+                2, 255, 255, 255,
+                6, 255, 255, 255,
+                10, 255, 255, 255,
+                14, 255, 255, 255);
+
+            var scrRed = Avx2.Shuffle(src, rMask);
+            var dstRed = Avx2.Shuffle(dst, rMask);
+
+            var resRed = DoSingleBlend(scrRed, dstRed, blend, blendInv);
+
+            var rInvMask = Vector256.Create(
+                255, 255, 0, 255,
+                255, 255, 4, 255,
+                255, 255, 8, 255,
+                255, 255, 12, 255,
+                255, 255, 0, 255,
+                255, 255, 4, 255,
+                255, 255, 8, 255,
+                255, 255, 12, 255);
+
+            return Avx2.Or(res, Avx2.Shuffle(resRed, rInvMask));
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+            static Vector256<byte> DoSingleBlend(
+                Vector256<byte> srcColor, Vector256<byte> dstColor,
+                Vector256<float> blend, Vector256<float> blendInv)
+            {
+                var srcFloat = Avx.ConvertToVector256Single(srcColor.AsInt32());
+                var dstFloat = Avx.ConvertToVector256Single(dstColor.AsInt32());
+
+                var resFloat = Avx.Add(
+                    Avx.Multiply(srcFloat, blend),
+                    Avx.Multiply(dstFloat, blendInv)
+                );
+
+                var res = Avx.ConvertToVector256Int32WithTruncation(resFloat);
+                return res.AsByte();
             }
         }
 
@@ -546,6 +717,7 @@ namespace Drizzle.Lingo.Runtime
         private interface IPixelOps<TPixel>
         {
             int Sample(ReadOnlySpan<TPixel> srcDat, int rowMajorPos);
+            Vector256<int> Read8(ReadOnlySpan<TPixel> dstDat, int rowMajorPos0, Vector256<int> readMask);
             void Write(Span<TPixel> dstDat, int rowMajorPos, int value);
             void Write8(Span<TPixel> dstDat, int rowMajorPos0, Vector256<int> pixelData, Vector256<int> writeMask);
             void Fill(Span<TPixel> dstDat, int value);
@@ -561,13 +733,22 @@ namespace Drizzle.Lingo.Runtime
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+            public Vector256<int> Read8(ReadOnlySpan<Bgra32> dstDat, int rowMajorPos0, Vector256<int> readMask)
+            {
+                fixed (Bgra32* px = &dstDat[rowMajorPos0])
+                {
+                    return Avx2.MaskLoad((int*)px, readMask);
+                }
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
             public void Write(Span<Bgra32> dstDat, int rowMajorPos, int value)
             {
                 dstDat[rowMajorPos] = Unsafe.As<int, Bgra32>(ref value);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-            public unsafe void Write8(Span<Bgra32> dstDat, int rowMajorPos0, Vector256<int> pixelData,
+            public void Write8(Span<Bgra32> dstDat, int rowMajorPos0, Vector256<int> pixelData,
                 Vector256<int> writeMask)
             {
                 fixed (Bgra32* ptr = &dstDat[rowMajorPos0])
@@ -595,6 +776,11 @@ namespace Drizzle.Lingo.Runtime
                 return (int)bgra.PackedValue;
             }
 
+            public Vector256<int> Read8(ReadOnlySpan<Bgra5551> dstDat, int rowMajorPos0, Vector256<int> readMask)
+            {
+                throw new NotImplementedException();
+            }
+
             [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
             public void Write(Span<Bgra5551> dstDat, int rowMajorPos, int value)
             {
@@ -602,18 +788,19 @@ namespace Drizzle.Lingo.Runtime
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-            public unsafe void Write8(
+            public void Write8(
                 Span<Bgra5551> dstDat,
                 int rowMajorPos0,
                 Vector256<int> pixelData,
                 Vector256<int> writeMask)
             {
                 // TODO: Make this fast.
-                var dstReg = dstDat.Slice(rowMajorPos0, 8);
-                for (var i = 0; i < dstReg.Length; i++)
+                dstDat = dstDat[rowMajorPos0..];
+                dstDat = dstDat[..Math.Min(8, dstDat.Length)];
+                for (var i = 0; i < dstDat.Length; i++)
                 {
                     var elem = pixelData.GetElement(i);
-                    dstReg[i].FromBgra32(Unsafe.As<int, Bgra32>(ref elem));
+                    dstDat[i].FromBgra32(Unsafe.As<int, Bgra32>(ref elem));
                 }
             }
 
@@ -633,6 +820,11 @@ namespace Drizzle.Lingo.Runtime
                 var px = srcDat[rowMajorPos].PackedValue;
                 var lingoColor = (LingoColor)px;
                 return lingoColor.BitPack;
+            }
+
+            public Vector256<int> Read8(ReadOnlySpan<L8> dstDat, int rowMajorPos0, Vector256<int> readMask)
+            {
+                throw new NotImplementedException();
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -687,10 +879,15 @@ namespace Drizzle.Lingo.Runtime
                 return DoBitRead(srcDat, rowMajorPos) ? LingoColor.PackWhite : LingoColor.PackBlack;
             }
 
+            public Vector256<int> Read8(ReadOnlySpan<int> dstDat, int rowMajorPos0, Vector256<int> readMask)
+            {
+                throw new NotImplementedException();
+            }
+
             [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
             public void Write(Span<int> dstDat, int rowMajorPos, int value)
             {
-                DoBitWrite(dstDat, rowMajorPos, value != LingoColor.PackBlack);
+                DoBitWrite(dstDat, rowMajorPos, value == LingoColor.PackWhite);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -699,9 +896,10 @@ namespace Drizzle.Lingo.Runtime
                 // todo: do these writes on int instead idk.
                 var bytes = MemoryMarshal.Cast<int, byte>(dstDat);
 
-                var isBlack = Avx2.CompareEqual(pixelData, Vector256.Create(LingoColor.PackBlack));
-                var bits = ~Avx.MoveMask(isBlack.AsSingle());
+                var isBlack = Avx2.CompareEqual(pixelData, Vector256.Create(LingoColor.PackWhite));
+                var bits = Avx.MoveMask(isBlack.AsSingle());
                 var writeMaskBit = Avx.MoveMask(writeMask.AsSingle());
+                bits &= writeMaskBit;
 
                 var pos = rowMajorPos0 >> 3;
                 var posRem = rowMajorPos0 & 7;
@@ -723,12 +921,12 @@ namespace Drizzle.Lingo.Runtime
                     // 0000_0000 0000_0000
                     ref var dstA = ref bytes[pos];
 
-                    dstA &= (byte)(~writeMaskBit << posRem);
+                    dstA &= (byte)(~(writeMaskBit << posRem));
                     dstA |= (byte)(bits << posRem);
 
                     ref var dstB = ref bytes[pos + 1];
 
-                    dstB &= (byte)(~writeMaskBit >> (8 - posRem));
+                    dstB &= (byte)(~(writeMaskBit >> (8 - posRem)));
                     dstB |= (byte)(bits >> (8 - posRem));
                 }
             }
