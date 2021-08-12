@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using System.Text;
 using Serilog;
 
 namespace Drizzle.Lingo.Runtime
@@ -75,6 +76,28 @@ namespace Drizzle.Lingo.Runtime
         {
             Dict[new LingoSymbol(binder.Name)] = value;
             return true;
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            sb.Append('[');
+
+            var first = true;
+            foreach (var (k, v) in Dict)
+            {
+                if (!first)
+                    sb.Append(", ");
+
+                first = false;
+
+                sb.Append(LingoFormat.LingoToString(k));
+                sb.Append(": ");
+                sb.Append(LingoFormat.LingoToString(v));
+            }
+
+            sb.Append(']');
+            return sb.ToString();
         }
     }
 }

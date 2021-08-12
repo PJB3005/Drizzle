@@ -100,5 +100,7 @@ namespace Drizzle.Lingo.Runtime
         {
             return !left.Equals(right);
         }
+
+        public override string ToString() => $"point({loch}, {locv})";
     }
 }
