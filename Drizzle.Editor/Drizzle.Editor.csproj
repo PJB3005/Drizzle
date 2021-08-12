@@ -21,7 +21,7 @@
     <ItemGroup>
         <ProjectReference Include="..\Drizzle.Lingo.Runtime\Drizzle.Lingo.Runtime.csproj" />
         <ProjectReference Include="..\Drizzle.Ported\Drizzle.Ported.csproj" />
-        <ProjectReference Include="..\Drizzle.EditorLogic\Drizzle.EditorLogic.csproj" />
+        <ProjectReference Include="..\Drizzle.Logic\Drizzle.Logic.csproj" />
     </ItemGroup>
     <ItemGroup>
       <Compile Update="Views\LingoFrames\FrameRenderEffectsView.axaml.cs">

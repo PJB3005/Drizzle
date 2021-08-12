@@ -1,4 +1,5 @@
 ﻿using Drizzle.Logic;
+using Drizzle.Logic.Rendering;
 
 namespace Drizzle.Editor.ViewModels.Render
 {

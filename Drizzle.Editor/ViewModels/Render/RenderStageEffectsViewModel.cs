@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Media;
 using Drizzle.Logic;
+using Drizzle.Logic.Rendering;
 
 namespace Drizzle.Editor.ViewModels.Render
 {
