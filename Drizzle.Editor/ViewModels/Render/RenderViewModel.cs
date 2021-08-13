@@ -45,8 +45,8 @@ namespace Drizzle.Editor.ViewModels.Render
         public void StartRendering(LingoRuntime clonedRuntime)
         {
             var movie = (MovieScript)clonedRuntime.MovieScriptInstance;
-            LevelName = movie.global_gloadedname;
-            var countCameras = (int)movie.global_gcameraprops.cameras.count;
+            LevelName = movie.gLoadedName;
+            var countCameras = (int)movie.gCameraProps.cameras.count;
 
             RenderProgressMax = countCameras * 10 + 1;
 

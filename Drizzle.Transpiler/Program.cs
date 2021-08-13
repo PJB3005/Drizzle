@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -209,7 +210,7 @@ namespace Drizzle.Transpiler
 
             foreach (var glob in ctx.AllGlobals)
             {
-                file.WriteLine($"[LingoGlobal] public dynamic global_{glob.ToLower()};");
+                file.WriteLine($"[LingoGlobal] public dynamic {glob};");
             }
 
             file.WriteLine("}\n}");
@@ -265,6 +266,8 @@ namespace Drizzle.Transpiler
                 .ToHashSet(StringComparer.InvariantCultureIgnoreCase);
             var scriptContext = new ScriptContext(ctx, allGlobals, allHandlers, isMovieScript);
 
+            ctx.AllGlobals.UnionWith(allGlobals);
+
             var props = new HashSet<string>();
             foreach (var prop in script.Nodes.OfType<AstNode.Property>().SelectMany(p => p.Identifiers))
             {
@@ -319,7 +322,6 @@ namespace Drizzle.Transpiler
             }
 
             GenerateParamCountOverloads(writer, quirks, script);
-            ctx.AllGlobals.UnionWith(allGlobals);
         }
 
         private static void GenerateParamCountOverloads(
@@ -499,7 +501,7 @@ namespace Drizzle.Transpiler
 
         private static void MakeLoopTmp(HandlerContext ctx, string name, string loopTmp)
         {
-            if (!IsGlobal(name, ctx) && ctx.Locals.Add(name))
+            if (!IsGlobal(name, ctx, out _) && ctx.Locals.Add(name))
                 ctx.DeclaredLocals.Add(name);
 
             ctx.Writer.WriteLine($"{WriteVariableNameCore(name, ctx)} = {loopTmp};");
@@ -593,7 +595,7 @@ namespace Drizzle.Transpiler
             {
                 var name = simpleTarget.Name.ToLower();
                 // Define local variable if necessary.
-                if (!IsGlobal(name, ctx))
+                if (!IsGlobal(name, ctx, out _))
                 {
                     // Local variable, not global
                     // Make sure it's not a parameter though.
@@ -699,23 +701,32 @@ namespace Drizzle.Transpiler
 
         private static string WriteVariableNameCore(string name, HandlerContext ctx)
         {
-            name = name.ToLower();
+            var lowered = name.ToLower();
 
-            if (name == "me")
+            if (lowered == "me")
                 return "this";
 
-            if (ctx.Locals.Contains(name))
-                return name;
+            if (ctx.Locals.Contains(lowered))
+                return lowered;
 
-            if (IsGlobal(name, ctx))
-                return $"{MovieScriptPrefix(ctx)}global_{name}";
+            if (IsGlobal(name, ctx, out var casedName))
+                return $"{MovieScriptPrefix(ctx)}{casedName}";
 
             return $"_global.{name}";
         }
 
-        private static bool IsGlobal(string name, HandlerContext ctx)
+        private static bool IsGlobal(string name, HandlerContext ctx, [NotNullWhen(true)] out string? caseName)
         {
-            return ctx.Parent.AllGlobals.Contains(name) || ctx.Globals.Contains(name);
+            if (!ctx.Parent.AllGlobals.Contains(name) && !ctx.Globals.Contains(name))
+            {
+                caseName = null;
+                return false;
+            }
+
+            if (!ctx.Parent.Parent.AllGlobals.TryGetValue(name, out caseName))
+                throw new InvalidOperationException("Global declared but not in all globals list?");
+
+            return true;
         }
 
         private static string WriteUnaryOperator(
