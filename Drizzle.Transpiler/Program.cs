@@ -160,7 +160,7 @@ namespace Drizzle.Transpiler
             WriteFileHeader(writer);
             writer.WriteLine($"//\n// Behavior script: {name}\n//");
             writer.WriteLine("[BehaviorScript]");
-            writer.WriteLine($"public sealed class {name} : LingoBehaviorScript {{");
+            writer.WriteLine($"public sealed partial class {name} : LingoBehaviorScript {{");
 
             EmitScriptBody(name, script, writer, ctx, isMovieScript: false);
 
@@ -190,7 +190,7 @@ namespace Drizzle.Transpiler
             WriteFileHeader(writer);
             writer.WriteLine($"//\n// Parent script: {name}\n//");
             writer.WriteLine("[ParentScript]");
-            writer.WriteLine($"public sealed class {name} : LingoParentScript {{");
+            writer.WriteLine($"public sealed partial class {name} : LingoParentScript {{");
 
             EmitScriptBody(name, script, writer, ctx, isMovieScript: false);
 
