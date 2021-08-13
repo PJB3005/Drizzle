@@ -26,10 +26,10 @@ namespace Drizzle.Ported {
             }
 
             rct = new LingoRect(512, 384, 512, 384)
-                + new LingoRect(-size.loch * (LingoDecimal)0.5 * fac,
-                                -size.locv * (LingoDecimal)0.5 * fac,
-                                 size.loch * (LingoDecimal)0.5 * fac,
-                                 size.locv * (LingoDecimal)0.5 * fac);
+                + new LingoRect(-size.loch * 0.5 * fac,
+                                -size.locv * 0.5 * fac,
+                                 size.loch * 0.5 * fac,
+                                 size.locv * 0.5 * fac);
 
             dynamic et = _movieScript.global_gloprops.extratiles;
             _global.sprite(90).rect = rct
@@ -62,8 +62,8 @@ namespace Drizzle.Ported {
                 for(int tmp_q = 1; tmp_q <= _movieScript.global_gcameraprops.cameras.count; tmp_q++) {
                     q = tmp_q;
                     pos = new LingoPoint(512, 384)
-                        + new LingoPoint(size.loch * (LingoDecimal)0.5 * fac,
-                                         size.locv * (LingoDecimal)0.5 * fac)
+                        + new LingoPoint(size.loch * 0.5 * fac,
+                                         size.locv * 0.5 * fac)
                         + _movieScript.global_gcameraprops.cameras[q] / 20 * fac
                         + new LingoPoint(35, 20) * fac;
 
