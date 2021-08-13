@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Drizzle.Editor.ViewModels.EditorTabs;
 using Drizzle.Lingo.Runtime;
+using Drizzle.Logic;
 
 namespace Drizzle.Editor.ViewModels
 {
-    public sealed class EditorContentViewModel : ViewModelBase
+    public sealed class EditorContentViewModel : ViewModelBase, ILingoRuntimeManager
     {
         public LingoRuntime Runtime { get; }
 
@@ -20,6 +23,17 @@ namespace Drizzle.Editor.ViewModels
                 new TabGeometryEditorViewModel(),
                 new TabTileEditorViewModel()
             };
+        }
+
+        public Task Exec(Action<LingoRuntime> action)
+        {
+            action(Runtime);
+            return Task.CompletedTask;
+        }
+
+        public Task<T> Exec<T>(Func<LingoRuntime, T> func)
+        {
+            return Task.FromResult(func(Runtime));
         }
     }
 }

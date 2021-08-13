@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 using Drizzle.Lingo.Runtime;
 using Drizzle.Ported;
 
-namespace Drizzle.Logic
+namespace Drizzle.Logic.Rendering
 {
-    public sealed partial class LevelRenderer
+    public sealed partial class LevelRenderer : ILingoRuntimeManager
     {
         // This partial contains wrapping code around the rendering code to handle multi-threaded control and such.
         private readonly LingoRuntime _runtime;
@@ -64,10 +65,12 @@ namespace Drizzle.Logic
                             return;
                         case RenderCmdCancel:
                             throw new RenderCancelledException();
+                        case RenderCmdExec exec:
+                            exec.Action();
+                            break;
                     }
                 }
             } while (_isPaused);
-
         }
 
         private void SendUpdateStatus(RenderStageStatus stageStatus)
@@ -88,6 +91,45 @@ namespace Drizzle.Logic
         public void SingleStep()
         {
             _cmdChannel.Writer.WriteAsync(new RenderCmdSingleStep()).AsTask().Wait();
+        }
+
+        public Task Exec(Action<LingoRuntime> action)
+        {
+            var tcs = new TaskCompletionSource();
+
+            _cmdChannel.Writer.WriteAsync(new RenderCmdExec(() =>
+            {
+                try
+                {
+                    action(_runtime);
+                    tcs.SetResult();
+                }
+                catch (Exception e)
+                {
+                    tcs.SetException(e);
+                }
+            })).AsTask().Wait();
+
+            return tcs.Task;
+        }
+
+        public Task<T> Exec<T>(Func<LingoRuntime, T> func)
+        {
+            var tcs = new TaskCompletionSource<T>();
+
+            _cmdChannel.Writer.WriteAsync(new RenderCmdExec(() =>
+            {
+                try
+                {
+                    tcs.SetResult(func(_runtime));
+                }
+                catch (Exception e)
+                {
+                    tcs.SetException(e);
+                }
+            })).AsTask().Wait();
+
+            return tcs.Task;
         }
     }
 }

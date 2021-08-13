@@ -21,7 +21,7 @@ namespace Drizzle.Editor.Views
             AvaloniaXamlLoader.Load(this);
         }
 
-        /*private void OnClosed(object? sender, EventArgs e)
+        private void OnClosed(object? sender, EventArgs e)
         {
             (DataContext as LingoCastViewerViewModel)?.Closed();
         }
@@ -29,6 +29,6 @@ namespace Drizzle.Editor.Views
         private void OpOpened(object? sender, EventArgs e)
         {
             (DataContext as LingoCastViewerViewModel)?.Opened();
-        }*/
+        }
     }
 }

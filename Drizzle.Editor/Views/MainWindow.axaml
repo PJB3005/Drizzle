@@ -31,6 +31,15 @@
                           InputGesture="Ctrl+Shift+R"
                           IsEnabled="{Binding SelectedTab,Converter={x:Static ObjectConverters.IsNotNull}}" />
             </MenuItem>
+            <MenuItem Header="_Debug">
+                <MenuItem Header="Cast Viewer (Zygote)" Command="{Binding CastViewerZygote}" HotKey="Shift+F10"
+                          InputGesture="Shift+F10" />
+                <MenuItem Header="Cast Viewer (Project)" Command="{Binding CastViewerProject}" HotKey="Ctrl+F10"
+                          InputGesture="Ctrl+F10"
+                          IsEnabled="{Binding SelectedTab,Converter={x:Static ObjectConverters.IsNotNull}}" />
+                <MenuItem Header="Run GC" Command="{Binding RunGC}" HotKey="Ctrl+F11"
+                          InputGesture="Ctrl+F11" />
+            </MenuItem>
         </Menu>
         <TabControl Items="{Binding MainTabs}" SelectedItem="{Binding SelectedTab}">
             <TabControl.ItemTemplate>

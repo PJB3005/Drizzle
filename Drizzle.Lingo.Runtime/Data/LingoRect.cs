@@ -94,5 +94,7 @@ namespace Drizzle.Lingo.Runtime
         {
             return !left.Equals(right);
         }
+
+        public override string ToString() => $"rect({left}, {top}, {right}, {bottom})";
     }
 }

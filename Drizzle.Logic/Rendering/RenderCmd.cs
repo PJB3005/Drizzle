@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Drizzle.Logic
+namespace Drizzle.Logic.Rendering
 {
     public abstract record RenderCmd;
 
@@ -9,6 +9,8 @@ namespace Drizzle.Logic
     public record RenderCmdSingleStep : RenderCmd;
 
     public record RenderCmdCancel : RenderCmd;
+
+    public record RenderCmdExec(Action Action) : RenderCmd;
 
     [Serializable]
     public class RenderCancelledException : OperationCanceledException
