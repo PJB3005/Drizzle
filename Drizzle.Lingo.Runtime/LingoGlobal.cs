@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -241,7 +241,7 @@ namespace Drizzle.Lingo.Runtime
 
         public string the_platform => "win";
 
-        public LingoSprite sprite(dynamic a)
+        public LingoSprite sprite(int a)
         {
             // Log.Warning("sprite() not implemented");
             return new LingoSprite();
