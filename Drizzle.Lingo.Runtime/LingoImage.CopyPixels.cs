@@ -114,9 +114,103 @@ namespace Drizzle.Lingo.Runtime
 
             var srcBox = CalcSrcBox(source, sourceRect);
 
-            CopyPixelsQuadCoreScalar<Bgra32, PixelOpsBgra32, Bgra32, PixelOpsBgra32>(
-                source, dest, destQuad, srcBox, parameters);
+            CopyPixelsQuadGenWriter(source, dest, destQuad, srcBox, parameters);
         }
+
+        private static void CopyPixelsQuadGenWriter(
+            LingoImage src, LingoImage dst,
+            in DestQuad destQuad,
+            Vector4 srcBox,
+            in CopyPixelsParameters parameters)
+        {
+            switch (dst.Depth)
+            {
+                case 32:
+                    CopyPixelsQuadGenSampler<Bgra32, PixelOpsBgra32>(
+                        src,
+                        dst,
+                        destQuad,
+                        srcBox,
+                        parameters);
+                    break;
+                case 16:
+                    CopyPixelsQuadGenSampler<Bgra5551, PixelOpsBgra5551>(
+                        src,
+                        dst,
+                        destQuad,
+                        srcBox,
+                        parameters);
+                    break;
+                case 8:
+                    CopyPixelsQuadGenSampler<L8, PixelOpsPalette8>(
+                        src,
+                        dst,
+                        destQuad,
+                        srcBox,
+                        parameters);
+                    break;
+                case 1:
+                    CopyPixelsQuadGenSampler<int, PixelOpsBit>(
+                        src,
+                        dst,
+                        destQuad,
+                        srcBox,
+                        parameters);
+                    break;
+                default:
+                    // Not implemented.
+                    break;
+            }
+        }
+
+        private static void CopyPixelsQuadGenSampler<TDstData, TWriter>(
+            LingoImage src, LingoImage dst,
+            in DestQuad destQuad,
+            Vector4 srcBox,
+            in CopyPixelsParameters parameters)
+            where TWriter : struct, IPixelOps<TDstData>
+            where TDstData : unmanaged
+        {
+            switch (src.Depth)
+            {
+                case 32:
+                    CopyPixelsQuadCoreScalar<Bgra32, PixelOpsBgra32, TDstData, TWriter>(
+                        src,
+                        dst,
+                        destQuad,
+                        srcBox,
+                        parameters);
+                    break;
+                case 16:
+                    CopyPixelsQuadCoreScalar<Bgra5551, PixelOpsBgra5551, TDstData, TWriter>(
+                        src,
+                        dst,
+                        destQuad,
+                        srcBox,
+                        parameters);
+                    break;
+                case 8:
+                    CopyPixelsQuadCoreScalar<L8, PixelOpsPalette8, TDstData, TWriter>(
+                        src,
+                        dst,
+                        destQuad,
+                        srcBox,
+                        parameters);
+                    break;
+                case 1:
+                    CopyPixelsQuadCoreScalar<int, PixelOpsBit, TDstData, TWriter>(
+                        src,
+                        dst,
+                        destQuad,
+                        srcBox,
+                        parameters);
+                    break;
+                default:
+                    // Not implemented.
+                    break;
+            }
+        }
+
 
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         private static void CopyPixelsQuadCoreScalar<TSrcData, TSampler, TDstData, TWriter>(
@@ -250,7 +344,7 @@ namespace Drizzle.Lingo.Runtime
 
             if (dstL > dest.width || dstT > dest.height || dstR < 0 || dstB < 0)
             {
-                Log.Debug("copyPixels(): ignoring complete out-of-bounds write.");
+                //Log.Debug("copyPixels(): ignoring complete out-of-bounds write.");
                 return;
             }
 
