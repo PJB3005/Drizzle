@@ -80,6 +80,9 @@ namespace Drizzle.Lingo.Runtime
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public LingoColor getpixel(int x, int y)
         {
+            if (x < 0 || x >= width || y < 0 || y >= height)
+                return LingoColor.White;
+
             var idx = y * width + x;
             switch (Depth)
             {
@@ -126,6 +129,9 @@ namespace Drizzle.Lingo.Runtime
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public void setpixel(int x, int y, LingoColor color)
         {
+            if (x < 0 || x >= width || y < 0 || y >= height)
+                return;
+
             var idx = y * width + x;
             switch (Depth)
             {
