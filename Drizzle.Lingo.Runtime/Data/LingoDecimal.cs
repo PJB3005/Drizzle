@@ -41,7 +41,7 @@ namespace Drizzle.Lingo.Runtime
 
         public static implicit operator LingoDecimal(int x) => new(x);
         public static implicit operator LingoDecimal(float x) => new(x);
-        public static implicit operator LingoDecimal(decimal x) => new(x);
+        public static implicit operator LingoDecimal(double x) => new(x);
         public static explicit operator int(LingoDecimal x) => (int) x.Value;
         public static explicit operator float(LingoDecimal x) => (float) x.Value;
 
