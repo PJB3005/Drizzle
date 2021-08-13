@@ -4,16 +4,15 @@
         xmlns:views="clr-namespace:Drizzle.Editor.Views"
         x:Class="Drizzle.Editor.Views.LingoCastViewer"
         Icon="/Assets/avalonia-logo.ico"
-        Title="Drizzle.Editor" Width="1024" Height="600"><!--Closed="OnClosed" Opened="OpOpened"-->
+        Title="Drizzle.Editor" Width="1024" Height="600" Closed="OnClosed" Opened="OpOpened">
 
-    <!--
     <Design.DataContext>
-        ~1~ ReSharper disable once Xaml.ConstructorWarning @1@
+        <!-- ReSharper disable once Xaml.ConstructorWarning -->
         <vm:LingoCastViewerViewModel />
     </Design.DataContext>
 
     <DockPanel Margin="2">
-        ~1~ Bottom @1@
+        <!-- Bottom -->
         <DockPanel DockPanel.Dock="Bottom" LastChildFill="False">
             <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="{Binding Status}" />
             <Button DockPanel.Dock="Right" Content="Refresh" Command="{Binding Refresh}" />
@@ -23,7 +22,7 @@
             <TabControl Grid.Column="0" Items="{Binding Casts}">
                 <TabControl.ItemTemplate>
                     <DataTemplate DataType="vm:LingoCastViewerCast">
-                        <TextBlock Text="{Binding CastLib.name}" />
+                        <TextBlock Text="{Binding CastLibNameName}" />
                     </DataTemplate>
                 </TabControl.ItemTemplate>
                 <TabControl.ContentTemplate>
@@ -54,9 +53,9 @@
                     <TextBlock DockPanel.Dock="Left">
                         <TextBlock.Text>
                             <MultiBinding StringFormat="{}Depth: {0} Size: {1}x{2}">
-                                <Binding Path="SelectedCastMember.CastMember.image.Depth" />
-                                <Binding Path="SelectedCastMember.CastMember.image.width" />
-                                <Binding Path="SelectedCastMember.CastMember.image.height" />
+                                <Binding Path="SelectedCastMember.Depth" FallbackValue="0" />
+                                <Binding Path="SelectedCastMember.Width" FallbackValue="0" />
+                                <Binding Path="SelectedCastMember.Height" FallbackValue="0" />
                             </MultiBinding>
                         </TextBlock.Text>
                     </TextBlock>
@@ -69,5 +68,4 @@
             </DockPanel>
         </Grid>
     </DockPanel>
--->
 </Window>

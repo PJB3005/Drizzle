@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Drizzle.Logic
+namespace Drizzle.Logic.Rendering
 {
     public record RenderStatus(int CameraIndex, int CountCamerasDone, bool IsPaused, RenderStageStatus Stage);
 

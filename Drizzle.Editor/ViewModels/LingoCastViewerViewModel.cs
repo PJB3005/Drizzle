@@ -1,40 +1,58 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Drizzle.Lingo.Runtime;
 using Drizzle.Lingo.Runtime.Cast;
+using Drizzle.Logic;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
 
 namespace Drizzle.Editor.ViewModels
 {
     public sealed class LingoCastViewerViewModel : ViewModelBase
     {
-        /*
-        private readonly LingoViewModel _lingo;
+        private static readonly string[] CastsToLoad =
+        {
+            "Internal",
+            "levelEditor"
+        };
+
+        private readonly ILingoRuntimeManager _lingo;
 
         public ObservableCollection<LingoCastViewerCast> Casts { get; } = new();
 
-        public LingoCastViewerViewModel(LingoViewModel lingo)
+        public LingoCastViewerViewModel(ILingoRuntimeManager lingo)
         {
             _lingo = lingo;
 
             this.WhenAnyValue(e => e.SelectedCastMember)
-                .Select(e => e == null ? null : LingoImageToBitmap(e.CastMember.image!, false))
-                .ToPropertyEx(this, x => x.CurrentImage);
+                // ReSharper disable once AsyncVoidLambda
+                .Subscribe(async e =>
+                {
+                    if (e == null)
+                    {
+                        CurrentLingoImage = null;
+                        CurrentImage = null;
+                        return;
+                    }
 
-            Casts.Add(new LingoCastViewerCast(_lingo.Runtime.GetCastLib("Internal")));
-            Casts.Add(new LingoCastViewerCast(_lingo.Runtime.GetCastLib("levelEditor")));
+                    var img = await _lingo.Exec(runtime => runtime.GetCastMember(e.Number)!.image!.duplicate());
+                    CurrentLingoImage = img;
+                    CurrentImage = LingoImageToBitmap(img, false);
+                });
 
-            _lingo.Update += LingoUpdate;
+            foreach (var castName in CastsToLoad)
+            {
+                Casts.Add(new LingoCastViewerCast(castName));
+            }
         }
 
         [Reactive] public string Status { get; set; } = "A";
@@ -42,17 +60,18 @@ namespace Drizzle.Editor.ViewModels
         [Reactive] public CastMemberViewModel? SelectedCastMember { get; set; }
 
         // ReSharper disable once UnassignedGetOnlyAutoProperty
-        [ObservableAsProperty] public Bitmap? CurrentImage { get; }
+        [Reactive] public Bitmap? CurrentImage { get; private set; }
+        [Reactive] public LingoImage? CurrentLingoImage { get;  private set; }
 
-        public void Refresh()
+        public async void Refresh()
         {
-            foreach (var castModel in Casts)
+            var members = await _lingo.Exec(runtime =>
             {
-                castModel.UnfilteredEntries.Edit(e =>
+                return CastsToLoad.Select(castName =>
                 {
-                    e.Clear();
+                    var cast = runtime.GetCastLib(castName);
+                    var members = new List<CastMemberViewModel>();
 
-                    var cast = castModel.CastLib;
                     for (var i = 1; i <= cast.NumMembers; i++)
                     {
                         var member = cast.GetMember(i)!;
@@ -60,79 +79,83 @@ namespace Drizzle.Editor.ViewModels
                         if (member.Type != CastMemberType.Bitmap)
                             continue;
 
-                        var bitmap = LingoImageToBitmap(member.image!, true);
-                        var entry = new CastMemberViewModel(bitmap, cast.name, member);
+                        var img = member.image!;
+                        var bitmap = LingoImageToBitmap(img, true);
+                        var entry = new CastMemberViewModel(
+                            bitmap,
+                            cast.name,
+                            member.name, member.Number,
+                            img.width, img.height, img.depth);
 
-                        e.Add(entry);
+                        members.Add(entry);
                     }
+
+                    return (castName, members);
+                }).ToDictionary(c => c.castName, c => c.members);
+            });
+
+            foreach (var castModel in Casts)
+            {
+                castModel.UnfilteredEntries.Edit(e =>
+                {
+                    e.Clear();
+
+                    e.AddRange(members[castModel.CastLibNameName]);
                 });
             }
         }
 
         public void OpenImage()
         {
-            if (SelectedCastMember == null)
-                return;
-
-            SelectedCastMember.CastMember.image!.ShowImage();
+            CurrentLingoImage?.ShowImage();
         }
 
         private static unsafe Bitmap LingoImageToBitmap(LingoImage img, bool thumbnail)
         {
-            var finalImg = img.Image;
+            var finalImg = img;
 
             if (thumbnail)
             {
                 var copyImg = new LingoImage(50, 50, 32);
                 copyImg.copypixels(img, copyImg.rect, img.rect);
-                finalImg = copyImg.Image;
+                finalImg = copyImg;
             }
             else if (img.Depth != 32)
             {
                 var copyImg = new LingoImage(img.width, img.height, 32);
                 copyImg.copypixels(img, img.rect, img.rect);
-                finalImg = copyImg.Image;
+                finalImg = copyImg;
             }
 
-            var bgra = (Image<Bgra32>)finalImg;
+            var bgra = finalImg;
 
-            if (!bgra.TryGetSinglePixelSpan(out var span))
-                throw new InvalidOperationException();
-
-            fixed (Bgra32* data = span)
+            fixed (byte* data = finalImg.ImageBuffer)
             {
                 return new Bitmap(
                     PixelFormat.Bgra8888,
                     AlphaFormat.Unpremul,
                     (nint)data,
-                    new PixelSize(bgra.Width, bgra.Height),
+                    new PixelSize(bgra.width, bgra.height),
                     new Vector(96, 96),
-                    sizeof(Bgra32) * bgra.Width);
+                    sizeof(Bgra32) * bgra.width);
             }
         }
 
         public void Closed()
         {
-            _lingo.Update -= LingoUpdate;
-        }
-
-        private void LingoUpdate(int newFrame)
-        {
-            // Refresh();
         }
 
         public void Opened()
         {
             Refresh();
         }
-    */
     }
 
     public sealed class LingoCastViewerCast : ViewModelBase
     {
-        public LingoCastViewerCast(LingoCastLib castLib)
+        public LingoCastViewerCast(string castLibName)
         {
-            CastLib = castLib;
+            CastLibNameName = castLibName;
 
             var searchSelect = this.WhenAnyValue(x => x.Search)
                 .Select<string?, Func<CastMemberViewModel, bool>>(search =>
@@ -150,7 +173,7 @@ namespace Drizzle.Editor.ViewModels
             Entries = entries;
         }
 
-        public LingoCastLib CastLib { get; }
+        public string CastLibNameName { get; }
 
         [Reactive] public string Search { get; set; } = "";
         public SourceList<CastMemberViewModel> UnfilteredEntries { get; } = new();
@@ -160,18 +183,32 @@ namespace Drizzle.Editor.ViewModels
     public sealed class CastMemberViewModel
     {
         public Bitmap Thumbnail { get; }
-        public string? Name => CastMember.name;
-        public int Number => CastMember.Number;
+        public string? Name { get; }
+        public int Number { get; }
         public string CastName { get; }
-        public CastMember CastMember { get; }
 
         public string NameOrNumber => Name == null ? Number.ToString() : $"{Name} ({Number})";
 
-        public CastMemberViewModel(Bitmap thumbnail, string castName, CastMember castMember)
+        public int Width { get; }
+        public int Height { get; }
+        public int Depth { get; }
+
+        public CastMemberViewModel(
+            Bitmap thumbnail,
+            string castName,
+            string? name,
+            int number,
+            int imgWidth,
+            int imgHeight,
+            int imgDepth)
         {
             Thumbnail = thumbnail;
             CastName = castName;
-            CastMember = castMember;
+            Name = name;
+            Number = number;
+            Width = imgWidth;
+            Height = imgHeight;
+            Depth = imgDepth;
         }
     }
 }

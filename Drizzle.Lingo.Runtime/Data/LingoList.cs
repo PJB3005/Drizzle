@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Serilog;
 
 namespace Drizzle.Lingo.Runtime
@@ -159,6 +160,25 @@ namespace Drizzle.Lingo.Runtime
         public static object? DuplicateIfList(object? obj)
         {
             return obj is ILingoListDuplicate dup ? dup.duplicate() : obj;
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            sb.Append('[');
+
+            var first = true;
+            foreach (var item in List)
+            {
+                if (!first)
+                    sb.Append(", ");
+                first = false;
+
+                sb.Append(LingoFormat.LingoToString(item));
+            }
+
+            sb.Append(']');
+            return sb.ToString();
         }
 
         private sealed class LingoComparer : IComparer<object?>

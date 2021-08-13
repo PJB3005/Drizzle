@@ -1,4 +1,4 @@
-﻿namespace Drizzle.Logic
+﻿namespace Drizzle.Logic.Rendering
 {
     public enum RenderStage
     {

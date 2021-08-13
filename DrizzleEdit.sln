@@ -23,7 +23,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drizzle.Lingo.Runtime", "Dr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drizzle.Ported", "Drizzle.Ported\Drizzle.Ported.csproj", "{74413099-56F3-4299-BD22-E4A699A43185}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drizzle.EditorLogic", "Drizzle.EditorLogic\Drizzle.EditorLogic.csproj", "{B10D3756-F3EE-4ADD-9FBD-0C6DA3D9EF3D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drizzle.Logic", "Drizzle.Logic\Drizzle.Logic.csproj", "{B10D3756-F3EE-4ADD-9FBD-0C6DA3D9EF3D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,14 +1,11 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Drizzle.Lingo.Runtime;
 using Drizzle.Ported;
 using Serilog;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 
-namespace Drizzle.Logic
+namespace Drizzle.Logic.Rendering
 {
     public sealed partial class LevelRenderer
     {
