@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -12,17 +13,6 @@ namespace Drizzle.Lingo.Runtime
 {
     public sealed unsafe partial class LingoImage
     {
-        /*
-             private static int CopiesPixelFast;
-   private static int CopiesEqualNonStretch;
-        private static int CopiesNonStretch;
-        private static int CopiesEqual;
-        private static int CopiesEqualTall;
-        private static int CopiesOther;
-
-        private static Dictionary<(int w, int h), int> Sizes = new();
-        */
-
         // Not used by the editor (but there is a similar lingo API)
         // Mostly just for unit tests right now.
         // Maybe optimizations for the editor later.
@@ -56,7 +46,17 @@ namespace Drizzle.Lingo.Runtime
 
         public void copypixels(LingoImage source, LingoList destQuad, LingoRect sourceRect, LingoPropertyList paramList)
         {
-            Log.Warning("copyPixels() destquad: not implemented");
+            ParseCommonCopyPixelsParameters(paramList, out var parameters);
+
+            var quad = new DestQuad
+            {
+                TopLeft = ((LingoPoint)destQuad.List[0]!).AsVector2,
+                TopRight = ((LingoPoint)destQuad.List[1]!).AsVector2,
+                BottomRight = ((LingoPoint)destQuad.List[2]!).AsVector2,
+                BottomLeft = ((LingoPoint)destQuad.List[3]!).AsVector2,
+            };
+
+            CopyPixelsQuadImpl(source, this, quad, sourceRect, parameters);
         }
 
         public void copypixels(LingoImage source, LingoRect destRect, LingoRect sourceRect)
@@ -72,7 +72,16 @@ namespace Drizzle.Lingo.Runtime
 
         public void copypixels(LingoImage source, LingoRect destRect, LingoRect sourceRect, LingoPropertyList paramList)
         {
-            var parameters = new CopyPixelsParameters();
+            ParseCommonCopyPixelsParameters(paramList, out var parameters);
+
+            CopyPixelsImpl(source, this, destRect, sourceRect, parameters);
+        }
+
+        private static void ParseCommonCopyPixelsParameters(
+            LingoPropertyList paramList,
+            out CopyPixelsParameters parameters)
+        {
+            parameters = default;
             if (paramList.Dict.TryGetValue(new LingoSymbol("blend"), out var blendValObj))
             {
                 var dec = (LingoDecimal)blendValObj!;
@@ -91,8 +100,137 @@ namespace Drizzle.Lingo.Runtime
 
             if (paramList.Dict.ContainsKey(new LingoSymbol("mask")))
                 Log.Warning("copypixels(): Mask rendering not implemented");
+        }
 
-            CopyPixelsImpl(source, this, destRect, sourceRect, parameters);
+        private static void CopyPixelsQuadImpl(
+            LingoImage source,
+            LingoImage dest,
+            in DestQuad destQuad,
+            LingoRect sourceRect,
+            in CopyPixelsParameters parameters)
+        {
+            if (parameters.Ink == CopyPixelsInk.Darkest)
+                Log.Warning("copypixels(): Darkest ink not implemented");
+
+            var srcBox = CalcSrcBox(source, sourceRect);
+
+            CopyPixelsQuadCoreScalar<Bgra32, PixelOpsBgra32, Bgra32, PixelOpsBgra32>(
+                source, dest, destQuad, srcBox, parameters);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        private static void CopyPixelsQuadCoreScalar<TSrcData, TSampler, TDstData, TWriter>(
+            LingoImage src, LingoImage dst,
+            in DestQuad destQuad,
+            Vector4 srcBox,
+            in CopyPixelsParameters parameters)
+            where TSampler : struct, IPixelOps<TSrcData>
+            where TSrcData : unmanaged
+            where TWriter : struct, IPixelOps<TDstData>
+            where TDstData : unmanaged
+        {
+            CopyPixelsQuadCoreScalarRasterize<TSrcData, TSampler, TDstData, TWriter>(
+                src, dst,
+                destQuad.TopLeft, new Vector2(srcBox.X, srcBox.Y),
+                destQuad.TopRight, new Vector2(srcBox.Z, srcBox.Y),
+                destQuad.BottomRight, new Vector2(srcBox.Z, srcBox.W),
+                parameters);
+
+            CopyPixelsQuadCoreScalarRasterize<TSrcData, TSampler, TDstData, TWriter>(
+                src, dst,
+                destQuad.TopLeft, new Vector2(srcBox.X, srcBox.Y),
+                destQuad.BottomRight, new Vector2(srcBox.Z, srcBox.W),
+                destQuad.BottomLeft, new Vector2(srcBox.X, srcBox.W),
+                parameters);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        [SuppressMessage("ReSharper", "InconsistentNaming")]
+        private static void CopyPixelsQuadCoreScalarRasterize<TSrcData, TSampler, TDstData, TWriter>(
+            LingoImage src,
+            LingoImage dst,
+            Vector2 v0, Vector2 v0st,
+            Vector2 v1, Vector2 v1st,
+            Vector2 v2, Vector2 v2st,
+            in CopyPixelsParameters parameters)
+            where TSampler : struct, IPixelOps<TSrcData>
+            where TSrcData : unmanaged
+            where TWriter : struct, IPixelOps<TDstData>
+            where TDstData : unmanaged
+        {
+            var srcImgW = src.width;
+            var srcImgH = src.height;
+            var dstImgW = dst.width;
+            var dstImgH = dst.height;
+
+            var boundsTL = Vector2.Min(
+                v0,
+                Vector2.Min(v1, v2));
+
+            var boundsBR = Vector2.Max(
+                v0,
+                Vector2.Max(v1, v2));
+
+            var boundL = Math.Clamp((int)boundsTL.X, 0, dstImgW);
+            var boundT = Math.Clamp((int)boundsTL.Y, 0, dstImgH);
+            var boundR = Math.Clamp((int)MathF.Ceiling(boundsBR.X), 0, dstImgW);
+            var boundB = Math.Clamp((int)MathF.Ceiling(boundsBR.Y), 0, dstImgH);
+
+            var doBackgroundTransparent = parameters.Ink == CopyPixelsInk.BackgroundTransparent;
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            var doBlend = parameters.Blend != 1;
+            var fgc = parameters.ForeColor;
+
+            ReadOnlySpan<TSrcData> srcSpan = MemoryMarshal.Cast<byte, TSrcData>(src.ImageBuffer);
+            var dstSpan = MemoryMarshal.Cast<byte, TDstData>(dst.ImageBuffer);
+
+            var sampler = new TSampler();
+            var writer = new TWriter();
+
+            var area = Math.Abs(EdgeFunction(v2, v1, v0));
+
+            for (var y = boundT; y < boundB; y++)
+            {
+                for (var x = boundL; x < boundR; x++)
+                {
+                    var p = new Vector2(x + 0.5f, y + 0.5f);
+
+                    var w0 = EdgeFunction(p, v2, v1);
+                    var w1 = EdgeFunction(p, v0, v2);
+                    var w2 = EdgeFunction(p, v1, v0);
+
+                    if (w0 >= 0 && w1 >= 0 && w2 >= 0 || w0 <= 0 && w1 <= 0 && w2 <= 0)
+                    {
+                        w0 /= area;
+                        w1 /= area;
+                        w2 /= area;
+
+                        w0 = Math.Abs(w0);
+                        w1 = Math.Abs(w1);
+                        w2 = Math.Abs(w2);
+
+                        var st = w0 * v0st + w1 * v1st + w2 * v2st;
+
+                        var dstPos = dstImgW * y + x;
+
+                        var imgRow = (int)(st.Y * srcImgH) * srcImgW;
+                        var color = DoSample(st.X, st.Y, srcImgW, sampler, srcSpan, imgRow);
+
+                        if (doBackgroundTransparent && color == LingoColor.PackWhite)
+                            continue;
+
+                        CopyPixelsCoreDoOutputScalar<TSrcData, TSampler, TDstData, TWriter>(
+                            parameters, color, fgc, doBlend, writer, dstSpan, dstPos);
+                    }
+                }
+            }
+
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+            static float EdgeFunction(Vector2 a, Vector2 b, Vector2 c)
+            {
+                return (c.X - a.X) * (b.Y - a.Y) - (c.Y - a.Y) * (b.X - a.X);
+            }
         }
 
         private static void CopyPixelsImpl(
@@ -103,34 +241,6 @@ namespace Drizzle.Lingo.Runtime
             in CopyPixelsParameters parameters)
         {
             Debug.Assert(!dest.IsPxl);
-
-            /*
-            if (destRect.width == sourceRect.width && destRect.height == sourceRect.height)
-            {
-                if (source.Depth == dest.Depth)
-                    CopiesEqualNonStretch += 1;
-                else
-                    CopiesNonStretch += 1;
-            }
-            else
-            {
-                if (source.Depth == dest.Depth)
-                {
-                    CopiesEqual += 1;
-                }
-                else
-                    CopiesOther += 1;
-            }
-
-            if (source.width == 1 && source.height == 1 && parameters.Ink != CopyPixelsInk.Copy)
-            {
-                var tup = ((int)destRect.width, (int)destRect.height);
-                if (!Sizes.ContainsKey(tup))
-                    Sizes[tup] = 0;
-
-                CollectionsMarshal.GetValueRefOrNullRef(Sizes, tup) += 1;
-            }
-            */
 
             // Integer coordinates for the purpose of rasterization.
             var dstL = destRect.left.integer;
@@ -157,6 +267,13 @@ namespace Drizzle.Lingo.Runtime
             if (parameters.Ink == CopyPixelsInk.Darkest)
                 Log.Warning("copypixels(): Darkest ink not implemented");
 
+            var srcBox = CalcSrcBox(source, sourceRect);
+
+            CopyPixelsRectGenWriter(source, dest, srcBox, (dstL, dstT, dstR, dstB), parameters);
+        }
+
+        private static Vector4 CalcSrcBox(LingoImage source, LingoRect sourceRect)
+        {
             // Float coordinates for the purposes of sampling.
             var srcL = (float)(sourceRect.left / source.width);
             var srcT = (float)(sourceRect.top / source.height);
@@ -165,8 +282,7 @@ namespace Drizzle.Lingo.Runtime
 
             // LTRB
             var srcBox = new Vector4(srcL, srcT, srcR, srcB);
-
-            CopyPixelsRectGenWriter(source, dest, srcBox, (dstL, dstT, dstR, dstB), parameters);
+            return srcBox;
         }
 
         private static void CopyPixelsRectGenWriter(
@@ -328,46 +444,75 @@ namespace Drizzle.Lingo.Runtime
                 var s = initS;
                 for (var x = dstL; x < dstR; x++, s += incSrcS)
                 {
-                    int color;
-                    if (s < 0 || s >= 1 || t < 0 || t >= 1)
-                        color = LingoColor.PackWhite;
-                    else
-                    {
-                        var imgX = (int)(s * srcImgW);
+                    var dstPos = dstImgW * y + x;
 
-                        color = sampler.Sample(srcSpan, imgRow + imgX);
-                    }
+                    var color = DoSample<TSrcData, TSampler>(s, t, srcImgW, sampler, srcSpan,
+                        imgRow);
 
                     if (doBackgroundTransparent && color == LingoColor.PackWhite)
                         continue;
 
-                    var unpacked = LingoColor.BitUnpack(color);
-                    int r = unpacked.RedByte;
-                    int g = unpacked.GreenByte;
-                    int b = unpacked.BlueByte;
-
-                    r = Math.Min(0xFF, r + fgc.RedByte);
-                    g = Math.Min(0xFF, g + fgc.GreenByte);
-                    b = Math.Min(0xFF, b + fgc.BlueByte);
-
-                    var dstPos = dstImgW * y + x;
-                    if (doBlend)
-                    {
-                        var unpackedDst = LingoColor.BitUnpack(writer.Sample(dstSpan, dstPos));
-
-                        var blendSrc = new Vector4(r, g, b, 0);
-                        var blendDst = new Vector4(unpackedDst.RedByte, unpackedDst.GreenByte, unpackedDst.BlueByte, 0);
-
-                        var final = blendSrc * parameters.Blend + blendDst * (1 - parameters.Blend);
-
-                        r = (int)final.X;
-                        g = (int)final.Y;
-                        b = (int)final.Z;
-                    }
-
-                    writer.Write(dstSpan, dstPos, new LingoColor(r, g, b).BitPack);
+                    CopyPixelsCoreDoOutputScalar<TSrcData, TSampler, TDstData, TWriter>(
+                        parameters, color, fgc, doBlend, writer, dstSpan, dstPos);
                 }
             }
+        }
+
+        private static void CopyPixelsCoreDoOutputScalar<TSrcData, TSampler, TDstData, TWriter>(
+            in CopyPixelsParameters parameters,
+            int color,
+            LingoColor fgc,
+            bool doBlend,
+            TWriter writer,
+            Span<TDstData> dstSpan,
+            int dstPos)
+            where TSampler : struct, IPixelOps<TSrcData>
+            where TSrcData : unmanaged
+            where TWriter : struct, IPixelOps<TDstData>
+            where TDstData : unmanaged
+        {
+            var unpacked = LingoColor.BitUnpack(color);
+            int r = unpacked.RedByte;
+            int g = unpacked.GreenByte;
+            int b = unpacked.BlueByte;
+
+            r = Math.Min(0xFF, r + fgc.RedByte);
+            g = Math.Min(0xFF, g + fgc.GreenByte);
+            b = Math.Min(0xFF, b + fgc.BlueByte);
+
+            if (doBlend)
+            {
+                var unpackedDst = LingoColor.BitUnpack(writer.Sample(dstSpan, dstPos));
+
+                var blendSrc = new Vector4(r, g, b, 0);
+                var blendDst = new Vector4(unpackedDst.RedByte, unpackedDst.GreenByte, unpackedDst.BlueByte, 0);
+
+                var final = blendSrc * parameters.Blend + blendDst * (1 - parameters.Blend);
+
+                r = (int)final.X;
+                g = (int)final.Y;
+                b = (int)final.Z;
+            }
+
+            writer.Write(dstSpan, dstPos, new LingoColor(r, g, b).BitPack);
+        }
+
+        private static int DoSample<TSrcData, TSampler>(
+            float s,
+            float t,
+            int srcImgW,
+            TSampler sampler,
+            ReadOnlySpan<TSrcData> srcSpan,
+            int imgRow)
+            where TSampler : struct, IPixelOps<TSrcData>
+            where TSrcData : unmanaged
+        {
+            if (s < 0 || s >= 1 || t < 0 || t >= 1)
+                return LingoColor.PackWhite;
+
+            var imgX = (int)(s * srcImgW);
+
+            return sampler.Sample(srcSpan, imgRow + imgX);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -959,6 +1104,14 @@ namespace Drizzle.Lingo.Runtime
             ref readonly var val = ref buf[bytePos];
 
             return (val & mask) != 0;
+        }
+
+        private struct DestQuad
+        {
+            public Vector2 TopLeft;
+            public Vector2 TopRight;
+            public Vector2 BottomRight;
+            public Vector2 BottomLeft;
         }
     }
 }

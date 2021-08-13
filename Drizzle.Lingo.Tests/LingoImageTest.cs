@@ -155,9 +155,7 @@ namespace Drizzle.Lingo.Tests
         [TestCase(false)]
         public void TestCopyPixelsPxl(bool pxlFlag)
         {
-            var pxl = new LingoImage(1, 1, 32);
-            pxl.setpixel(0, 0, 255);
-            pxl.IsPxl = pxlFlag;
+            var pxl = MakePxl(pxlFlag);
             var dst = new LingoImage(128, 128, 1);
 
             dst.copypixels(pxl, new LingoRect(32, 32, 96, 96), pxl.rect);
@@ -199,6 +197,31 @@ namespace Drizzle.Lingo.Tests
                     Assert.That(px, Is.EqualTo(expectedPixel));
                 }
             }
+        }
+
+        [Test]
+        public void TestCopyPixelsQuad()
+        {
+            var pxl = MakePxl();
+            var dest = new LingoImage(32, 32, 32);
+
+            dest.copypixels(pxl, new LingoList
+            {
+                new LingoPoint(16, 0),
+                new LingoPoint(32, 16),
+                new LingoPoint(16, 32),
+                new LingoPoint(0, 16),
+            }, pxl.rect);
+
+
+        }
+
+        private static LingoImage MakePxl(bool markAsSuch=false)
+        {
+            var img = new LingoImage(1, 1, 32);
+            img.setpixel(0, 0, LingoColor.Black);
+            img.IsPxl = markAsSuch;
+            return img;
         }
     }
 }

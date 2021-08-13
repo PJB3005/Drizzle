@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 
 namespace Drizzle.Lingo.Runtime
 {
@@ -10,6 +11,8 @@ namespace Drizzle.Lingo.Runtime
 
         public LingoDecimal loch;
         public LingoDecimal locv;
+
+        public Vector2 AsVector2 => new((float)loch.Value, (float)locv.Value);
 
         public LingoPoint(int loch, int locv)
         {
@@ -65,7 +68,7 @@ namespace Drizzle.Lingo.Runtime
 
         public static LingoPoint operator -(LingoPoint a)
         {
-            return new LingoPoint(a.loch, a.locv);
+            return new LingoPoint(-a.loch, -a.locv);
         }
 
         public int inside(LingoRect rect)
