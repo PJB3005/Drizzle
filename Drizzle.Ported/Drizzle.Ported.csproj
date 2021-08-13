@@ -8,8 +8,4 @@
     <ProjectReference Include="..\Drizzle.Lingo.Runtime\Drizzle.Lingo.Runtime.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Translated" />
-  </ItemGroup>
-
 </Project>
