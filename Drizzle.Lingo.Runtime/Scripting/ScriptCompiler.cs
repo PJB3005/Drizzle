@@ -69,11 +69,10 @@ namespace Drizzle.Lingo.Runtime.Scripting
                 AstNode.Symbol symbol => CompileSymbol(symbol, scope),
                 AstNode.VariableName varName => CompileVariableName(varName, scope),
                 AstNode.GlobalCall globalCall => CompileGlobalCall(globalCall, scope),
-                AstNode.Integer integer => CompileInteger(integer, scope),
                 AstNode.List list => CompileList(list, scope),
                 AstNode.PropertyList propList => CompilePropertyList(propList, scope),
                 AstNode.BinaryOperator binOp => CompileBinaryOperator(binOp, scope),
-                AstNode.Decimal @decimal => CompileDecimal(@decimal, scope),
+                AstNode.Number number => CompileNumber(number, scope),
                 AstNode.MemberProp memProp => CompileMemberProp(memProp, scope),
                 AstNode.UnaryOperator unaryOp => CompileUnaryOperator(unaryOp, scope),
                 AstNode.Constant constant => CompileConstant(constant, scope),
@@ -89,7 +88,7 @@ namespace Drizzle.Lingo.Runtime.Scripting
                 "empty" => Expression.Constant(""),
                 "enter" => Expression.Constant("\x03"),
                 "false" => Expression.Constant(0),
-                "pi" => Expression.Constant(new LingoDecimal(Math.PI)),
+                "pi" => Expression.Constant(new LingoNumber(Math.PI)),
                 "quote" => Expression.Constant("\""),
                 "return" => Expression.Constant("\r"),
                 "space" => Expression.Constant(" "),
@@ -149,14 +148,9 @@ namespace Drizzle.Lingo.Runtime.Scripting
             );
         }
 
-        private static Expression CompileDecimal(AstNode.Decimal node, CompileScope scope)
+        private static Expression CompileNumber(AstNode.Number node, CompileScope scope)
         {
-            return Expression.Constant(node.Value, typeof(LingoDecimal));
-        }
-
-        private static Expression CompileInteger(AstNode.Integer node, CompileScope scope)
-        {
-            return Expression.Constant(node.Value, typeof(int));
+            return Expression.Constant(node.Value, typeof(LingoNumber));
         }
 
         private static Expression CompileSymbol(AstNode.Symbol node, CompileScope scope)

@@ -38,6 +38,7 @@ namespace Drizzle.Lingo.Runtime
             {
                 string castName => _castLibNames[castName].GetMember(nameOrNum),
                 int castNumber => _castLibs[castNumber - 1].GetMember(nameOrNum),
+                LingoNumber castNumber => _castLibs[castNumber.IntValue - 1].GetMember(nameOrNum),
                 null => GetCastMemberAnyCast(nameOrNum),
                 _ => throw new ArgumentException("Invalid cast name")
             };

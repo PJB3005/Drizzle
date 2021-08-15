@@ -9,18 +9,12 @@ namespace Drizzle.Lingo.Runtime
         // Despite what the documentation clearly states
         // These contain float coordinates, not int.
 
-        public LingoDecimal loch;
-        public LingoDecimal locv;
+        public LingoNumber loch;
+        public LingoNumber locv;
 
-        public Vector2 AsVector2 => new((float)loch.Value, (float)locv.Value);
+        public Vector2 AsVector2 => new((float)loch.DecimalValue, (float)locv.DecimalValue);
 
-        public LingoPoint(int loch, int locv)
-        {
-            this.loch = loch;
-            this.locv = locv;
-        }
-
-        public LingoPoint(LingoDecimal loch, LingoDecimal locv)
+        public LingoPoint(LingoNumber loch, LingoNumber locv)
         {
             this.loch = loch;
             this.locv = locv;
@@ -46,22 +40,22 @@ namespace Drizzle.Lingo.Runtime
             return new(a.loch / b.loch, a.locv / b.locv);
         }
 
-        public static LingoPoint operator +(LingoPoint a, LingoDecimal b)
+        public static LingoPoint operator +(LingoPoint a, LingoNumber b)
         {
             return new(a.loch + b, a.locv + b);
         }
 
-        public static LingoPoint operator -(LingoPoint a, LingoDecimal b)
+        public static LingoPoint operator -(LingoPoint a, LingoNumber b)
         {
             return new(a.loch - b, a.locv - b);
         }
 
-        public static LingoPoint operator *(LingoPoint a, LingoDecimal b)
+        public static LingoPoint operator *(LingoPoint a, LingoNumber b)
         {
             return new(a.loch * b, a.locv * b);
         }
 
-        public static LingoPoint operator /(LingoPoint a, LingoDecimal b)
+        public static LingoPoint operator /(LingoPoint a, LingoNumber b)
         {
             return new(a.loch / b, a.locv / b);
         }
@@ -71,7 +65,7 @@ namespace Drizzle.Lingo.Runtime
             return new LingoPoint(-a.loch, -a.locv);
         }
 
-        public int inside(LingoRect rect)
+        public LingoNumber inside(LingoRect rect)
         {
             var b = rect.left <= loch && rect.top <= locv &&
                     rect.right > loch && rect.bottom > locv;

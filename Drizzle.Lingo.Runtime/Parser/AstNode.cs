@@ -55,13 +55,8 @@ namespace Drizzle.Lingo.Runtime.Parser
             }
         }
 
-
-        public sealed record Integer(
-            int Value
-        ) : Base;
-
-        public sealed record Decimal(
-            LingoDecimal Value
+        public sealed record Number(
+            LingoNumber Value
         ) : Base;
 
         public sealed record String(

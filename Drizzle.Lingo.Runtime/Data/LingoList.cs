@@ -7,7 +7,7 @@ using Serilog;
 
 namespace Drizzle.Lingo.Runtime
 {
-    public class LingoList : IEnumerable<object>, ILingoListDuplicate
+    public class LingoList : IEnumerable<object>, ILingoListDuplicate, IEquatable<LingoList>
     {
         public List<object?> List { get; }
 
@@ -17,13 +17,13 @@ namespace Drizzle.Lingo.Runtime
             set => List[index - 1] = value;
         }
 
-        public dynamic? this[LingoDecimal index]
+        public dynamic? this[LingoNumber index]
         {
-            get => this[(int) index];
-            set => this[(int) index] = value;
+            get => this[(int)index];
+            set => this[(int)index] = value;
         }
 
-        public int count => List.Count;
+        public LingoNumber count => List.Count;
 
         public LingoList()
         {
@@ -40,7 +40,7 @@ namespace Drizzle.Lingo.Runtime
             List = new List<object?>(items);
         }
 
-        public int getpos(object? value)
+        public LingoNumber getpos(object? value)
         {
             return List.IndexOf(value) + 1;
         }
@@ -71,10 +71,14 @@ namespace Drizzle.Lingo.Runtime
             List.RemoveAt(number - 1);
         }
 
+        public void deleteat(LingoNumber number) => deleteat(number.IntValue);
+
         public void addat(int number, object? value)
         {
             List.Insert(number - 1, value);
         }
+
+        public void addat(LingoNumber number, object? value) => addat(number.IntValue, value);
 
         public void deleteone(object? value)
         {
@@ -162,6 +166,22 @@ namespace Drizzle.Lingo.Runtime
             return obj is ILingoListDuplicate dup ? dup.duplicate() : obj;
         }
 
+        public bool Equals(LingoList? other)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool Equals(object? other)
+        {
+            return other is LingoList otherList && Equals(otherList);
+        }
+
+        public override int GetHashCode()
+        {
+            // todo: do we care, I don't think lists are used as dict keys anywhere.
+            return default;
+        }
+
         public override string ToString()
         {
             var sb = new StringBuilder();
@@ -183,7 +203,7 @@ namespace Drizzle.Lingo.Runtime
 
         private sealed class LingoComparer : IComparer<object?>
         {
-            public static readonly LingoComparer Instance = new ();
+            public static readonly LingoComparer Instance = new();
 
             public int Compare(object? x, object? y)
             {
@@ -197,7 +217,7 @@ namespace Drizzle.Lingo.Runtime
                     return 1;
 
                 // Try a numeric compare if they're both numbers.
-                if (LingoDecimal.TryAs(x, out var decX) && LingoDecimal.TryAs(y, out var decY))
+                if (x is LingoNumber decX && y is LingoNumber decY)
                     return decX.CompareTo(decY);
 
                 // Compare by string.

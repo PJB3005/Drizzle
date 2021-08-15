@@ -10,7 +10,7 @@ namespace Drizzle.Lingo.Runtime
     {
         public Dictionary<object, dynamic?> Dict { get; }
 
-        public int length => Dict.Count;
+        public LingoNumber length => Dict.Count;
 
         public LingoPropertyList(Dictionary<object, dynamic?> dict)
         {

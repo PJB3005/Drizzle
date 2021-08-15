@@ -8,22 +8,22 @@ namespace Drizzle.Lingo.Runtime
 {
     public sealed partial class LingoImage
     {
-        public LingoImage makesilhouette(int invertedI)
+        public LingoImage makesilhouette(LingoNumber invertedI)
         {
-            if (depth != 32 && depth != 1)
+            if (Depth != 32 && Depth != 1)
                 throw new InvalidOperationException("makeSilhouette only supports 32 bit images right now");
 
-            var inverted = invertedI != 0;
-            var output = new LingoImage(width, height, 1);
+            var inverted = LingoGlobal.ToBool(invertedI);
+            var output = new LingoImage(Width, Height, 1);
 
-            if (depth == 32)
+            if (Depth == 32)
             {
                 if (Avx2.IsSupported)
                     MakeSilhouette32ImplAvx2(this, output, inverted);
                 else
                     MakeSilhouette32ImplScalar(this, output, inverted);
             }
-            else if (depth == 1)
+            else if (Depth == 1)
             {
                 MakeSilhouette1Impl(this, output, inverted);
             }

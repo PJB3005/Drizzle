@@ -56,7 +56,7 @@ namespace Drizzle.Lingo.Runtime
                 _global = global;
             }
 
-            public int keypressed(dynamic keyName)
+            public LingoNumber keypressed(dynamic keyName)
             {
                 switch (keyName)
                 {
@@ -70,7 +70,7 @@ namespace Drizzle.Lingo.Runtime
                 }
             }
 
-            public int keypressed(string keyName)
+            public LingoNumber keypressed(string keyName)
             {
                 if (!KeyNameMap.TryGetValue(keyName, out var keyCode))
                 {
@@ -81,7 +81,7 @@ namespace Drizzle.Lingo.Runtime
                 return keypressed(keyCode);
             }
 
-            public int keypressed(int keyCode)
+            public LingoNumber keypressed(int keyCode)
             {
                 return _global.LingoRuntime.KeysDown.Contains(keyCode) ? 1 : 0;
             }

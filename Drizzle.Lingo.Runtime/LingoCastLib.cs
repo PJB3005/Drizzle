@@ -52,6 +52,13 @@ namespace Drizzle.Lingo.Runtime
                     return numMember;
             }
 
+            if (nameOrNum is LingoNumber lingoNum)
+            {
+                var numMember = GetMember(lingoNum.IntValue);
+                if (numMember != null)
+                    return numMember;
+            }
+
             return null;
         }
 

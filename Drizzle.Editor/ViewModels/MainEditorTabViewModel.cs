@@ -29,7 +29,7 @@ namespace Drizzle.Editor.ViewModels
                     Path.GetDirectoryName(fullPath)!,
                     Path.GetFileNameWithoutExtension(fullPath));
 
-                cloned.CreateScript<loadLevel>().loadlevel(withoutExt, 1);
+                cloned.CreateScript<loadLevel>().loadlevel(withoutExt, new LingoNumber(1));
 
                 return cloned;
             });

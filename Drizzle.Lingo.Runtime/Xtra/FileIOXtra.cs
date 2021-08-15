@@ -7,9 +7,11 @@ namespace Drizzle.Lingo.Runtime.Xtra
     {
         private FileStream? _file;
 
-        public void openfile(string filePath, int mode = 0)
+        public void openfile(string filePath) => openfile(filePath, 0);
+
+        public void openfile(string filePath, LingoNumber mode)
         {
-            var access = mode switch
+            var access = mode.IntValue switch
             {
                 0 => FileAccess.ReadWrite,
                 1 => FileAccess.Read,

@@ -71,8 +71,8 @@ namespace Drizzle.Logic.Rendering
             Movie.gCurrentRenderCamera = camIndex;
             Movie.gRenderCameraTilePos =
                 new LingoPoint(
-                    (camera.loch / (LingoDecimal)20.0 - (LingoDecimal)0.49999).integer,
-                    (camera.locv / (LingoDecimal)20.0 - (LingoDecimal)0.49999).integer);
+                    (camera.loch / (LingoNumber)20.0 - (LingoNumber)0.49999).integer,
+                    (camera.locv / (LingoNumber)20.0 - (LingoNumber)0.49999).integer);
 
             Movie.gRenderCameraPixelPos = camera - (Movie.gRenderCameraTilePos * 20);
             Movie.gRenderCameraPixelPos.loch = Movie.gRenderCameraPixelPos.loch.integer;
@@ -100,7 +100,7 @@ namespace Drizzle.Logic.Rendering
 
             var sw = Stopwatch.StartNew();
             Movie.gSkyColor = new LingoColor(0, 0, 0);
-            Movie.gTinySignsDrawn = 0;
+            Movie.gTinySignsDrawn = new LingoNumber(0);
             Movie.gRenderTrashProps = new LingoList();
             _runtime.GetCastMember(@"finalImage")!.image = new LingoImage(cols * 20, rows * 20, 32);
             _runtime.Global.the_randomSeed = Movie.gLOprops.tileseed;
@@ -112,14 +112,14 @@ namespace Drizzle.Logic.Rendering
                 RenderStartFrame(new RenderStageStatusLayers(i));
                 sw.Start();
 
-                Movie.setuplayer(i);
+                Movie.setuplayer(new LingoNumber(i));
             }
 
             Movie.gLastImported = "";
             Log.Information("{LevelName} rendered layers in {ElapsedMilliseconds} ms",
                 Movie.gLoadedName, sw.ElapsedMilliseconds);
 
-            Movie.c = 1;
+            Movie.c = new LingoNumber(1);
         }
 
         private void RenderPropsPreEffects()
@@ -145,7 +145,7 @@ namespace Drizzle.Logic.Rendering
             {
                 var effectsList = (LingoList)Movie.gEEprops.effects;
                 var effectNames = effectsList.List.Select(e => (string)((dynamic)e!).nm).ToArray();
-                var totalCount = effectsList.count;
+                var totalCount = effectsList.List.Count;
                 var curr = (int)Movie.r;
                 var vert = (int)Movie.vertRepeater;
                 RenderStartFrame(new RenderStageStatusEffects(totalCount, curr, vert, effectNames));
@@ -156,7 +156,7 @@ namespace Drizzle.Logic.Rendering
         private void RenderPropsPostEffects()
         {
             RenderStartFrame(RenderStage.RenderPropsPostEffects);
-            Movie.afterEffects = 1;
+            Movie.afterEffects = new LingoNumber(1);
             _runtime.CreateScript<renderPropsStart>().exitframe();
 
             var script = _runtime.CreateScript<renderProps>();

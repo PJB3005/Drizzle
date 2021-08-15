@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using Drizzle.Lingo.Runtime.Parser;
-using Microsoft.Scripting.Utils;
 
 namespace Drizzle.Lingo.Runtime.Scripting
 {
@@ -22,9 +19,8 @@ namespace Drizzle.Lingo.Runtime.Scripting
             return node switch
             {
                 AstNode.Constant constant => EvalConstant(constant, scope),
-                AstNode.Decimal @decimal => @decimal.Value,
+                AstNode.Number number => number.Value,
                 AstNode.GlobalCall globalCall => EvalGlobalCall(globalCall, scope),
-                AstNode.Integer integer => integer.Value,
                 AstNode.List list => EvalList(list, scope),
                 AstNode.PropertyList propertyList => EvalPropList(propertyList, scope),
                 AstNode.String s => s.Value,
@@ -85,7 +81,7 @@ namespace Drizzle.Lingo.Runtime.Scripting
                 var x = args[0];
                 var y = args[1];
 
-                if (x is LingoDecimal xd && y is LingoDecimal yd)
+                if (x is LingoNumber xd && y is LingoNumber yd)
                     return new LingoPoint(xd, yd);
 
                 if (x is int xi && y is int yi)
@@ -101,7 +97,7 @@ namespace Drizzle.Lingo.Runtime.Scripting
                 var z = args[2];
                 var w = args[3];
 
-                if (x is LingoDecimal xd && y is LingoDecimal yd && z is LingoDecimal zd && w is LingoDecimal wd)
+                if (x is LingoNumber xd && y is LingoNumber yd && z is LingoNumber zd && w is LingoNumber wd)
                     return new LingoRect(xd, yd, zd, wd);
 
                 if (x is int xi && y is int yi && z is int zi && w is int wi)
@@ -127,7 +123,7 @@ namespace Drizzle.Lingo.Runtime.Scripting
                 "empty" => "",
                 "enter" => "\x03",
                 "false" => 0,
-                "pi" => new LingoDecimal(Math.PI),
+                "pi" => new LingoNumber(Math.PI),
                 "quote" => "\"",
                 "return" => "\r",
                 "space" => " ",

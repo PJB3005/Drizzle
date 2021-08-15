@@ -2,25 +2,19 @@ namespace Drizzle.Lingo.Runtime
 {
     public sealed partial class LingoGlobal
     {
-        public LingoDecimal the_randomSeed
+        public LingoNumber the_randomSeed
         {
             get => (int) LingoRuntime.RngSeed;
             set => LingoRuntime.RngSeed = (uint) value.integer;
         }
 
-        public int random(int max)
+        public LingoNumber random(LingoNumber max)
         {
+            // todo: should this return int?
             var sample = LingoRuntime.RngNext();
             var scaled = sample * (1.0 / uint.MaxValue);
 
-            return (int)(scaled * max) + 1;
+            return (int)(scaled * max + 1).DecimalValue;
         }
-
-        public int random(LingoDecimal max)
-        {
-            // todo: should this return int?
-            return random((int) max);
-        }
-
     }
 }

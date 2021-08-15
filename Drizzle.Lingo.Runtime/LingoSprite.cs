@@ -6,24 +6,24 @@ namespace Drizzle.Lingo.Runtime
     {
         public LingoRect rect { get; set; }
 
-        public LingoDecimal locv
+        public LingoNumber locv
         {
             get => loc.locv;
             set => loc = new LingoPoint(loch, value);
         }
 
-        public LingoDecimal loch
+        public LingoNumber loch
         {
             get => loc.loch;
             set => loc = new LingoPoint(value, loch);
         }
 
         public dynamic? visibility { get; set; } // Fairly certain this is invalid.
-        public int visible { get; set; }
+        public LingoNumber visible { get; set; }
 
         public CastMember? member { get; set; }
 
-        public int blend { get; set; } = 100;
+        public LingoNumber blend { get; set; } = 100;
 
         public LingoColor color { get; set; }
         public LingoColor bgcolor { get; set; }
@@ -44,7 +44,7 @@ namespace Drizzle.Lingo.Runtime
 
         public LingoList quad { get; set; } = new();
 
-        public int linesize { get; set; }
+        public LingoNumber linesize { get; set; }
 
         public string text { get; set; } = "";
 

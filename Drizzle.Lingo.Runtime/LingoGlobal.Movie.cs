@@ -7,8 +7,8 @@ namespace Drizzle.Lingo.Runtime
     {
         public Movie _movie { get; private set; } = default!;
 
-        public void go(int frame) => _movie.go(frame);
-        public int the_frame => _movie.frame;
+        public void go(LingoNumber frame) => _movie.go(frame);
+        public LingoNumber the_frame => _movie.frame;
 
         public sealed class Movie
         {
@@ -22,13 +22,13 @@ namespace Drizzle.Lingo.Runtime
                 window = new Window(global);
             }
 
-            public int frame => 0;
+            public LingoNumber frame => 0;
 
             public string path => _global.the_moviePath;
 
             public dynamic stage => throw new NotImplementedException();
 
-            public void go(int newFrame)
+            public void go(LingoNumber newFrame)
             {
                 // score not implemented.
             }
@@ -43,7 +43,7 @@ namespace Drizzle.Lingo.Runtime
 
             // Literally unused except for one set, just return it.
             public dynamic appearanceoptions => new ExpandoObject();
-            public int resizable { get; set; }
+            public LingoNumber resizable { get; set; }
             public LingoRect rect { get; set; }
             public LingoSymbol sizestate => new ("normal");
         }

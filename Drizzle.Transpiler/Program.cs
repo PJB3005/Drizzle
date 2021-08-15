@@ -406,7 +406,7 @@ namespace Drizzle.Transpiler
                 default:
                     if (node is AstNode.VariableName
                         or AstNode.MemberProp or AstNode.MemberIndex or AstNode.BinaryOperator or AstNode.UnaryOperator
-                        or AstNode.String or AstNode.Integer or AstNode.Decimal or AstNode.Symbol or AstNode.List or
+                        or AstNode.String or AstNode.Number or AstNode.Symbol or AstNode.List or
                         AstNode.Property)
                     {
                         Console.WriteLine($"Warning: {ctx.Name} has loose expression {node}");
@@ -491,7 +491,7 @@ namespace Drizzle.Transpiler
 
             ctx.Writer.WriteLine($"for (int {loopTmp} = (int) ({start}); {loopTmp} <= {end}; {loopTmp}++) {{");
 
-            MakeLoopTmp(ctx, name, loopTmp);
+            MakeLoopTmp(ctx, name, $"(LingoNumber){loopTmp}");
             WriteStatementBlock(node.Block, ctx);
 
             ctx.Writer.WriteLine("}");
@@ -525,12 +525,16 @@ namespace Drizzle.Transpiler
         {
             // Check if all expressions are literal.
             // If so we can translate it as a switch statement.
-            var literals = node.Cases.SelectMany(c => c.exprs)
-                .All(e => e is AstNode.Constant or AstNode.Integer or AstNode.String);
+            var literals = node.Cases.SelectMany(c => c.exprs).All(e => e is AstNode.Constant or AstNode.String);
+
+            var allInts = node.Cases.All(c => c.exprs.All(e => e is AstNode.Number { Value: { IsDecimal: false } }));
+            literals |= allInts;
 
             if (literals)
             {
                 ctx.Writer.Write("switch (");
+                if (allInts)
+                    ctx.Writer.Write("(int)");
                 ctx.Writer.Write(WriteExpression(node.Expression, ctx));
                 // If this is a string switch, .ToLower() it and switch on lowercase values.
                 // to avoid any case problems.
@@ -545,6 +549,11 @@ namespace Drizzle.Transpiler
                         ctx.Writer.Write("case ");
                         if (expr is AstNode.String str)
                             ctx.Writer.Write(DoWriteString(str.Value.ToLowerInvariant()));
+                        else if (expr is AstNode.Number num)
+                        {
+                            Debug.Assert(allInts);
+                            ctx.Writer.Write(num.Value.ToString());
+                        }
                         else
                             ctx.Writer.Write(WriteExpression(expr, ctx));
                         ctx.Writer.WriteLine(':');
@@ -616,9 +625,8 @@ namespace Drizzle.Transpiler
             {
                 AstNode.BinaryOperator binaryOperator => WriteBinaryOperator(binaryOperator, ctx, param),
                 AstNode.Constant constant => WriteConstant(constant, ctx),
-                AstNode.Decimal @decimal => WriteDecimal(@decimal, ctx),
+                AstNode.Number number => WriteNumber(number, ctx),
                 AstNode.GlobalCall globalCall => WriteGlobalCall(globalCall, ctx),
-                AstNode.Integer integer => WriteInteger(integer, ctx),
                 AstNode.List list => WriteList(list, ctx),
                 AstNode.MemberCall memberCall => WriteMemberCall(memberCall, ctx),
                 AstNode.MemberIndex memberIndex => WriteMemberIndex(memberIndex, ctx),
@@ -807,10 +815,6 @@ namespace Drizzle.Transpiler
 
         private static string WriteMemberProp(AstNode.MemberProp node, HandlerContext ctx)
         {
-            if (node.Property == "float")
-                return WriteGlobalCall("floatmember_helper", ctx, node.Expression);
-            if (node.Property == "integer")
-                return WriteGlobalCall("integermember_helper", ctx, node.Expression);
             if (node.Property == "char")
                 return WriteGlobalCall("charmember_helper", ctx, node.Expression);
             if (node.Property == "line")
@@ -846,12 +850,6 @@ namespace Drizzle.Transpiler
             return $"new LingoList {{ {string.Join(',', args)} }}";
         }
 
-        private static string WriteInteger(AstNode.Integer node, HandlerContext ctx)
-        {
-            // That was easy.
-            return node.Value.ToString();
-        }
-
         private static string WriteGlobalCall(AstNode.GlobalCall node, HandlerContext ctx)
         {
             var args = node.Arguments.Select(a => WriteExpression(a, ctx));
@@ -876,9 +874,9 @@ namespace Drizzle.Transpiler
             return ctx.Parent.IsMovieScript ? "" : "_movieScript.";
         }
 
-        private static string WriteDecimal(AstNode.Decimal node, HandlerContext ctx)
+        private static string WriteNumber(AstNode.Number node, HandlerContext ctx)
         {
-            return $"new LingoDecimal({node.Value.Value:R})";
+            return $"new LingoNumber({node.Value})";
         }
 
         private static string WriteConstant(AstNode.Constant node, HandlerContext ctx)
@@ -1026,7 +1024,8 @@ namespace Drizzle.Transpiler
         private static readonly HashSet<string> CSharpKeyWords = new HashSet<string>
         {
             "new",
-            "string"
+            "string",
+            "float"
         };
 
         private static string WriteSanitizeIdentifier(string identifier)

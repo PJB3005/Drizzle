@@ -66,7 +66,7 @@ namespace Drizzle.Lingo.Runtime
 
                 if (value is LingoPropertyList propList)
                 {
-                    var newList = new LingoPropertyList(propList.length);
+                    var newList = new LingoPropertyList(propList.Dict.Count);
                     foreach (var (key, dictValue) in propList.Dict)
                     {
                         newList.Dict.Add(DeepClone(key), DeepClone(dictValue));

@@ -14,11 +14,13 @@ namespace Drizzle.Lingo.Runtime
         public int Depth { get; }
         public byte[] ImageBuffer { get; }
 
-        public LingoRect rect => new LingoRect(0, 0, width, height);
+        public LingoRect rect => new(0, 0, width, height);
 
-        public int width { get; }
-        public int height { get; }
-        public int depth => Depth;
+        public int Width { get; }
+        public int Height { get; }
+        public LingoNumber width => Width;
+        public LingoNumber height => Height;
+        public LingoNumber depth => Depth;
 
         // So the editor does a *ton* of tiny copypixels() operations from the "pxl" cast member,
         // which basically amounts to line/rect drawings in a silly way.
@@ -27,8 +29,8 @@ namespace Drizzle.Lingo.Runtime
 
         public LingoImage(int width, int height, int depth)
         {
-            this.width = width;
-            this.height = height;
+            Width = width;
+            Height = height;
             Depth = depth;
 
             ImageBuffer = NewImgBufferForDepth(width, height, depth);
@@ -36,8 +38,8 @@ namespace Drizzle.Lingo.Runtime
 
         public LingoImage(Image<Bgra32> image)
         {
-            width = image.Width;
-            height = image.Height;
+            Width = image.Width;
+            Height = image.Height;
             Depth = 32;
 
             ImageBuffer = NewImgBufferForDepth(image.Width, image.Height, 32);
@@ -47,8 +49,8 @@ namespace Drizzle.Lingo.Runtime
 
         private LingoImage(byte[] buffer, int width, int height, int depth)
         {
-            this.width = width;
-            this.height = height;
+            Width = width;
+            Height = height;
             Depth = depth;
 
             ImageBuffer = buffer;
@@ -72,7 +74,7 @@ namespace Drizzle.Lingo.Runtime
         }
 
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-        public LingoColor getpixel(LingoDecimal x, LingoDecimal y)
+        public LingoColor getpixel(LingoNumber x, LingoNumber y)
         {
             return getpixel((int)x, (int)y);
         }
@@ -80,10 +82,10 @@ namespace Drizzle.Lingo.Runtime
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public LingoColor getpixel(int x, int y)
         {
-            if (x < 0 || x >= width || y < 0 || y >= height)
+            if (x < 0 || x >= Width || y < 0 || y >= Height)
                 return LingoColor.White;
 
-            var idx = y * width + x;
+            var idx = y * Width + x;
             switch (Depth)
             {
                 case 32:
@@ -121,7 +123,7 @@ namespace Drizzle.Lingo.Runtime
         }
 
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-        public void setpixel(LingoDecimal x, LingoDecimal y, LingoColor color)
+        public void setpixel(LingoNumber x, LingoNumber y, LingoColor color)
         {
             setpixel((int)x, (int)y, color);
         }
@@ -129,10 +131,10 @@ namespace Drizzle.Lingo.Runtime
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public void setpixel(int x, int y, LingoColor color)
         {
-            if (x < 0 || x >= width || y < 0 || y >= height)
+            if (x < 0 || x >= Width || y < 0 || y >= Height)
                 return;
 
-            var idx = y * width + x;
+            var idx = y * Width + x;
             switch (Depth)
             {
                 case 32:
@@ -168,7 +170,7 @@ namespace Drizzle.Lingo.Runtime
         {
             var newBuf = GC.AllocateUninitializedArray<byte>(ImageBuffer.Length);
             ImageBuffer.AsSpan().CopyTo(newBuf);
-            return new LingoImage(newBuf, width, height, Depth) { IsPxl = IsPxl };
+            return new LingoImage(newBuf, Width, Height, Depth) { IsPxl = IsPxl };
         }
 
         public dynamic createmask()
@@ -195,7 +197,7 @@ namespace Drizzle.Lingo.Runtime
             var img = this;
             if (img.Depth is 8 or 1)
             {
-                var copy = new LingoImage(width, height, 16);
+                var copy = new LingoImage(Width, Height, 16);
                 copy.copypixels(this, rect, rect);
                 img = copy;
             }
@@ -204,14 +206,14 @@ namespace Drizzle.Lingo.Runtime
             Span<byte> imgSharpSpan;
             if (img.Depth == 16)
             {
-                var bgra5551 = new Image<Bgra5551>(img.width, img.height);
+                var bgra5551 = new Image<Bgra5551>(img.Width, img.Height);
                 imgSharp = bgra5551;
                 imgSharpSpan = MemoryMarshal.Cast<Bgra5551, byte>(bgra5551.GetSinglePixelSpan());
             }
             else
             {
                 Debug.Assert(img.Depth == 32);
-                var bgra32 = new Image<Bgra32>(img.width, img.height);
+                var bgra32 = new Image<Bgra32>(img.Width, img.Height);
                 imgSharp = bgra32;
                 imgSharpSpan = MemoryMarshal.Cast<Bgra32, byte>(bgra32.GetSinglePixelSpan());
             }

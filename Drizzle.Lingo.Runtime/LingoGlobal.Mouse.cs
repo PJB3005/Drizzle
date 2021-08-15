@@ -14,8 +14,8 @@
             }
 
             public LingoPoint mouseloc => default;
-            public int mousedown => 0;
-            public int rightmousedown => 0;
+            public LingoNumber mousedown => 0;
+            public LingoNumber rightmousedown => 0;
         }
 
     }

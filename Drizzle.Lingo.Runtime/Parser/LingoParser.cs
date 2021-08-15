@@ -144,13 +144,7 @@ namespace Drizzle.Lingo.Runtime.Parser
                     .Then(Digit.SkipAtLeastOnce())
                     // Decimal point and after.
                     .Then(Try(Char('.').Then(Digit.SkipAtLeastOnce())).Optional())
-                    .Slice((span, t) =>
-                    {
-                        if (int.TryParse(span, out var i))
-                            return (AstNode.Base)new AstNode.Integer(i);
-
-                        return new AstNode.Decimal(new LingoDecimal(double.Parse(span)));
-                    }));
+                    .Slice((span, t) => (AstNode.Base) new AstNode.Number(LingoNumber.Parse(span))));
 
         private static readonly Parser<char, AstNode.Base> Symbol =
             Char('#')

@@ -85,7 +85,7 @@ namespace Drizzle.Editor.ViewModels
                             bitmap,
                             cast.name,
                             member.name, member.Number,
-                            img.width, img.height, img.depth);
+                            img.Width, img.Height, img.Depth);
 
                         members.Add(entry);
                     }
@@ -122,7 +122,7 @@ namespace Drizzle.Editor.ViewModels
             }
             else if (img.Depth != 32)
             {
-                var copyImg = new LingoImage(img.width, img.height, 32);
+                var copyImg = new LingoImage(img.Width, img.Height, 32);
                 copyImg.copypixels(img, img.rect, img.rect);
                 finalImg = copyImg;
             }
@@ -135,9 +135,9 @@ namespace Drizzle.Editor.ViewModels
                     PixelFormat.Bgra8888,
                     AlphaFormat.Unpremul,
                     (nint)data,
-                    new PixelSize(bgra.width, bgra.height),
+                    new PixelSize(bgra.Width, bgra.Height),
                     new Vector(96, 96),
-                    sizeof(Bgra32) * bgra.width);
+                    sizeof(Bgra32) * bgra.Width);
             }
         }
 

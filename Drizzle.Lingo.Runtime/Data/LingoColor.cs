@@ -28,22 +28,22 @@ namespace Drizzle.Lingo.Runtime
         public byte GreenByte;
         public byte BlueByte;
 
-        public int red
+        public LingoNumber red
         {
             get => RedByte;
-            set => RedByte = (byte)value;
+            set => RedByte = (byte)value.IntValue;
         }
 
-        public int green
+        public LingoNumber green
         {
             get => GreenByte;
-            set => GreenByte = (byte)value;
+            set => GreenByte = (byte)value.IntValue;
         }
 
-        public int blue
+        public LingoNumber blue
         {
             get => BlueByte;
-            set => BlueByte = (byte)value;
+            set => BlueByte = (byte)value.IntValue;
         }
 
         // Pack as BGRA32
@@ -78,6 +78,11 @@ namespace Drizzle.Lingo.Runtime
             }
 
             return BitUnpack(palCol);
+        }
+
+        public static implicit operator LingoColor(LingoNumber paletteIndex)
+        {
+            return (int)paletteIndex;
         }
 
         public bool Equals(LingoColor other)

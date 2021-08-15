@@ -34,27 +34,28 @@ namespace Drizzle.Lingo.Runtime
             };
         }
 
-        public static int thenumberoflines_helper(string value)
+        public static LingoNumber thenumberoflines_helper(string value)
         {
             var cacheData = GetCachedStringLineData(value);
             return cacheData.NewlineIndices.Length + 1;
         }
 
-        public static string lineof_helper(int idx, string collection)
+        public static string lineof_helper(LingoNumber idx, string collection)
         {
             return linemember_helper(collection)[idx];
         }
 
-        public static string charof_helper(int idx, string str)
+        public static string charof_helper(LingoNumber idx, string str)
         {
+            var iVal = idx.IntValue;
             // This is such a cursed program god damn.
-            if (idx < 1)
+            if (iVal < 1)
                 return str;
 
-            if (idx > str.Length)
+            if (iVal > str.Length)
                 return "";
 
-            return str[idx - 1].ToString();
+            return str[iVal - 1].ToString();
         }
 
         public static dynamic charmember_helper(string d)
@@ -87,11 +88,12 @@ namespace Drizzle.Lingo.Runtime
             public string String { get; }
 
             public string this[int idx] => String[idx - 1].ToString();
+            public string this[LingoNumber idx] => this[(int) idx];
 
             // I have no idea why this is necessary.
             public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object? result)
             {
-                result = this[(int)indexes[0]];
+                result = this[(int)(LingoNumber)indexes[0]];
                 return true;
             }
 
@@ -116,7 +118,7 @@ namespace Drizzle.Lingo.Runtime
 
             public string String { get; }
 
-            public string this[int value]
+            public string this[LingoNumber value]
             {
                 get
                 {
@@ -125,7 +127,7 @@ namespace Drizzle.Lingo.Runtime
 
                     var cacheData = GetCachedStringLineData(String);
                     var indices = cacheData.NewlineIndices;
-                    var idx = value - 1;
+                    var idx = (int) value - 1;
 
                     if (idx > indices.Length)
                         return "";
@@ -157,7 +159,7 @@ namespace Drizzle.Lingo.Runtime
 
             public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object? result)
             {
-                result = this[(int)indexes[0]];
+                result = this[(int)(LingoNumber)indexes[0]];
                 return true;
             }
 
@@ -173,6 +175,8 @@ namespace Drizzle.Lingo.Runtime
         {
             return ((char)num).ToString();
         }
+
+        public string numtochar(LingoNumber num) => numtochar((int)num);
 
         private sealed class StringLineData
         {
