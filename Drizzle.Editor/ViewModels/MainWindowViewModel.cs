@@ -52,11 +52,10 @@ namespace Drizzle.Editor.ViewModels
         {
             Log.Debug("Initializing zygote runtime...");
             _zygoteRuntime.Init();
-            var startUp = _zygoteRuntime.CreateScript<startUp>();
 
             Log.Debug("Running zygote startup...");
             var sw = Stopwatch.StartNew();
-            startUp.exitframe();
+            EditorRuntimeHelpers.RunStartup(_zygoteRuntime);
 
             Log.Debug("Done initializing zygote runtime in {ZygoteStartupTime}!", sw.Elapsed);
 

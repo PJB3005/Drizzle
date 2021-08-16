@@ -1,154 +1,83 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Drizzle.ConsoleApp;
 using Drizzle.Lingo.Runtime;
-using Drizzle.Lingo.Runtime.Parser;
-using Pidgin;
+using Drizzle.Logic;
+using Drizzle.Logic.Rendering;
+using Drizzle.Ported;
+using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
 
-namespace Drizzle.ConsoleApp
+if (!CommandLineArgs.TryParse(args, out var parsedArgs))
+    return 1;
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Error()
+    .WriteTo.Console(theme: AnsiConsoleTheme.Literate)
+    .CreateLogger();
+
+return parsedArgs.Verb switch
 {
-    class Program
+    CommandLineArgs.VerbRender render => DoCmdRender(render),
+    _ => throw new ArgumentOutOfRangeException()
+};
+
+static int DoCmdRender(CommandLineArgs.VerbRender options)
+{
+    Console.WriteLine("Initializing Zygote runtime");
+
+    var zygote = MakeZygoteRuntime();
+
+    Console.WriteLine($"Starting render of {options.Levels.Count} levels");
+    var sw = Stopwatch.StartNew();
+
+    var errors = 0;
+    var success = 0;
+
+    var parallelOptions = new ParallelOptions
     {
-        /*
-        private static LingoDecimal Diag(LingoPoint a, LingoPoint b)
+        MaxDegreeOfParallelism = options.MaxParallelism == 0 ? -1 : options.MaxParallelism
+    };
+
+    Parallel.ForEach(options.Levels, parallelOptions, s =>
+    {
+        var renderRuntime = zygote.Clone();
+
+        var levelName = Path.GetFileNameWithoutExtension(s);
+
+        try
         {
-            var w = Math.Abs(a.loch - b.loch);
-            var h = Math.Abs(a.locv - b.locv);
+            EditorRuntimeHelpers.RunLoadLevel(renderRuntime, s);
 
-            return (int) Math.Sqrt(w * w + h * h);
+            var renderer = new LevelRenderer(renderRuntime, null);
+
+            renderer.DoRender();
         }
-        */
-
-        static void Main(string[] args)
+        catch (Exception e)
         {
-            /*
-            var runtime = new LingoRuntime();
-
-            var scriptContents = File.ReadAllText(Path.Combine("..", "..", "..", "..", "LingoSource", "fiffigt.ls"));
-            var script = LingoParser.Script.ParseOrThrow(scriptContents);
-            var handlerDiag = script.Nodes.Single(n => n is AstNode.Handler {Name: "diag"});
-            var compiled = ScriptCompiler.CompileHandler((AstNode.Handler) handlerDiag, runtime);
-
-            const int count = 1024;
-
-            var inputA = new LingoPoint[count];
-            var inputB = new LingoPoint[count];
-            var output = new int[count];
-
-            var r = new Random();
-
-            for (var i = 0; i < 256; i++)
-            {
-                inputA[i] = new LingoPoint(r.Next(-50, 50), r.Next(-50, 50));
-                inputB[i] = new LingoPoint(r.Next(-50, 50), r.Next(-50, 50));
-            }
-
-            var diag = (Func<object?, object?, object?>) compiled;
-
-            // Shitty warmup.
-            diag(default(LingoPoint), default(LingoPoint));
-            diag(default(LingoPoint), default(LingoPoint));
-            diag(default(LingoPoint), default(LingoPoint));
-            diag(default(LingoPoint), default(LingoPoint));
-            diag(default(LingoPoint), default(LingoPoint));
-
-            Diag(default, default);
-            Diag(default, default);
-            Diag(default, default);
-            Diag(default, default);
-            Diag(default, default);
-
-            var sw = new Stopwatch();
-            for (var iter = 0; iter < 20; iter++)
-            {
-                sw.Restart();
-                for (var i = 0; i < count; i++)
-                {
-                    output[i] = Diag(inputA[i], inputB[i]);
-                }
-                sw.Stop();
-                var ns = sw.Elapsed.TotalMilliseconds / count * 1_000_000;
-                Console.WriteLine($"[{iter}] C# -> {sw.Elapsed.TotalMilliseconds * 1000:F2} ({ns:F} ns / iter)");
-
-                sw.Restart();
-                for (var i = 0; i < count; i++)
-                {
-                    output[i] = (int) diag(inputA[i], inputB[i])!;
-                }
-                sw.Stop();
-                ns = sw.Elapsed.TotalMilliseconds / count * 1_000_000;
-                Console.WriteLine($"[{iter}] Lingo -> {sw.Elapsed.TotalMilliseconds * 1000:F2} us ({ns:F} ns / iter)");
-            }
-            */
-
-
-            //Console.WriteLine(diag(new LingoPoint(0, 0), new LingoPoint(20, 20)));
-
-            /*
-            var param = Expression.Parameter(typeof(int), "a");
-            var set = Expression.Assign(param, Expression.Constant(5));
-            var add = Expression.AddAssign(param, Expression.Constant(10));
-            var print = Expression.Call(null,
-                typeof(Console).GetMethod("WriteLine", new Type[] {typeof(int)}), param);
-            var block = Expression.Block(new List<ParameterExpression>() {param}, set, add, print);
-
-            var del = Expression.Lambda<Action>(block).Compile();
-            del();
-            del();
-            del();
-            del();
-            del();*/
-
-            if (true)
-            {
-                var text = File.ReadAllText(
-                    @"C:\Users\Pieter-Jan Briers\Projects\DrizzleEdit\LingoSource\applyBlur.ls");
-                var sw = Stopwatch.StartNew();
-                var parsed = LingoParser.Script.ParseOrThrow(text);
-                Console.WriteLine(DebugPrint.PrintAstNode(parsed));
-                Console.WriteLine($"Parsed in {sw.Elapsed}");
-            }
-            else
-            {
-                var text = @"
-
-on renderLevel()
-  tm = _system.milliseconds
-
-  gSkyColor = color(0,0,0)
-  gTinySignsDrawn = 0
-
-  gRenderTrashProps = []
-
-  RENDER = 0
-
-  -- member(""shortCutSymbolsImg"").image = image(1040, 800, 1)
-                    -- saveLvl()
-                cols = 100--gLOprops.size.loch
-                    rows = 60--gLOprops.size.locv
-
-                    -- member(""bkgBkgImage"").image = image(cols*20, rows*20, 16)
-                member(""finalImage"").image = image(cols*20, rows*20, 32)
-
-                the randomSeed = gLOprops.tileSeed
-
-                setUpLayer(3)
-                setUpLayer(2)
-                setUpLayer(1)
-
-                gLastImported = ""
-
-                global gLoadedName
-
-                put gLoadedName && ""rendered in"" && (_system.milliseconds-tm)
-                end
-
-
-";
-                var parsed = LingoParser.Script.ParseOrThrow(text);
-                Console.WriteLine("FINAL: {0}", DebugPrint.PrintAstNode(parsed));
-            }
+            Console.WriteLine($"{levelName}: Exception while rendering!");
+            Console.WriteLine(e);
+            Interlocked.Increment(ref errors);
+            return;
         }
-    }
+
+        Console.WriteLine($"{levelName}: Render succeeded");
+        Interlocked.Increment(ref success);
+    });
+
+    Console.WriteLine($"Finished rendering in {sw.Elapsed}. {errors} errored, {success} succeeded");
+    return errors != 0 ? 1 : 0;
+}
+
+static LingoRuntime MakeZygoteRuntime()
+{
+    var runtime = new LingoRuntime(typeof(MovieScript).Assembly);
+    runtime.Init();
+
+    EditorRuntimeHelpers.RunStartup(runtime);
+
+    return runtime;
 }

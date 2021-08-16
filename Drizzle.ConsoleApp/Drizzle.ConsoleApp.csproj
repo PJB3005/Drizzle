@@ -4,16 +4,18 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
     <Nullable>enable</Nullable>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Drizzle.Lingo.Runtime\Drizzle.Lingo.Runtime.csproj" />
+    <PackageReference Include="Serilog" Version="2.10.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
+    <PackageReference Include="CommandLineParser" Version="2.8.0" />
   </ItemGroup>
-
-<!--
+  
   <ItemGroup>
-    <Reference Include="Pidgin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cf8803ee5be21175">
-      <HintPath>..\..\Pidgin\Pidgin\bin\Debug\net5.0\Pidgin.dll</HintPath>
-    </Reference>
-  </ItemGroup>-->
+    <ProjectReference Include="..\Drizzle.Lingo.Runtime\Drizzle.Lingo.Runtime.csproj" />
+    <ProjectReference Include="..\Drizzle.Logic\Drizzle.Logic.csproj" />
+    <ProjectReference Include="..\Drizzle.Ported\Drizzle.Ported.csproj" />
+  </ItemGroup>
 </Project>
