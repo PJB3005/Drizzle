@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Reflection;
 
 namespace Drizzle.Lingo.Runtime
@@ -14,6 +15,26 @@ namespace Drizzle.Lingo.Runtime
             CastPath = Path.Combine(MovieBasePath, "Cast");
         }
 
-        public string GetFilePath(string relPath) => Path.Combine(MovieBasePath, relPath);
+        public string GetFilePath(string relPath)
+        {
+            var fullPath = Path.Combine(MovieBasePath, relPath);
+            if (File.Exists(fullPath))
+                return fullPath;
+
+            // Try case sensitive compare.
+            var dir = Path.GetDirectoryName(fullPath);
+            if (dir == null || !Directory.Exists(dir))
+                return fullPath;
+
+            var origFileName = Path.GetFileName(fullPath.AsSpan());
+            foreach (var dirFile in Directory.EnumerateFiles(dir))
+            {
+                var dirFileName = Path.GetFileName(dirFile.AsSpan());
+                if (origFileName.Equals(dirFileName, StringComparison.InvariantCultureIgnoreCase))
+                    return dirFile;
+            }
+
+            return fullPath;
+        }
     }
 }
