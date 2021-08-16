@@ -3,7 +3,7 @@ using Drizzle.Lingo.Runtime;
 
 namespace Drizzle.Ported {
     public sealed partial class cameraEditor {
-        public void exitframe() {
+        public void notyetdone_exitframe() {
             LingoDecimal fac = _movieScript.global_fac;
             LingoPoint size = _movieScript.global_gloprops.size;
 
@@ -76,7 +76,16 @@ namespace Drizzle.Ported {
             }
 
             if(mouseovercamera > 0) {
-                // point to continue from later
+                pos = (new LingoPoint(512, 384) + size * 0.5 * fac) + _movieScript.global_gcameraprops.cameras[mouseovercamera];
+                int smallestdist = 10000;
+                closestcorner = 0;
+
+                for(int tmp_q = 1; tmp_q <= 4; tmp_q++) {
+                    q = tmp_q;
+                    // CONTINUE FROM HERE
+                    // note: I'm stopping work on this for now because there are other files
+                    //  which need porting much more.
+                }
             }
 
             // make sure global_fac is global
