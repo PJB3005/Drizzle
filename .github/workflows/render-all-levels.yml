@@ -1,4 +1,4 @@
-name: build & test
+name: render all levels
 
 on:
   push:
