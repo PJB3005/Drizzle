@@ -145,7 +145,7 @@ on exitFrame me
   gTiles[2].tls.add( [#nm:"SH grate box", #sz:point(1,1), #specs:[0], #placeMethod:"rect", #color:color(160, 0, 255)]    )
   
   sav = member("initImport")
-  member("initImport").importFileInto("Graphics" & the dirSeparator & "init.txt")
+  member("initImport").importFileInto("Graphics" & the dirSeparator & "Init.txt")
   sav.name = "initImport"
   
   member("previewTiles").image = image(60000, 500, 1)
@@ -208,7 +208,7 @@ on exitFrame me
   end repeat
   
   sav = member("initImport")
-  member("initImport").importFileInto("Props" & the dirSeparator & "init.txt")
+  member("initImport").importFileInto("Props" & the dirSeparator & "Init.txt")
   sav.name = "initImport"
   
   repeat with q = 1 to 1000 then
