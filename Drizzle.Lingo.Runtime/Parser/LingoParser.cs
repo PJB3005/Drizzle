@@ -30,7 +30,7 @@ namespace Drizzle.Lingo.Runtime.Parser
 
         public static readonly Parser<char, Unit> Nop = Return(Unit.Value);
 
-#if true
+#if false
         private static Parser<char, T> TraceBegin<T>(this Parser<char, T> parser, string msg) =>
             CurrentPos.Trace(p => $"[{PrintPos(p)}] {msg}").Then(parser);
 
