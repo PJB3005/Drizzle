@@ -1,5 +1,9 @@
 name: render all levels
 
+concurrency:
+  group: render_all
+  cancel-in-progress: true
+
 on:
   push:
     branches: [ master ]

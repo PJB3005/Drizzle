@@ -14,6 +14,8 @@ using Serilog.Sinks.SystemConsole.Themes;
 if (!CommandLineArgs.TryParse(args, out var parsedArgs))
     return 1;
 
+var isCi = Environment.GetEnvironmentVariable("CI") == "true";
+
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Error()
     .WriteTo.Console(theme: AnsiConsoleTheme.Literate)
@@ -25,7 +27,7 @@ return parsedArgs.Verb switch
     _ => throw new ArgumentOutOfRangeException()
 };
 
-static int DoCmdRender(CommandLineArgs.VerbRender options)
+int DoCmdRender(CommandLineArgs.VerbRender options)
 {
     Console.WriteLine("Initializing Zygote runtime");
 
@@ -58,6 +60,10 @@ static int DoCmdRender(CommandLineArgs.VerbRender options)
         }
         catch (Exception e)
         {
+            // Fancy error output for Actions CI.
+            if (isCi)
+                Console.WriteLine($"::error::{levelName}: Rendering failed");
+
             Console.WriteLine($"{levelName}: Exception while rendering!");
             Console.WriteLine(e);
             Interlocked.Increment(ref errors);
