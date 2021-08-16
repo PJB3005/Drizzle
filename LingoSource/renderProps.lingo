@@ -160,9 +160,9 @@ on renderProp(prop, dp, qd, mdPoint, data)
       end if
     end repeat
     if(tileAsProp)then
-      member("previewImprt").importFileInto("Graphics\" &prop.nm&".png")
+      member("previewImprt").importFileInto("Graphics" & the dirSeparator &prop.nm&".png")
     else
-      member("previewImprt").importFileInto("Props\" &prop.nm&".png")
+      member("previewImprt").importFileInto("Props" & the dirSeparator &prop.nm&".png")
     end if
     sav2.name = "previewImprt"
     gLastImported = prop.nm

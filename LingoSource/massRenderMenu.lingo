@@ -2,9 +2,9 @@ global projects, ldPrps, gTEprops, gTiles, gLEProps, gEEprops, gLightEProps
 global gLEVEL, gLOprops, gLoadedName, gLOADPATH, massRenderSelectL
 
 on exitFrame me
-  pth = the moviePath & "LevelEditorProjects\"
+  pth = the moviePath & "LevelEditorProjects" & the dirSeparator
   repeat with f in gLOADPATH then
-    pth = pth & f & "\"
+    pth = pth & f & the dirSeparator
   end repeat
   
   

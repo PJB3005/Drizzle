@@ -145,7 +145,7 @@ on exitFrame me
   gTiles[2].tls.add( [#nm:"SH grate box", #sz:point(1,1), #specs:[0], #placeMethod:"rect", #color:color(160, 0, 255)]    )
   
   sav = member("initImport")
-  member("initImport").importFileInto("Graphics\init.txt")
+  member("initImport").importFileInto("Graphics" & the dirSeparator & "init.txt")
   sav.name = "initImport"
   
   member("previewTiles").image = image(60000, 500, 1)
@@ -166,7 +166,7 @@ on exitFrame me
         debugline = sav.text.line[q]
         
         sav2 = member("previewImprt")
-        member("previewImprt").importFileInto("Graphics\" &ad.nm&".png")
+        member("previewImprt").importFileInto("Graphics" & the dirSeparator &ad.nm&".png")
         sav2.name = "previewImprt"
         
         calculatedHeight = sav2.image.rect.height
@@ -199,7 +199,7 @@ on exitFrame me
   global gPEcolors
   gPEcolors = []
   sav = member("initImport")
-  member("initImport").importFileInto("Props\propColors.txt")
+  member("initImport").importFileInto("Props" & the dirSeparator & "propColors.txt")
   sav.name = "initImport"
   repeat with q = 1 to the number of lines in sav.text then
     if sav.text.line[q] <> "" then
@@ -208,7 +208,7 @@ on exitFrame me
   end repeat
   
   sav = member("initImport")
-  member("initImport").importFileInto("Props\init.txt")
+  member("initImport").importFileInto("Props" & the dirSeparator & "init.txt")
   sav.name = "initImport"
   
   repeat with q = 1 to 1000 then

@@ -25,6 +25,7 @@ namespace Drizzle.Lingo.Runtime
         public const object? VOID = null;
 
         public string the_moviePath => LingoRuntime.MovieBasePath;
+        public string the_dirSeparator => Path.DirectorySeparatorChar.ToString();
 
         public static LingoNumber abs(LingoNumber value) => LingoNumber.Abs(value);
 

@@ -28,9 +28,9 @@ on exitFrame me
     put RETURN after str
     
     objFileio = new xtra("fileio")
-    pth = the moviePath & "LevelEditorProjects\"
+    pth = the moviePath & "LevelEditorProjects" & the dirSeparator
     repeat with f in gLOADPATH then
-      pth = pth & f & "\"
+      pth = pth & f & the dirSeparator
     end repeat
     createFile (objFileio, pth&levelName&".txt")
     objFileio.openFile(pth&levelName&".txt", 0)

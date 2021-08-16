@@ -1093,7 +1093,7 @@ on updateVariedPreview(prop, var)
   
   
   imprtMem = member("previewImprt")
-  member("previewImprt").importFileInto("Props\" &prop.nm&".png")
+  member("previewImprt").importFileInto("Props" & the dirSeparator &prop.nm&".png")
   imprtMem.name = "previewImprt"
   
   
@@ -1137,9 +1137,9 @@ on propPreviewMember(prop)
   
   sav2 = member("previewImprt")
   if(tileAsProp)then
-    member("previewImprt").importFileInto("Graphics\" &prop.nm&".png")
+    member("previewImprt").importFileInto("Graphics" & the dirSeparator &prop.nm&".png")
   else
-    member("previewImprt").importFileInto("Props\" &prop.nm&".png")
+    member("previewImprt").importFileInto("Props" &the dirSeparator &prop.nm&".png")
   end if
   sav2.name = "previewImprt"
   
