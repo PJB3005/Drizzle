@@ -27,4 +27,4 @@ jobs:
       shell: pwsh
       run: |
         $env:COMPlus_gcServer=1
-        dotnet run --no-build -c Release --project Drizzle.ConsoleApp/Drizzle.ConsoleApp.csproj -- render (get-childitem -Recurse Data/LevelEditorProjects/*.txt)
+        dotnet run --no-build -c Release --project Drizzle.ConsoleApp/Drizzle.ConsoleApp.csproj -- render --parallelism 2 (get-childitem -Recurse Data/LevelEditorProjects/*.txt)
