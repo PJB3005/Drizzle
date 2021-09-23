@@ -9,8 +9,31 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        folder:
+        - "000tests"
+        - "00_GATE"
+        - "demos"
+        - "EditorSamples"
+        - "templates"
+        - "testFolder"
+        - "World/CC"
+        - "World/DS"
+        - "World/DU"
+        - "World/GW"
+        - "World/HI"
+        - "World/LF"
+        - "World/Multi"
+        - "World/SB"
+        - "World/SH"
+        - "World/SI"
+        - "World/SL"
+        - "World/SS"
+        - "World/SU"
+        - "World/UW"
 
     steps:
     - uses: actions/checkout@v2
@@ -30,4 +53,6 @@ jobs:
       shell: pwsh
       run: |
         $env:COMPlus_gcServer=1
-        dotnet run --no-build -c Release --project Drizzle.ConsoleApp/Drizzle.ConsoleApp.csproj -- render --parallelism 2 (get-childitem -Recurse Data/LevelEditorProjects/*.txt)
+        $path = join-path "Data/LevelEditorProjects" ${{ matrix.folder }} "*.txt"
+        $files = (get-childitem -Recurse $path)
+        dotnet run --no-build -c Release --project Drizzle.ConsoleApp/Drizzle.ConsoleApp.csproj -- render --parallelism 2 $files
