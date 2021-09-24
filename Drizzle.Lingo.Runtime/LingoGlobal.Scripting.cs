@@ -15,7 +15,7 @@ namespace Drizzle.Lingo.Runtime
         {
             var trimmed = a.AsSpan().Trim();
             if (trimmed.IsEmpty)
-                return 0; // value() returns zero on empty string.
+                return new LingoNumber(0); // value() returns zero on empty string.
 
             // NOTE: This uses ExpressionNoOps, so expressions like "5 + 10" aren't gonna be parsed correctly.
             // This is fine for the level editor, but if you ever do something funny, you've been warned.
