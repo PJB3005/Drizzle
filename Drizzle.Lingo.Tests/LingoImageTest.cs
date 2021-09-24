@@ -212,8 +212,22 @@ namespace Drizzle.Lingo.Tests
                 new LingoPoint(16, 32),
                 new LingoPoint(0, 16),
             }, pxl.rect);
+        }
 
+        [Test]
+        public void TestCopyPixelsBitWriteMaskOob()
+        {
+            // This pattern (dst is 12 bits) caused an OOB in bit writing,
+            // the total pixel count is divisible by 32 so no rounding up,
+            // and due to how pixels are written,
+            // the last byte written is split past the end of the buffer but *with* write mask.
+            // so effectively we're making sure the write mask prevents oob error in write8 bits.
+            var src = new LingoImage(1, 1, 1);
+            var dst = new LingoImage(12, 8, 1);
+            src.fill(LingoColor.Black);
+            dst.fill(LingoColor.Black);
 
+            dst.copypixels(src, new LingoRect(0, 0, 12, 8), new LingoRect(0, 0, 1, 1));
         }
 
         private static LingoImage MakePxl(bool markAsSuch=false)

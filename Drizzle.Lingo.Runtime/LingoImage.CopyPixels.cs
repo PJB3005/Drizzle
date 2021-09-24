@@ -358,9 +358,6 @@ namespace Drizzle.Lingo.Runtime
                 return;
             }
 
-            if (parameters.Ink == CopyPixelsInk.Darkest)
-                Log.Warning("copypixels(): Darkest ink not implemented");
-
             var srcBox = CalcSrcBox(source, sourceRect);
 
             CopyPixelsRectGenWriter(source, dest, srcBox, (dstL, dstT, dstR, dstB), parameters);
@@ -484,7 +481,7 @@ namespace Drizzle.Lingo.Runtime
             where TWriter : struct, IPixelOps<TDstData>
             where TDstData : unmanaged
         {
-            if (Avx2.IsSupported)
+            if (Avx2.IsSupported && parameters.Ink != CopyPixelsInk.Darkest)
                 CopyPixelsRectCoreCopyAvx2<TSrcData, TSampler, TDstData, TWriter>(
                     src, dst,
                     srcBox, dstBox,
@@ -545,6 +542,17 @@ namespace Drizzle.Lingo.Runtime
 
                     if (doBackgroundTransparent && color == LingoColor.PackWhite)
                         continue;
+
+                    if (parameters.Ink == CopyPixelsInk.Darkest)
+                    {
+                        var existing = LingoColor.BitUnpack(writer.Sample(dstSpan, dstPos));
+                        var unpackedColor = LingoColor.BitUnpack(color);
+
+                        color = new LingoColor(
+                            Math.Min(existing.RedByte, unpackedColor.RedByte),
+                            Math.Min(existing.GreenByte, unpackedColor.GreenByte),
+                            Math.Min(existing.BlueByte, unpackedColor.BlueByte)).BitPack;
+                    }
 
                     CopyPixelsCoreDoOutputScalar<TSrcData, TSampler, TDstData, TWriter>(
                         parameters, color, fgc, doBlend, writer, dstSpan, dstPos);
@@ -1163,9 +1171,14 @@ namespace Drizzle.Lingo.Runtime
                     dstA &= (byte)(~(writeMaskBit << posRem));
                     dstA |= (byte)(bits << posRem);
 
+                    var secondMask = (byte)(~(writeMaskBit >> (8 - posRem)));
+                    // if secondMask is 0xFF no bits would be written, skip write to avoid OOB.
+                    if (secondMask == 0xFF)
+                        return;
+
                     ref var dstB = ref bytes[pos + 1];
 
-                    dstB &= (byte)(~(writeMaskBit >> (8 - posRem)));
+                    dstB &= secondMask;
                     dstB |= (byte)(bits >> (8 - posRem));
                 }
             }
