@@ -30,6 +30,9 @@ namespace Drizzle.Lingo.Runtime
             _intValue = intValue;
         }
 
+        // just...
+        public LingoNumber findpos(object val) => int.MinValue;
+
         public static LingoNumber Parse(ReadOnlySpan<char> text)
         {
             if (int.TryParse(text, out var intValue))
