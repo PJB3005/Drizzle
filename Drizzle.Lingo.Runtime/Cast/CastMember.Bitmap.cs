@@ -27,6 +27,9 @@
             }
         }
 
+        public LingoNumber width => image.width;
+        public LingoNumber height => image.height;
+
         public dynamic getpixel(int x, int y) => image.getpixel(x, y);
 
         public LingoPoint regpoint { get; set; }
