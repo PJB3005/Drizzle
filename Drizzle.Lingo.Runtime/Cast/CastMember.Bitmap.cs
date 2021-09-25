@@ -31,6 +31,7 @@
         public LingoNumber height => image.height;
 
         public dynamic getpixel(int x, int y) => image.getpixel(x, y);
+        public dynamic getpixel(LingoNumber x, LingoNumber y) => image.getpixel(x, y);
 
         public LingoPoint regpoint { get; set; }
 
