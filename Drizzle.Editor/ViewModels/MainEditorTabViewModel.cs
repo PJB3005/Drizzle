@@ -1,8 +1,6 @@
-﻿using System.IO;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Drizzle.Lingo.Runtime;
 using Drizzle.Logic;
-using Drizzle.Ported;
 using ReactiveUI.Fody.Helpers;
 using Serilog;
 

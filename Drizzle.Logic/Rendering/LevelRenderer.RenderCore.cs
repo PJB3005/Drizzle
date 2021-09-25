@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Drizzle.Lingo.Runtime;
@@ -18,12 +19,20 @@ namespace Drizzle.Logic.Rendering
             RenderStart();
 
             // Set up camera order.
-            var camOrder = Enumerable.Range(1, (int)Movie.gCameraProps.cameras.count).ToList();
-
-            if (Movie.gPrioCam is not null and not 0)
+            List<int> camOrder;
+            if (_singleCamera is { } s)
             {
-                camOrder.Remove(Movie.gPrioCam);
-                camOrder.Insert(0, Movie.gPrioCam);
+                camOrder = new List<int> { s + 1 };
+            }
+            else
+            {
+                camOrder = Enumerable.Range(1, (int)Movie.gCameraProps.cameras.count).ToList();
+
+                if (Movie.gPrioCam is not (null or 0))
+                {
+                    camOrder.Remove(Movie.gPrioCam);
+                    camOrder.Insert(0, Movie.gPrioCam);
+                }
             }
 
             foreach (var camIndex in camOrder)

@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
-using Avalonia.Controls;
 using Drizzle.Editor.ViewModels.Render;
 using Drizzle.Editor.Views;
 using Drizzle.Editor.Views.Render;
@@ -12,6 +11,7 @@ using Drizzle.Lingo.Runtime;
 using Drizzle.Logic;
 using Drizzle.Ported;
 using DynamicData;
+using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Serilog;
 
@@ -26,7 +26,7 @@ namespace Drizzle.Editor.ViewModels
         private readonly SourceList<MainEditorTabViewModel> _tabsList = new();
 
         [Reactive] public MainEditorTabViewModel? SelectedTab { get; set; }
-        public Window? Parent { get; set; }
+        public EditorContentViewModel? TabContent => SelectedTab?.Content;
 
         private Task<LingoRuntime> _zygoteInitialized = default!;
 
@@ -37,6 +37,9 @@ namespace Drizzle.Editor.ViewModels
                 .Subscribe();
 
             MainTabs = tabs;
+
+            this.WhenAnyValue(x => x.SelectedTab!.Content)
+                .Subscribe(_ => this.RaisePropertyChanged(nameof(TabContent)));
         }
 
         public void Init(CommandLineArgs commandLineArgs)
@@ -45,7 +48,7 @@ namespace Drizzle.Editor.ViewModels
             // MapEditorVM.Init(commandLineArgs);
 
             if (commandLineArgs.Project != null)
-                DoOpenProject(commandLineArgs.Project);
+                OpenProject(commandLineArgs.Project);
         }
 
         private LingoRuntime InitZygote()
@@ -66,34 +69,10 @@ namespace Drizzle.Editor.ViewModels
         {
         }
 
-        public async void OpenProject()
+        public void OpenProject(string file)
         {
-            var dialog = new OpenFileDialog
-            {
-                Filters = new List<FileDialogFilter>
-                {
-                    new()
-                    {
-                        Name = "Level editor projects",
-                        Extensions = { "txt" }
-                    }
-                },
-            };
-
-            var result = await dialog.ShowAsync(Parent);
-
-            if (result.Length == 0)
-                return;
-
-            var file = result[0];
-
-            DoOpenProject(file);
-        }
-
-        private void DoOpenProject(string fileName)
-        {
-            var vm = new MainEditorTabViewModel(Path.GetFileNameWithoutExtension(fileName));
-            vm.InitLoad(_zygoteInitialized, fileName);
+            var vm = new MainEditorTabViewModel(Path.GetFileNameWithoutExtension(file));
+            vm.InitLoad(_zygoteInitialized, file);
 
             _tabsList.Add(vm);
 
@@ -108,7 +87,10 @@ namespace Drizzle.Editor.ViewModels
         {
         }
 
-        public void RenderProject()
+        public void RenderProject() => StartRendering();
+        public void RenderCamera(int camera) => StartRendering(camera);
+
+        private void StartRendering(int? singleCamera = null)
         {
             if (SelectedTab?.Content == null)
                 return;
@@ -116,7 +98,7 @@ namespace Drizzle.Editor.ViewModels
             var runtime = SelectedTab.Content.Runtime;
 
             var renderViewModel = new RenderViewModel();
-            renderViewModel.StartRendering(runtime.Clone());
+            renderViewModel.StartRendering(runtime.Clone(), singleCamera);
 
             var window = new RenderWindow { DataContext = renderViewModel };
             window.Show();

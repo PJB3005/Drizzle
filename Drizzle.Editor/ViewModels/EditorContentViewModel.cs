@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Drizzle.Editor.ViewModels.EditorTabs;
 using Drizzle.Lingo.Runtime;
 using Drizzle.Logic;
+using Drizzle.Ported;
 
 namespace Drizzle.Editor.ViewModels
 {
@@ -12,6 +13,8 @@ namespace Drizzle.Editor.ViewModels
         public LingoRuntime Runtime { get; }
 
         public IReadOnlyList<EditorTabViewModelBase> EditorTabs { get; }
+        public int CountCameras => (int) MovieScript.gCameraProps.cameras.count;
+        private MovieScript MovieScript => (MovieScript)Runtime.MovieScriptInstance;
 
         public EditorContentViewModel(LingoRuntime runtime)
         {

@@ -1,35 +1,41 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reactive.Disposables;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.ReactiveUI;
 using Drizzle.Editor.ViewModels;
+using ReactiveUI;
 
 namespace Drizzle.Editor.Views
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : ReactiveWindow<MainWindowViewModel>
     {
-        private MainWindowViewModel? _viewModel;
-
         public MainWindow()
         {
             InitializeComponent();
 #if DEBUG
             this.AttachDevTools();
 #endif
-        }
 
-        protected override void OnDataContextChanged(EventArgs e)
-        {
-            base.OnDataContextChanged(e);
-
-            if (_viewModel != null)
-                _viewModel.Parent = null;
-
-            _viewModel = DataContext as MainWindowViewModel;
-
-            if (_viewModel != null)
-                _viewModel.Parent = this;
+            this.WhenActivated(disposables =>
+            {
+                this.WhenAnyValue(x => x.ViewModel!.TabContent!.CountCameras)
+                    .Subscribe(cameras =>
+                    {
+                        var menu = this.FindControl<MenuItem>("MenuRenderCamera");/*= Enumerable.Range(0, cameras);*/
+                        menu.Items = Enumerable.Range(0, cameras).Select(c => new MenuItem
+                        {
+                            Header = $"Camera {c+1}",
+                            Command = ReactiveCommand.Create(() => ViewModel!.RenderCamera(c))
+                        }).ToList();
+                    })
+                    .DisposeWith(disposables);
+            });
         }
 
         private void InitializeComponent()
@@ -65,6 +71,29 @@ namespace Drizzle.Editor.Views
                 return;
 
             vm.MapEditorVM.Lingo.Runtime.KeysDown.Remove(code);*/
+        }
+
+        private async void MenuOpen_OnClick(object? sender, RoutedEventArgs e)
+        {
+            var dialog = new OpenFileDialog
+            {
+                Filters = new List<FileDialogFilter>
+                {
+                    new()
+                    {
+                        Name = "Level editor projects",
+                        Extensions = { "txt" }
+                    }
+                },
+            };
+
+            var result = await dialog.ShowAsync(this);
+
+            if (result.Length == 0)
+                return;
+
+            var file = result[0];
+            ViewModel!.OpenProject(file);
         }
     }
 }

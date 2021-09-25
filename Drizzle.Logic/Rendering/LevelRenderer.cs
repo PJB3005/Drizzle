@@ -18,12 +18,14 @@ namespace Drizzle.Logic.Rendering
         private readonly Channel<RenderCmd> _cmdChannel;
 
         private readonly RenderStage? _pauseOnStage;
+        private readonly int? _singleCamera;
         private RenderStage _stage;
         private bool _isPaused;
 
-        public LevelRenderer(LingoRuntime runtime, RenderStage? pauseOnStage)
+        public LevelRenderer(LingoRuntime runtime, RenderStage? pauseOnStage, int? singleCamera=null)
         {
             _pauseOnStage = pauseOnStage;
+            _singleCamera = singleCamera;
             _runtime = runtime;
 
             _cmdChannel = Channel.CreateUnbounded<RenderCmd>();

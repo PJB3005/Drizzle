@@ -42,15 +42,15 @@ namespace Drizzle.Editor.ViewModels.Render
             }
         }
 
-        public void StartRendering(LingoRuntime clonedRuntime)
+        public void StartRendering(LingoRuntime clonedRuntime, int? singleCamera)
         {
             var movie = (MovieScript)clonedRuntime.MovieScriptInstance;
             LevelName = movie.gLoadedName;
-            var countCameras = (int)movie.gCameraProps.cameras.count;
+            var countCameras = singleCamera != null ? 1 : (int)movie.gCameraProps.cameras.count;
 
             RenderProgressMax = countCameras * 10 + 1;
 
-            _renderer = new LevelRenderer(clonedRuntime, null);
+            _renderer = new LevelRenderer(clonedRuntime, null, singleCamera);
             _renderThread = new Thread(RenderThread) { Name = $"Render {LevelName}" };
             _renderer.StatusChanged += status => _statusObservable.OnNext(status);
 
