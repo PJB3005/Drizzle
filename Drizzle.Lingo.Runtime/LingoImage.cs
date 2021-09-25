@@ -173,10 +173,13 @@ namespace Drizzle.Lingo.Runtime
             return new LingoImage(newBuf, Width, Height, Depth) { IsPxl = IsPxl };
         }
 
-        public dynamic createmask()
+        public LingoMask createmask()
         {
-            Log.Warning("createmask(): Not implemented");
-            return null;
+            if (Depth == 1)
+                return new LingoMask(Width, Height, ImageBuffer);
+
+            var copy = makesilhouette(0);
+            return new LingoMask(Width, Height, copy.ImageBuffer);
         }
 
         public void ShowImage()
@@ -188,15 +191,21 @@ namespace Drizzle.Lingo.Runtime
         public static LingoImage LoadFromPath(string path)
         {
             using var fs = File.OpenRead(path);
+
+            return LoadFromStream(fs);
+        }
+
+        public static LingoImage LoadFromStream(Stream stream)
+        {
             // Empty (0 byte file) images get imported into cast members by *clearing the cast member entirely*.
             // Some levels (e.g. SS_I03) have such images, and this previously broke loading.
             // Trying to actually clear the cast member directly however just results in insane cast type mixing,
             // which Director *does* support, but I really do not want to get into because that's awful.
             // Simply loading an empty image instead satisfies the editor's loading code so good enough for me.
-            if (fs.Length == 0)
+            if (stream.Length == 0)
                 return new LingoImage(1, 1, 32);
 
-            var img = Image.Load<Bgra32>(path);
+            var img = Image.Load<Bgra32>(stream);
             // TODO: loading of low-bit images, maybe.
             return new LingoImage(img);
         }

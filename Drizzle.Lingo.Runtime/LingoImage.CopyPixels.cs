@@ -6,7 +6,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-using Serilog;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace Drizzle.Lingo.Runtime
@@ -98,8 +97,10 @@ namespace Drizzle.Lingo.Runtime
             if (paramList.Dict.TryGetValue(new LingoSymbol("ink"), out var inkVal))
                 parameters.Ink = (CopyPixelsInk)(int)inkVal!;
 
-            if (paramList.Dict.ContainsKey(new LingoSymbol("mask")))
-                Log.Warning("copypixels(): Mask rendering not implemented");
+            if (paramList.Dict.TryGetValue(new LingoSymbol("mask"), out var mask)
+                || paramList.Dict.TryGetValue(new LingoSymbol("maskImage"), out mask)
+                || paramList.Dict.TryGetValue(new LingoSymbol("maskimage"), out mask))
+                parameters.Mask = (LingoMask?)mask;
         }
 
         private static void CopyPixelsQuadImpl(
@@ -478,7 +479,9 @@ namespace Drizzle.Lingo.Runtime
             where TWriter : struct, IPixelOps<TDstData>
             where TDstData : unmanaged
         {
-            if (Avx2.IsSupported && parameters.Ink != CopyPixelsInk.Darkest)
+            // Advanced copy features not implemented on AVX code path, they're rare so it's fine probably.
+            var mustScalar = parameters.Ink == CopyPixelsInk.Darkest || parameters.Mask != null;
+            if (Avx2.IsSupported && !mustScalar)
                 CopyPixelsRectCoreCopyAvx2<TSrcData, TSampler, TDstData, TWriter>(
                     src, dst,
                     srcBox, dstBox,
@@ -533,6 +536,18 @@ namespace Drizzle.Lingo.Runtime
                 for (var x = dstL; x < dstR; x++, s += incSrcS)
                 {
                     var dstPos = dstImgW * y + x;
+
+                    if (parameters.Mask is { } mask)
+                    {
+                        var maskX = (int)(s * srcImgW);
+                        var maskY = (int)(t * srcImgH);
+
+                        if (maskX < 0 || maskY < 0 || maskX >= mask.Width || maskY >= mask.Height)
+                            continue;
+
+                        if (DoBitRead(MemoryMarshal.Cast<byte, int>(mask.Data), mask.Width * maskY + maskX))
+                            continue;
+                    }
 
                     var color = DoSample<TSrcData, TSampler>(s, t, srcImgW, sampler, srcSpan,
                         imgRow);
@@ -948,7 +963,7 @@ namespace Drizzle.Lingo.Runtime
             public float Blend;
 
             public LingoColor ForeColor;
-            // todo: mask
+            public LingoMask? Mask;
         }
 
         private enum CopyPixelsInk

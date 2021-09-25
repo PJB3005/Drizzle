@@ -24,4 +24,5 @@ Constructing a rect from two points rounds the points' components though. Yeah. 
     * 32 is RGBA32 with alpha channel only one bit still.
 * out-of-bounds reads with `copyPixels()` will basically be treated as if the out of bounds region is empty.
 * Copying to a 1-bit image seems somewhat intelligent about whether to pick white or black based on input color. Primary colors (like pure red) seem to be black, but secondaries like yellow are white. Probably just a specific case of palettization, but still.
-
+* Masked copies position the mask at the top left corner at the source image, and scale the mask 1:1 with the source image.
+  * If you have a mask of equal size as a source image and sample the right half of that image, you get the right half of the mask 
