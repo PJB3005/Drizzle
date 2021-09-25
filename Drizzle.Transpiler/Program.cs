@@ -850,28 +850,9 @@ namespace Drizzle.Transpiler
             return $"new LingoList {{ {string.Join(',', args)} }}";
         }
 
-        private static string WriteGlobalCall(AstNode.GlobalCall node, HandlerContext ctx)
-        {
-            var args = node.Arguments.Select(a => WriteExpression(a, ctx));
-            var lower = node.Name.ToLower();
-            if (ctx.Parent.AllHandlers.Contains(lower))
-            {
-                // Local call
-                return $"{lower}({string.Join(',', args)})";
-            }
-
-            if (ctx.Parent.Parent.MovieHandlers.Contains(node.Name))
-            {
-                // Movie script call
-                return $"{MovieScriptPrefix(ctx)}{lower}({string.Join(',', args)})";
-            }
-
-            return WriteGlobalCall(lower, ctx, args);
-        }
-
         private static string MovieScriptPrefix(HandlerContext ctx)
         {
-            return ctx.Parent.IsMovieScript ? "" : "_movieScript.";
+            return ctx.Parent.IsMovieScript ? "this." : "_movieScript.";
         }
 
         private static string WriteNumber(AstNode.Number node, HandlerContext ctx)
@@ -996,6 +977,25 @@ namespace Drizzle.Transpiler
             expressionParams.BoolGranted = true;
 
             return $"({exprLeft} {op} {exprRight})";
+        }
+
+        private static string WriteGlobalCall(AstNode.GlobalCall node, HandlerContext ctx)
+        {
+            var args = node.Arguments.Select(a => WriteExpression(a, ctx));
+            var lower = node.Name.ToLower();
+            if (ctx.Parent.AllHandlers.Contains(lower))
+            {
+                // Local call
+                return $"this.{lower}({string.Join(',', args)})";
+            }
+
+            if (ctx.Parent.Parent.MovieHandlers.Contains(node.Name))
+            {
+                // Movie script call
+                return $"{MovieScriptPrefix(ctx)}{lower}({string.Join(',', args)})";
+            }
+
+            return WriteGlobalCall(lower, ctx, args);
         }
 
         private static string WriteGlobalCall(string name, HandlerContext ctx, params AstNode.Base[] args)
