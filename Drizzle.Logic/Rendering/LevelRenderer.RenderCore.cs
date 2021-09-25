@@ -134,6 +134,7 @@ namespace Drizzle.Logic.Rendering
         private void RenderPropsPreEffects()
         {
             RenderStartFrame(RenderStage.RenderPropsPreEffects);
+            Movie.afterEffects = new LingoNumber(0);
             _runtime.CreateScript<renderPropsStart>().exitframe();
 
             var script = _runtime.CreateScript<renderProps>();
