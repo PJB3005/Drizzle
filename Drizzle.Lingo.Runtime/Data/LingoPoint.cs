@@ -20,50 +20,21 @@ namespace Drizzle.Lingo.Runtime
             this.locv = locv;
         }
 
-        public static LingoPoint operator +(LingoPoint a, LingoPoint b)
-        {
-            return new(a.loch + b.loch, a.locv + b.locv);
-        }
+        public static LingoPoint operator +(LingoPoint a, LingoPoint b) => new(a.loch + b.loch, a.locv + b.locv);
+        public static LingoPoint operator -(LingoPoint a, LingoPoint b) => new(a.loch - b.loch, a.locv - b.locv);
+        public static LingoPoint operator *(LingoPoint a, LingoPoint b) => new(a.loch * b.loch, a.locv * b.locv);
+        public static LingoPoint operator /(LingoPoint a, LingoPoint b) => new(a.loch / b.loch, a.locv / b.locv);
 
-        public static LingoPoint operator -(LingoPoint a, LingoPoint b)
-        {
-            return new(a.loch - b.loch, a.locv - b.locv);
-        }
+        public static LingoPoint operator +(LingoPoint a, LingoNumber b) => new(a.loch + b, a.locv + b);
+        public static LingoPoint operator +(LingoNumber a, LingoPoint b) => new(a + b.loch, a + b.locv);
+        public static LingoPoint operator -(LingoPoint a, LingoNumber b) => new(a.loch - b, a.locv - b);
+        public static LingoPoint operator -(LingoNumber a, LingoPoint b) => new(a - b.loch, a - b.locv);
+        public static LingoPoint operator *(LingoPoint a, LingoNumber b) => new(a.loch * b, a.locv * b);
+        public static LingoPoint operator *(LingoNumber a, LingoPoint b) => new(a * b.loch, a * b.locv);
+        public static LingoPoint operator /(LingoPoint a, LingoNumber b) => new(a.loch / b, a.locv / b);
+        public static LingoPoint operator /(LingoNumber a, LingoPoint b) => new(a / b.loch, a / b.locv);
 
-        public static LingoPoint operator *(LingoPoint a, LingoPoint b)
-        {
-            return new(a.loch * b.loch, a.locv * b.locv);
-        }
-
-        public static LingoPoint operator /(LingoPoint a, LingoPoint b)
-        {
-            return new(a.loch / b.loch, a.locv / b.locv);
-        }
-
-        public static LingoPoint operator +(LingoPoint a, LingoNumber b)
-        {
-            return new(a.loch + b, a.locv + b);
-        }
-
-        public static LingoPoint operator -(LingoPoint a, LingoNumber b)
-        {
-            return new(a.loch - b, a.locv - b);
-        }
-
-        public static LingoPoint operator *(LingoPoint a, LingoNumber b)
-        {
-            return new(a.loch * b, a.locv * b);
-        }
-
-        public static LingoPoint operator /(LingoPoint a, LingoNumber b)
-        {
-            return new(a.loch / b, a.locv / b);
-        }
-
-        public static LingoPoint operator -(LingoPoint a)
-        {
-            return new LingoPoint(-a.loch, -a.locv);
-        }
+        public static LingoPoint operator -(LingoPoint a) => new(-a.loch, -a.locv);
 
         public LingoNumber inside(LingoRect rect)
         {
