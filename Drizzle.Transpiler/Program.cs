@@ -899,13 +899,19 @@ namespace Drizzle.Transpiler
                 AstNode.BinaryOperatorType.GreaterThanOrEqual => "op_ge",
                 AstNode.BinaryOperatorType.And => "op_and",
                 AstNode.BinaryOperatorType.Or => "op_or",
+                AstNode.BinaryOperatorType.Add => "op_add",
+                AstNode.BinaryOperatorType.Subtract => "op_sub",
+                AstNode.BinaryOperatorType.Multiply => "op_mul",
+                AstNode.BinaryOperatorType.Divide => "op_div",
+                AstNode.BinaryOperatorType.Mod => "op_mod",
                 _ => null
             };
 
             if (helperOps != null)
                 return WriteGlobalCall(helperOps, ctx, node.Left, node.Right);
 
-            var sb = new StringBuilder();
+            throw new ArgumentOutOfRangeException();
+            /*var sb = new StringBuilder();
 
             var op = node.Type switch
             {
@@ -923,7 +929,7 @@ namespace Drizzle.Transpiler
             sb.Append(WriteExpression(node.Right, ctx));
             sb.Append(')');
 
-            return sb.ToString();
+            return sb.ToString();*/
         }
 
         private static string WriteComparisonBoolOp(

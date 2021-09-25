@@ -154,6 +154,69 @@ namespace Drizzle.Lingo.Runtime
 
         public string @string(dynamic value) => value.ToString();
 
+        public static LingoNumber op_add(LingoNumber a, LingoNumber b) => a + b;
+        public static LingoNumber op_sub(LingoNumber a, LingoNumber b) => a - b;
+        public static LingoNumber op_mul(LingoNumber a, LingoNumber b) => a * b;
+        public static LingoNumber op_div(LingoNumber a, LingoNumber b) => a / b;
+        public static LingoNumber op_mod(LingoNumber a, LingoNumber b) => a % b;
+
+        public static dynamic op_add(dynamic? a, dynamic? b)
+        {
+            if (a is LingoNumber na && b is null)
+                return na + 0;
+
+            if (a is null && b is LingoNumber nb)
+                return 0 + nb;
+
+            return a + b;
+        }
+
+        public static dynamic op_sub(dynamic? a, dynamic? b)
+        {
+            if (a is LingoNumber na && b is null)
+                return na - 0;
+
+            if (a is null && b is LingoNumber nb)
+                return 0 - nb;
+
+            return a - b;
+        }
+
+        public static dynamic op_mul(dynamic? a, dynamic? b)
+        {
+            if (a is LingoNumber na && b is null)
+                return na * 0;
+
+            if (a is null && b is LingoNumber nb)
+                return 0 * nb;
+
+            return a * b;
+        }
+
+        public static dynamic op_div(dynamic? a, dynamic? b)
+        {
+            if (a is LingoNumber na && b is null)
+                return na / 0;
+
+            if (a is null && b is LingoNumber nb)
+                return 0 / nb;
+
+            return a / b;
+        }
+
+        public static dynamic op_mod(dynamic? a, dynamic? b)
+        {
+            if (a is LingoNumber na && b is null)
+                return na % 0;
+
+            if (a is null && b is LingoNumber nb)
+                return 0 % nb;
+
+            return a % b;
+        }
+
+
+
         public static bool op_eq_b(dynamic? a, dynamic? b)
         {
             if ((a is LingoNumber {DecimalValue: 0} && b is null) || (a is null && b is LingoNumber {DecimalValue: 0}))
