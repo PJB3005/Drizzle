@@ -1,4 +1,6 @@
-﻿using Drizzle.Lingo.Runtime;
+﻿using System;
+using System.Reflection;
+using Drizzle.Lingo.Runtime;
 using NUnit.Framework;
 
 namespace Drizzle.Lingo.Tests
@@ -228,6 +230,63 @@ namespace Drizzle.Lingo.Tests
             dst.fill(LingoColor.Black);
 
             dst.copypixels(src, new LingoRect(0, 0, 12, 8), new LingoRect(0, 0, 1, 1));
+        }
+
+        [Test]
+        public void TestCopyPixelsMask()
+        {
+            var maskImg = new LingoImage(2, 2, 1);
+            maskImg.setpixel(0, 0, LingoColor.Black);
+            maskImg.setpixel(1, 1, LingoColor.Black);
+            var mask = maskImg.createmask();
+
+            var src = new LingoImage(3, 3, 32);
+            src.fill(new LingoColor(255, 0, 0));
+
+            var dst = new LingoImage(4, 4, 32);
+            dst.fill(new LingoColor(0, 255, 0));
+
+            dst.copypixels(src, src.rect, src.rect, new LingoPropertyList { [new LingoSymbol("mask")] = mask});
+
+            Assert.Multiple(() =>
+            {
+                for (var y = 0; y < dst.Height; y++)
+                {
+                    for (var x = 0; x < dst.Width; x++)
+                    {
+                        if (x == 0 && y == 0 || y == 1 && x == 1)
+                            Assert.That(dst.getpixel(x, y) == new LingoColor(255, 0, 0));
+                        else
+                            Assert.That(dst.getpixel(x, y) == new LingoColor(0, 255, 0));
+                    }
+                }
+            });
+        }
+
+        [Test]
+        public void TestCopyPixelsMaskEffect()
+        {
+            var flattenedGradientB = ImageFromResource("Drizzle.Lingo.Tests.Images.effectmask.flattenedgradientB.png");
+            var layer9 = ImageFromResource("Drizzle.Lingo.Tests.Images.effectmask.layer9.png");
+            var dumpImage = ImageFromResource("Drizzle.Lingo.Tests.Images.effectmask.dumpimage.png");
+
+            flattenedGradientB.copypixels(
+                dumpImage,
+                new LingoRect(-43, -47, 1443, 844),
+                new LingoRect(400, 310, 1900, 1210),
+                new LingoPropertyList
+                {
+                    [new LingoSymbol("maskimage")] = layer9.makesilhouette(0).createmask()
+                });
+        }
+
+        private static LingoImage ImageFromResource(string name)
+        {
+            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name);
+            if (stream == null)
+                throw new ArgumentException();
+
+            return LingoImage.LoadFromStream(stream);
         }
 
         private static LingoImage MakePxl(bool markAsSuch=false)

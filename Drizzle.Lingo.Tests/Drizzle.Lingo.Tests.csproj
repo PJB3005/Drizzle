@@ -17,4 +17,10 @@
     <ProjectReference Include="..\Drizzle.Lingo.Runtime\Drizzle.Lingo.Runtime.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Images\effectmask\dumpimage.png" />
+    <EmbeddedResource Include="Images\effectmask\flattenedgradientB.png" />
+    <EmbeddedResource Include="Images\effectmask\layer9.png" />
+  </ItemGroup>
+
 </Project>
