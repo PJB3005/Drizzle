@@ -39,7 +39,7 @@ namespace Drizzle.Editor.ViewModels
 
             MainTabs = tabs;
 
-            this.WhenAnyValue(x => x.SelectedTab!.Content)
+            this.WhenAnyValue(x => x.SelectedTab, x => x.SelectedTab!.Content)
                 .Subscribe(_ => this.RaisePropertyChanged(nameof(TabContent)));
         }
 

@@ -73,7 +73,7 @@ namespace Drizzle.Editor.Views
             vm.MapEditorVM.Lingo.Runtime.KeysDown.Remove(code);*/
         }
 
-        private async void MenuOpen_OnClick(object? sender, RoutedEventArgs e)
+        public async void OpenProject()
         {
             var dialog = new OpenFileDialog
             {

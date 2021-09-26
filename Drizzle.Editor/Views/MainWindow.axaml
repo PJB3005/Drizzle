@@ -3,7 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:vm="using:Drizzle.Editor.ViewModels"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:system="clr-namespace:System;assembly=System.Runtime"
+        xmlns:views="clr-namespace:Drizzle.Editor.Views"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Drizzle.Editor.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
@@ -18,12 +18,12 @@
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
                 <MenuItem Header="_New" Command="{Binding NewProject}" HotKey="Ctrl+N" InputGesture="Ctrl+N" />
-                <MenuItem Header="_Open..." Click="MenuOpen_OnClick" HotKey="Ctrl+O" InputGesture="Ctrl+O" />
+                <MenuItem Header="_Open..." Command="{Binding $parent[views:MainWindow].OpenProject}" HotKey="Ctrl+O" InputGesture="Ctrl+O" />
                 <MenuItem Header="_Save" Command="{Binding SaveProject}" HotKey="Ctrl+S" InputGesture="Ctrl+S"
-                          IsEnabled="{Binding SelectedTab,Converter={x:Static ObjectConverters.IsNotNull}}" />
+                          IsEnabled="{Binding TabContent,Converter={x:Static ObjectConverters.IsNotNull}}" />
                 <MenuItem Header="Save _As..." Command="{Binding SaveAsProject}" HotKey="Ctrl+Shift+S"
                           InputGesture="Ctrl+Shift+S"
-                          IsEnabled="{Binding SelectedTab,Converter={x:Static ObjectConverters.IsNotNull}}" />
+                          IsEnabled="{Binding TabContent,Converter={x:Static ObjectConverters.IsNotNull}}" />
                 <MenuItem Header="_Close" Command="{Binding CloseProject}" HotKey="Ctrl+W"
                           InputGesture="Ctrl+W"
                           IsEnabled="{Binding SelectedTab,Converter={x:Static ObjectConverters.IsNotNull}}" />
@@ -31,9 +31,9 @@
             <MenuItem Header="_Project">
                 <MenuItem Header="_Render" Command="{Binding RenderProject}" HotKey="Ctrl+Shift+R"
                           InputGesture="Ctrl+Shift+R"
-                          IsEnabled="{Binding SelectedTab,Converter={x:Static ObjectConverters.IsNotNull}}" />
+                          IsEnabled="{Binding TabContent,Converter={x:Static ObjectConverters.IsNotNull}}" />
                 <MenuItem Name="MenuRenderCamera" Header="Render _Camera" 
-                          IsEnabled="{Binding SelectedTab,Converter={x:Static ObjectConverters.IsNotNull}}">
+                          IsEnabled="{Binding TabContent,Converter={x:Static ObjectConverters.IsNotNull}}">
                     <!--<MenuItem.ItemTemplate>
                         <DataTemplate DataType="system:Int32">
                             <MenuItem Header="{Binding Path='.', StringFormat=Camera {0}}"
@@ -48,7 +48,7 @@
                           InputGesture="Shift+F10" />
                 <MenuItem Header="Cast Viewer (Project)" Command="{Binding CastViewerProject}" HotKey="Ctrl+F10"
                           InputGesture="Ctrl+F10"
-                          IsEnabled="{Binding SelectedTab,Converter={x:Static ObjectConverters.IsNotNull}}" />
+                          IsEnabled="{Binding TabContent,Converter={x:Static ObjectConverters.IsNotNull}}" />
                 <MenuItem Header="Run GC" Command="{Binding RunGC}" HotKey="Ctrl+F11"
                           InputGesture="Ctrl+F11" />
             </MenuItem>
