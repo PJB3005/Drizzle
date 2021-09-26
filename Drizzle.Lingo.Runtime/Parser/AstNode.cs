@@ -340,6 +340,8 @@ namespace Drizzle.Lingo.Runtime.Parser
             Divide,
             And,
             Or,
+            Sand,
+            Sor,
             Mod,
 
             // Precedence 5

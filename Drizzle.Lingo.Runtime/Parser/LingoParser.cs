@@ -309,7 +309,7 @@ namespace Drizzle.Lingo.Runtime.Parser
             Binary(Tok("contains").ThenReturn(AstNode.BinaryOperatorType.Contains));
 
         private static readonly Parser<char, Func<AstNode.Base, AstNode.Base, AstNode.Base>> Starts =
-            Binary(Tok("starts").ThenReturn(AstNode.BinaryOperatorType.Starts));
+            Binary(Try(Tok("starts")).ThenReturn(AstNode.BinaryOperatorType.Starts));
 
         private static readonly Parser<char, Func<AstNode.Base, AstNode.Base, AstNode.Base>> ConcatSpace =
             Binary(Try(Tok("&&")).ThenReturn(AstNode.BinaryOperatorType.ConcatSpace));
@@ -331,6 +331,12 @@ namespace Drizzle.Lingo.Runtime.Parser
 
         private static readonly Parser<char, Func<AstNode.Base, AstNode.Base, AstNode.Base>> Or =
             Binary(Try(Tok("or")).ThenReturn(AstNode.BinaryOperatorType.Or));
+
+        private static readonly Parser<char, Func<AstNode.Base, AstNode.Base, AstNode.Base>> Sand =
+            Binary(Try(Tok("sand")).TraceBegin("trying short-circuiting binary and").ThenReturn(AstNode.BinaryOperatorType.Sand));
+
+        private static readonly Parser<char, Func<AstNode.Base, AstNode.Base, AstNode.Base>> Sor =
+            Binary(Try(Tok("sor")).TraceBegin("trying short-circuiting binary or").ThenReturn(AstNode.BinaryOperatorType.Sor));
 
         private static readonly Parser<char, Func<AstNode.Base, AstNode.Base, AstNode.Base>> Mod =
             Binary(Tok("mod").ThenReturn(AstNode.BinaryOperatorType.Mod));
@@ -485,8 +491,10 @@ namespace Drizzle.Lingo.Runtime.Parser
                         // Precedence 5 (yes lol)
                         Operator.Prefix(Not),
                         // Precedence 4
-                        Operator.InfixL(And /*.TraceBegin("And")*/)
-                            .And(Operator.InfixL(Or /*.TraceBegin("Or")*/)),
+                        Operator.InfixL(And.TraceBegin("AND"))
+                            .And(Operator.InfixL(Sand.TraceBegin("SAND")))
+                            .And(Operator.InfixL(Or.TraceBegin("OR")))
+                            .And(Operator.InfixL(Sor.TraceBegin("SOR"))),
                     };
 
                     if (!allowBinOps)

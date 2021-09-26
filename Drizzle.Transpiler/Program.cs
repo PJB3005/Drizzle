@@ -556,6 +556,7 @@ namespace Drizzle.Transpiler
                         }
                         else
                             ctx.Writer.Write(WriteExpression(expr, ctx));
+
                         ctx.Writer.WriteLine(':');
                     }
 
@@ -872,7 +873,8 @@ namespace Drizzle.Transpiler
         {
             if (param?.WantBool ?? false)
             {
-                if (node.Type is AstNode.BinaryOperatorType.Or or AstNode.BinaryOperatorType.And)
+                if (node.Type is AstNode.BinaryOperatorType.Or or AstNode.BinaryOperatorType.And or AstNode
+                    .BinaryOperatorType.Sor or AstNode.BinaryOperatorType.Sand)
                 {
                     return WriteBinaryBoolOp(node, ctx, param);
                 }
@@ -899,6 +901,8 @@ namespace Drizzle.Transpiler
                 AstNode.BinaryOperatorType.GreaterThanOrEqual => "op_ge",
                 AstNode.BinaryOperatorType.And => "op_and",
                 AstNode.BinaryOperatorType.Or => "op_or",
+                AstNode.BinaryOperatorType.Sand => "op_sand",
+                AstNode.BinaryOperatorType.Sor => "op_sor",
                 AstNode.BinaryOperatorType.Add => "op_add",
                 AstNode.BinaryOperatorType.Subtract => "op_sub",
                 AstNode.BinaryOperatorType.Multiply => "op_mul",
@@ -974,9 +978,10 @@ namespace Drizzle.Transpiler
 
             var op = node.Type switch
             {
-                // Use non-short-circuiting ops.
                 AstNode.BinaryOperatorType.And => "&",
                 AstNode.BinaryOperatorType.Or => "|",
+                AstNode.BinaryOperatorType.Sand => "&&",
+                AstNode.BinaryOperatorType.Sor => "||",
                 _ => throw new ArgumentOutOfRangeException()
             };
 
