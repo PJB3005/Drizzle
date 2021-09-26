@@ -168,6 +168,27 @@ namespace Drizzle.Lingo.Runtime
             if (a is null && b is LingoNumber nb)
                 return 0 + nb;
 
+            if (a?.GetType() == b?.GetType() && a is LingoNumber or LingoPoint or LingoRect)
+                // R# analysis is wrong, this is totally reachable.
+                // ReSharper disable once HeuristicUnreachableCode
+                return a + b;
+
+            if (a is ILingoVector nva && b is ILingoVector nvb)
+            {
+                var minSize = Math.Min(nva.CountElems, nvb.CountElems);
+                var res = new LingoList(minSize);
+
+                for (var i = 0; i < minSize; i++)
+                {
+                    var elemA = nva[i];
+                    var elemB = nvb[i];
+
+                    res.add(op_add(elemA, elemB));
+                }
+
+                return res;
+            }
+
             return a + b;
         }
 
@@ -178,6 +199,28 @@ namespace Drizzle.Lingo.Runtime
 
             if (a is null && b is LingoNumber nb)
                 return 0 - nb;
+
+            if (a?.GetType() == b?.GetType() && a is LingoNumber or LingoPoint or LingoRect)
+                // R# analysis is wrong, this is totally reachable.
+                // ReSharper disable once HeuristicUnreachableCode
+                return a - b;
+
+            if (a is ILingoVector nva && b is ILingoVector nvb)
+            {
+                var minSize = Math.Min(nva.CountElems, nvb.CountElems);
+                var res = new LingoList(minSize);
+
+                for (var i = 0; i < minSize; i++)
+                {
+                    var elemA = nva[i];
+                    var elemB = nvb[i];
+
+                    res.add(op_sub(elemA, elemB));
+                }
+
+                return res;
+            }
+
 
             return a - b;
         }
@@ -190,6 +233,28 @@ namespace Drizzle.Lingo.Runtime
             if (a is null && b is LingoNumber nb)
                 return 0 * nb;
 
+            if (a?.GetType() == b?.GetType() && a is LingoNumber or LingoPoint or LingoRect)
+                // R# analysis is wrong, this is totally reachable.
+                // ReSharper disable once HeuristicUnreachableCode
+                return a * b;
+
+            if (a is ILingoVector nva && b is ILingoVector nvb)
+            {
+                var minSize = Math.Min(nva.CountElems, nvb.CountElems);
+                var res = new LingoList(minSize);
+
+                for (var i = 0; i < minSize; i++)
+                {
+                    var elemA = nva[i];
+                    var elemB = nvb[i];
+
+                    res.add(op_mul(elemA, elemB));
+                }
+
+                return res;
+            }
+
+
             return a * b;
         }
 
@@ -201,6 +266,27 @@ namespace Drizzle.Lingo.Runtime
             if (a is null && b is LingoNumber nb)
                 return 0 / nb;
 
+            if (a?.GetType() == b?.GetType() && a is LingoNumber or LingoPoint or LingoRect)
+                // R# analysis is wrong, this is totally reachable.
+                // ReSharper disable once HeuristicUnreachableCode
+                return a / b;
+
+            if (a is ILingoVector nva && b is ILingoVector nvb)
+            {
+                var minSize = Math.Min(nva.CountElems, nvb.CountElems);
+                var res = new LingoList(minSize);
+
+                for (var i = 0; i < minSize; i++)
+                {
+                    var elemA = nva[i];
+                    var elemB = nvb[i];
+
+                    res.add(op_div(elemA, elemB));
+                }
+
+                return res;
+            }
+
             return a / b;
         }
 
@@ -211,6 +297,27 @@ namespace Drizzle.Lingo.Runtime
 
             if (a is null && b is LingoNumber nb)
                 return 0 % nb;
+
+            if (a?.GetType() == b?.GetType() && a is LingoNumber or LingoPoint or LingoRect)
+                // R# analysis is wrong, this is totally reachable.
+                // ReSharper disable once HeuristicUnreachableCode
+                return a % b;
+
+            if (a is ILingoVector nva && b is ILingoVector nvb)
+            {
+                var minSize = Math.Min(nva.CountElems, nvb.CountElems);
+                var res = new LingoList(minSize);
+
+                for (var i = 0; i < minSize; i++)
+                {
+                    var elemA = nva[i];
+                    var elemB = nvb[i];
+
+                    res.add(op_mod(elemA, elemB));
+                }
+
+                return res;
+            }
 
             return a % b;
         }

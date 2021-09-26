@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace Drizzle.Lingo.Runtime
 {
-    public struct LingoPoint : IEquatable<LingoPoint>
+    public struct LingoPoint : IEquatable<LingoPoint>, ILingoVector
     {
         // Yes, of course
         // Despite what the documentation clearly states
@@ -13,6 +13,15 @@ namespace Drizzle.Lingo.Runtime
         public LingoNumber locv;
 
         public Vector2 AsVector2 => new((float)loch.DecimalValue, (float)locv.DecimalValue);
+
+        int ILingoVector.CountElems => 2;
+
+        object ILingoVector.this[int index] => index switch
+        {
+            0 => loch,
+            1 => locv,
+            _ => throw new ArgumentOutOfRangeException()
+        };
 
         public LingoPoint(LingoNumber loch, LingoNumber locv)
         {

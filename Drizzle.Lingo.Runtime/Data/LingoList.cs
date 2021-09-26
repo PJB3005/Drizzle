@@ -7,9 +7,13 @@ using Serilog;
 
 namespace Drizzle.Lingo.Runtime
 {
-    public class LingoList : IEnumerable<object>, ILingoListDuplicate, IEquatable<LingoList>
+    public class LingoList : IEnumerable<object>, ILingoListDuplicate, IEquatable<LingoList>, ILingoVector
     {
         public List<object?> List { get; }
+
+        int ILingoVector.CountElems => List.Count;
+
+        object? ILingoVector.this[int index] => List[index];
 
         public dynamic? this[int index]
         {

@@ -2,7 +2,7 @@
 
 namespace Drizzle.Lingo.Runtime
 {
-    public struct LingoRect : IEquatable<LingoRect>
+    public struct LingoRect : IEquatable<LingoRect>, ILingoVector
     {
         public LingoNumber left;
         public LingoNumber top;
@@ -11,6 +11,21 @@ namespace Drizzle.Lingo.Runtime
 
         public LingoNumber width => right - left;
         public LingoNumber height => bottom - top;
+
+        int ILingoVector.CountElems => 4;
+
+        object ILingoVector.this[int index] => index switch
+        {
+            0 => left,
+            1 => top,
+            2 => right,
+            3 => bottom,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        private LingoRect(LingoNumber all) : this(all, all, all, all)
+        {
+        }
 
         public LingoRect(LingoNumber left, LingoNumber top, LingoNumber right, LingoNumber bottom)
         {
@@ -44,13 +59,13 @@ namespace Drizzle.Lingo.Runtime
                 a.bottom - b.bottom);
         }
 
-        public static LingoRect operator *(LingoRect a, LingoNumber b)
+        public static LingoRect operator *(LingoRect a, LingoRect b)
         {
             return new(
-                a.left * b,
-                a.top * b,
-                a.right * b,
-                a.bottom * b);
+                a.left * b.left,
+                a.top * b.top,
+                a.right * b.right,
+                a.bottom * b.bottom);
         }
 
         public static LingoRect operator /(LingoRect a, LingoRect b)
@@ -61,6 +76,26 @@ namespace Drizzle.Lingo.Runtime
                 a.right / b.right,
                 a.bottom / b.bottom);
         }
+
+        public static LingoRect operator %(LingoRect a, LingoRect b)
+        {
+            return new(
+                a.left % b.left,
+                a.top % b.top,
+                a.right % b.right,
+                a.bottom % b.bottom);
+        }
+
+        public static LingoRect operator +(LingoRect a, LingoNumber b) => a + new LingoRect(b);
+        public static LingoRect operator +(LingoNumber a, LingoRect b) => new LingoRect(a) + b;
+        public static LingoRect operator -(LingoRect a, LingoNumber b) => a - new LingoRect(b);
+        public static LingoRect operator -(LingoNumber a, LingoRect b) => new LingoRect(a) - b;
+        public static LingoRect operator *(LingoRect a, LingoNumber b) => a * new LingoRect(b);
+        public static LingoRect operator *(LingoNumber a, LingoRect b) => new LingoRect(a) * b;
+        public static LingoRect operator /(LingoRect a, LingoNumber b) => a / new LingoRect(b);
+        public static LingoRect operator /(LingoNumber a, LingoRect b) => new LingoRect(a) / b;
+        public static LingoRect operator %(LingoRect a, LingoNumber b) => a % new LingoRect(b);
+        public static LingoRect operator %(LingoNumber a, LingoRect b) => new LingoRect(a) % b;
 
         public bool Equals(LingoRect other)
         {
