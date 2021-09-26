@@ -28,6 +28,10 @@
                           InputGesture="Ctrl+W"
                           IsEnabled="{Binding SelectedTab,Converter={x:Static ObjectConverters.IsNotNull}}" />
             </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Header="_Undo" InputGesture="Ctrl+Z" HotKey="Ctrl+Z" />
+                <MenuItem Header="_Redo" InputGesture="Ctrl+Shift+Z" HotKey="Ctrl+Shift+Z" />
+            </MenuItem>
             <MenuItem Header="_Project">
                 <MenuItem Header="_Render" Command="{Binding RenderProject}" HotKey="Ctrl+Shift+R"
                           InputGesture="Ctrl+Shift+R"
