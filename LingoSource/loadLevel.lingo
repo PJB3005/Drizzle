@@ -173,7 +173,7 @@ on loadLevel me, lvlName, fullPath
     gCameraProps = value(l2.line[7])
   end if
   
-  if (value(l2.line[8]) = void)or(value(l2.line[8]).findpos(#waterLevel) = void) then
+  if (value(l2.line[8]) = void)sor(value(l2.line[8]).findpos(#waterLevel) = void) then
     resetgEnvEditorProps()
   else
     gEnvEditorProps = value(l2.line[8])
