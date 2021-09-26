@@ -281,6 +281,10 @@ namespace Drizzle.Lingo.Runtime
 
             var area = Math.Abs(EdgeFunction(v2, v1, v0));
 
+            if (area == 0)
+                // Degenerate triangle, do not render.
+                return;
+
             for (var y = boundT; y < boundB; y++)
             {
                 for (var x = boundL; x < boundR; x++)
