@@ -92,7 +92,7 @@ namespace Drizzle.Lingo.Runtime.Cast
             switch (Type)
             {
                 case CastMemberType.Bitmap:
-                    _image = other._image!.duplicate();
+                    _image = other._image!.DuplicateShared();
                     break;
                 case CastMemberType.Script:
                     break;

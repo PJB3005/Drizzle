@@ -17,6 +17,8 @@ namespace Drizzle.Lingo.Runtime
         // Maybe optimizations for the editor later.
         public void fill(LingoColor color)
         {
+            CopyIfShared();
+
             switch (Depth)
             {
                 case 32:
@@ -110,6 +112,7 @@ namespace Drizzle.Lingo.Runtime
             LingoRect sourceRect,
             in CopyPixelsParameters parameters)
         {
+            dest.CopyIfShared();
             var srcBox = CalcSrcBox(source, sourceRect);
 
             CopyPixelsQuadGenWriter(source, dest, destQuad, srcBox, parameters);
@@ -336,6 +339,7 @@ namespace Drizzle.Lingo.Runtime
             LingoRect sourceRect,
             in CopyPixelsParameters parameters)
         {
+            dest.CopyIfShared();
             Debug.Assert(!dest.IsPxl);
 
             // Integer coordinates for the purpose of rasterization.

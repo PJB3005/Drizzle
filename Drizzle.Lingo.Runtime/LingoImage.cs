@@ -12,7 +12,8 @@ namespace Drizzle.Lingo.Runtime
     public sealed partial class LingoImage
     {
         public int Depth { get; }
-        public byte[] ImageBuffer { get; }
+        public byte[] ImageBuffer { get; private set; }
+        public bool ImageBufferShared { get; set; }
 
         public LingoRect rect => new(0, 0, width, height);
 
@@ -134,6 +135,8 @@ namespace Drizzle.Lingo.Runtime
             if (x < 0 || x >= Width || y < 0 || y >= Height)
                 return;
 
+            CopyIfShared();
+
             var idx = y * Width + x;
             switch (Depth)
             {
@@ -173,6 +176,12 @@ namespace Drizzle.Lingo.Runtime
             return new LingoImage(newBuf, Width, Height, Depth) { IsPxl = IsPxl };
         }
 
+        public LingoImage DuplicateShared()
+        {
+            ImageBufferShared = true;
+            return new LingoImage(ImageBuffer, Width, Height, Depth) { IsPxl = IsPxl, ImageBufferShared = true };
+        }
+
         public LingoMask createmask()
         {
             if (Depth == 1)
@@ -180,6 +189,17 @@ namespace Drizzle.Lingo.Runtime
 
             var copy = makesilhouette(0);
             return new LingoMask(Width, Height, copy.ImageBuffer);
+        }
+
+        private void CopyIfShared()
+        {
+            if (!ImageBufferShared)
+                return;
+
+            ImageBufferShared = false;
+            var prevBuf = ImageBuffer;
+            ImageBuffer = GC.AllocateUninitializedArray<byte>(prevBuf.Length);
+            Array.Copy(prevBuf, ImageBuffer, prevBuf.Length);
         }
 
         public void ShowImage()
