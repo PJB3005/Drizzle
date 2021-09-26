@@ -77,6 +77,7 @@ namespace Drizzle.Editor.Views
         {
             var dialog = new OpenFileDialog
             {
+                AllowMultiple = true,
                 Filters = new List<FileDialogFilter>
                 {
                     new()
@@ -92,8 +93,7 @@ namespace Drizzle.Editor.Views
             if (result.Length == 0)
                 return;
 
-            var file = result[0];
-            ViewModel!.OpenProject(file);
+            ViewModel!.OpenProjects(result);
         }
     }
 }

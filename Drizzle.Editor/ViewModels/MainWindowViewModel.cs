@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime;
 using System.Threading.Tasks;
 using Drizzle.Editor.ViewModels.Render;
 using Drizzle.Editor.Views;
@@ -69,6 +70,14 @@ namespace Drizzle.Editor.ViewModels
         {
         }
 
+        public void OpenProjects(IEnumerable<string> files)
+        {
+            foreach (var file in files)
+            {
+                OpenProject(file);
+            }
+        }
+
         public void OpenProject(string file)
         {
             var vm = new MainEditorTabViewModel(Path.GetFileNameWithoutExtension(file));
@@ -125,6 +134,7 @@ namespace Drizzle.Editor.ViewModels
 
         public void RunGC()
         {
+            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
             GC.Collect();
         }
 
