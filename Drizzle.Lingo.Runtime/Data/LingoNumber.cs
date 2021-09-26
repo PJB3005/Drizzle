@@ -51,7 +51,7 @@ namespace Drizzle.Lingo.Runtime
 
         public static LingoNumber Sqrt(LingoNumber dec)
         {
-            var val = new LingoNumber(Math.Sqrt(dec._decimalValue));
+            var val = new LingoNumber(Math.Sqrt(dec.DecimalValue));
             return dec.IsDecimal ? val : val.integer;
         }
 
