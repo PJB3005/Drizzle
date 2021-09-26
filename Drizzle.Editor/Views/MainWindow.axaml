@@ -24,6 +24,9 @@
                 <MenuItem Header="Save _As..." Command="{Binding SaveAsProject}" HotKey="Ctrl+Shift+S"
                           InputGesture="Ctrl+Shift+S"
                           IsEnabled="{Binding SelectedTab,Converter={x:Static ObjectConverters.IsNotNull}}" />
+                <MenuItem Header="_Close" Command="{Binding CloseProject}" HotKey="Ctrl+W"
+                          InputGesture="Ctrl+W"
+                          IsEnabled="{Binding SelectedTab,Converter={x:Static ObjectConverters.IsNotNull}}" />
             </MenuItem>
             <MenuItem Header="_Project">
                 <MenuItem Header="_Render" Command="{Binding RenderProject}" HotKey="Ctrl+Shift+R"

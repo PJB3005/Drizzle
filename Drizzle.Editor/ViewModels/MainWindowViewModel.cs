@@ -87,6 +87,12 @@ namespace Drizzle.Editor.ViewModels
         {
         }
 
+        public void CloseProject()
+        {
+            if (SelectedTab != null)
+                _tabsList.Remove(SelectedTab);
+        }
+
         public void RenderProject() => StartRendering();
         public void RenderCamera(int camera) => StartRendering(camera);
 
