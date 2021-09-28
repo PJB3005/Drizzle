@@ -11,4 +11,9 @@ namespace Drizzle.Ported
             Init(this, global);
         }
     }
+
+    public static class MovieScriptExt
+    {
+        public static MovieScript MovieScript(this LingoRuntime runtime) => (MovieScript)runtime.MovieScriptInstance;
+    }
 }

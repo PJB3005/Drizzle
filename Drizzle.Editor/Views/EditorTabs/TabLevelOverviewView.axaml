@@ -3,11 +3,16 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:editorTabs="clr-namespace:Drizzle.Editor.ViewModels.EditorTabs"
+             xmlns:views="clr-namespace:Drizzle.Editor.Views"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Drizzle.Editor.Views.EditorTabs.TabLevelOverviewView">
     <Design.DataContext>
         <editorTabs:TabLevelOverviewViewModel />
     </Design.DataContext>
     
-    level overview idk
+    <DockPanel>
+        <Viewbox>
+            <views:LevelPreviewControl DataContext="{Binding ParentVm}" />
+        </Viewbox>
+    </DockPanel>
 </UserControl>
