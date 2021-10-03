@@ -2,7 +2,70 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:tabVm="clr-namespace:Drizzle.Editor.ViewModels.EditorTabs"
+             xmlns:paz="clr-namespace:Avalonia.Controls.PanAndZoom;assembly=Avalonia.Controls.PanAndZoom"
+             xmlns:tabViews="clr-namespace:Drizzle.Editor.Views.EditorTabs"
+             xmlns:helpers="clr-namespace:Drizzle.Editor.Helpers"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Drizzle.Editor.Views.EditorTabs.TabGeometryEditorView">
-    geometry editor idk
+    <Design.DataContext>
+        <tabVm:TabGeometryEditorViewModel />
+    </Design.DataContext>
+
+    <DockPanel>
+        <WrapPanel DockPanel.Dock="Top" Margin="4 2">
+            <CheckBox Content="Layer 1" IsChecked="{Binding Layer1Visible, Mode=TwoWay}" />
+            <CheckBox Content="Layer 2" IsChecked="{Binding Layer2Visible, Mode=TwoWay}" />
+            <CheckBox Content="Layer 3" IsChecked="{Binding Layer3Visible, Mode=TwoWay}" />
+        </WrapPanel>
+        <StackPanel DockPanel.Dock="Left" Margin="4">
+            <RadioButton Content="Solid wall" Margin="0 2"
+                         IsChecked="{Binding PlacingTool, Converter={x:Static helpers:EnumBoolConverter.Instance}, ConverterParameter={x:Static tabVm:GeometryPlacementTool.Wall}}" />
+            <RadioButton Content="Slope" Margin="0 2"
+                         IsChecked="{Binding PlacingTool, Converter={x:Static helpers:EnumBoolConverter.Instance}, ConverterParameter={x:Static tabVm:GeometryPlacementTool.Slope}}" />
+            <RadioButton Content="Floor" Margin="0 2"
+                         IsChecked="{Binding PlacingTool, Converter={x:Static helpers:EnumBoolConverter.Instance}, ConverterParameter={x:Static tabVm:GeometryPlacementTool.Floor}}" />
+            <RadioButton Content="Invisible wall" Margin="0 2"
+                         IsChecked="{Binding PlacingTool, Converter={x:Static helpers:EnumBoolConverter.Instance}, ConverterParameter={x:Static tabVm:GeometryPlacementTool.Glass}}" />
+            <RadioButton Content="Horizontal Beam" Margin="0 2"
+                         IsChecked="{Binding PlacingTool, Converter={x:Static helpers:EnumBoolConverter.Instance}, ConverterParameter={x:Static tabVm:GeometryPlacementTool.BeamHorizontal}}" />
+            <RadioButton Content="Vertical Beam" Margin="0 2"
+                         IsChecked="{Binding PlacingTool, Converter={x:Static helpers:EnumBoolConverter.Instance}, ConverterParameter={x:Static tabVm:GeometryPlacementTool.BeamVertical}}" />
+            <RadioButton Content="Hive"  Margin="0 2"
+                         IsChecked="{Binding PlacingTool, Converter={x:Static helpers:EnumBoolConverter.Instance}, ConverterParameter={x:Static tabVm:GeometryPlacementTool.Hive}}" />
+            <RadioButton Content="Shortcut Entrance" Margin="0 2"
+                         IsChecked="{Binding PlacingTool, Converter={x:Static helpers:EnumBoolConverter.Instance}, ConverterParameter={x:Static tabVm:GeometryPlacementTool.ShortcutEntrance}}" />
+            <RadioButton Content="Shortcut" Margin="0 2"
+                         IsChecked="{Binding PlacingTool, Converter={x:Static helpers:EnumBoolConverter.Instance}, ConverterParameter={x:Static tabVm:GeometryPlacementTool.Shortcut}}" />
+            <RadioButton Content="Entrance" Margin="0 2"
+                         IsChecked="{Binding PlacingTool, Converter={x:Static helpers:EnumBoolConverter.Instance}, ConverterParameter={x:Static tabVm:GeometryPlacementTool.Entrance}}" />
+            <RadioButton Content="Dragon Den" Margin="0 2"
+                         IsChecked="{Binding PlacingTool, Converter={x:Static helpers:EnumBoolConverter.Instance}, ConverterParameter={x:Static tabVm:GeometryPlacementTool.DragonDen}}" />
+            <RadioButton Content="Rock" Margin="0 2"
+                         IsChecked="{Binding PlacingTool, Converter={x:Static helpers:EnumBoolConverter.Instance}, ConverterParameter={x:Static tabVm:GeometryPlacementTool.Rock}}" />
+            <RadioButton Content="Spear" Margin="0 2"
+                         IsChecked="{Binding PlacingTool, Converter={x:Static helpers:EnumBoolConverter.Instance}, ConverterParameter={x:Static tabVm:GeometryPlacementTool.Spear}}" />
+            <RadioButton Content="Crack" Margin="0 2"
+                         IsChecked="{Binding PlacingTool, Converter={x:Static helpers:EnumBoolConverter.Instance}, ConverterParameter={x:Static tabVm:GeometryPlacementTool.Crack}}" />
+            <RadioButton Content="Forbid Fly Chains" Margin="0 2"
+                         IsChecked="{Binding PlacingTool, Converter={x:Static helpers:EnumBoolConverter.Instance}, ConverterParameter={x:Static tabVm:GeometryPlacementTool.ForbidFlyChains}}" />
+            <RadioButton Content="Garbage Worm Hole" Margin="0 2"
+                         IsChecked="{Binding PlacingTool, Converter={x:Static helpers:EnumBoolConverter.Instance}, ConverterParameter={x:Static tabVm:GeometryPlacementTool.GarbageWormHole}}" />
+            <RadioButton Content="Waterfall" Margin="0 2"
+                         IsChecked="{Binding PlacingTool, Converter={x:Static helpers:EnumBoolConverter.Instance}, ConverterParameter={x:Static tabVm:GeometryPlacementTool.Waterfall}}" />
+            <RadioButton Content="Whack-A-Mole Hole" Margin="0 2"
+                         IsChecked="{Binding PlacingTool, Converter={x:Static helpers:EnumBoolConverter.Instance}, ConverterParameter={x:Static tabVm:GeometryPlacementTool.WhackAMoleHole}}" />
+            <RadioButton Content="Worm Grass" Margin="0 2"
+                         IsChecked="{Binding PlacingTool, Converter={x:Static helpers:EnumBoolConverter.Instance}, ConverterParameter={x:Static tabVm:GeometryPlacementTool.WormGrass}}" />
+            <RadioButton Content="Scavenger Hole" Margin="0 2"
+                         IsChecked="{Binding PlacingTool, Converter={x:Static helpers:EnumBoolConverter.Instance}, ConverterParameter={x:Static tabVm:GeometryPlacementTool.ScavengerHole}}" />
+        </StackPanel>
+        <paz:ZoomBorder Name="ZoomBorder" Stretch="None" ZoomSpeed="1.2" Margin="4"
+                        ClipToBounds="True" Focusable="True"
+                        Background="#888888"
+                        VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+                        PanButton="Middle">
+            <tabViews:GeometryEditorControl DataContext="{Binding}" />
+        </paz:ZoomBorder>
+    </DockPanel>
 </UserControl>

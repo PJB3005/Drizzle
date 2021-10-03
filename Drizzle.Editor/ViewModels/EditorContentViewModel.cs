@@ -23,7 +23,7 @@ namespace Drizzle.Editor.ViewModels
             EditorTabs = new EditorTabViewModelBase[]
             {
                 new TabLevelOverviewViewModel(this),
-                new TabGeometryEditorViewModel(),
+                new TabGeometryEditorViewModel(this),
                 new TabTileEditorViewModel()
             };
         }

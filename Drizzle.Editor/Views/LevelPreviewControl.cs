@@ -1,13 +1,9 @@
-﻿using System.Buffers;
-using System.Collections;
-using Avalonia;
-using Avalonia.Media;
+﻿using Avalonia.Media;
 using Avalonia.ReactiveUI;
 using Drizzle.Editor.ViewModels;
 using Drizzle.Lingo.Runtime;
 using Drizzle.Ported;
 using ReactiveUI;
-using Brushes = Avalonia.Media.Brushes;
 
 namespace Drizzle.Editor.Views
 {
@@ -58,55 +54,12 @@ namespace Drizzle.Editor.Views
                     var column = mv.gLEProps.matrix[x];
                     for (var y = 1; y <= sizeMaxY; y++)
                     {
-                        var offsetX = x * TileSize;
-                        var offsetY = y * TileSize;
+                        var offsetX = (x - 1) * TileSize;
+                        var offsetY = (y - 1) * TileSize;
 
                         var dat = column[y][layer];
-                        switch ((TileGeometry)(int)dat[1])
-                        {
-                            case TileGeometry.Air:
-                                break;
-                            case TileGeometry.SolidWall:
-                                gCtx.BeginFigure(new Point(offsetX, offsetY), true);
-                                gCtx.LineTo(new Point(offsetX + TileSize, offsetY));
-                                gCtx.LineTo(new Point(offsetX + TileSize, offsetY + TileSize));
-                                gCtx.LineTo(new Point(offsetX, offsetY + TileSize));
-                                gCtx.EndFigure(true);
-                                break;
-                            case TileGeometry.SlopeBL:
-                                gCtx.BeginFigure(new Point(offsetX, offsetY), true);
-                                gCtx.LineTo(new Point(offsetX + TileSize, offsetY + TileSize));
-                                gCtx.LineTo(new Point(offsetX, offsetY + TileSize));
-                                gCtx.EndFigure(true);
-                                break;
-                            case TileGeometry.SlopeBR:
-                                gCtx.BeginFigure(new Point(offsetX + TileSize, offsetY), true);
-                                gCtx.LineTo(new Point(offsetX + TileSize, offsetY + TileSize));
-                                gCtx.LineTo(new Point(offsetX, offsetY + TileSize));
-                                gCtx.EndFigure(true);
-                                break;
-                            case TileGeometry.SlopeTL:
-                                gCtx.BeginFigure(new Point(offsetX, offsetY), true);
-                                gCtx.LineTo(new Point(offsetX + TileSize, offsetY));
-                                gCtx.LineTo(new Point(offsetX, offsetY + TileSize));
-                                gCtx.EndFigure(true);
-                                break;
-                            case TileGeometry.SlopeTR:
-                                gCtx.BeginFigure(new Point(offsetX, offsetY), true);
-                                gCtx.LineTo(new Point(offsetX + TileSize, offsetY));
-                                gCtx.LineTo(new Point(offsetX + TileSize, offsetY + TileSize));
-                                gCtx.EndFigure(true);
-                                break;
-                            case TileGeometry.Floor:
-                                gCtx.BeginFigure(new Point(offsetX, offsetY), true);
-                                gCtx.LineTo(new Point(offsetX + TileSize, offsetY));
-                                gCtx.LineTo(new Point(offsetX + TileSize, offsetY + TileSize / 2));
-                                gCtx.LineTo(new Point(offsetX, offsetY + TileSize / 2));
-                                gCtx.EndFigure(true);
-                                break;
-                            case TileGeometry.Glass:
-                                break;
-                        }
+
+                        EditorRendering.DrawTileGeometry(offsetX, offsetY, TileSize, gCtx, (TileGeometry)(int)dat[1]);
 
                         var features = (LingoList) dat[2];
                         foreach (var feature in features.List)
@@ -114,18 +67,10 @@ namespace Drizzle.Editor.Views
                             switch ((TileFeature)(int)(LingoNumber)feature!)
                             {
                                 case TileFeature.BeamHorizontal:
-                                    gCtx.BeginFigure(new Point(offsetX, offsetY + TileSize * 2f / 5f), true);
-                                    gCtx.LineTo(new Point(offsetX, offsetY + TileSize * 3f / 5f));
-                                    gCtx.LineTo(new Point(offsetX + TileSize, offsetY + TileSize * 3f / 5f));
-                                    gCtx.LineTo(new Point(offsetX + TileSize, offsetY + TileSize * 2f / 5f));
-                                    gCtx.EndFigure(true);
+                                    EditorRendering.DrawBeamHorizontal(offsetX, offsetY, TileSize, gCtx);
                                     break;
                                 case TileFeature.BeamVertical:
-                                    gCtx.BeginFigure(new Point(offsetX + TileSize * 2f / 5f, offsetY), true);
-                                    gCtx.LineTo(new Point(offsetX + TileSize * 3f / 5f, offsetY));
-                                    gCtx.LineTo(new Point(offsetX + TileSize * 3f / 5f, offsetY + TileSize));
-                                    gCtx.LineTo(new Point(offsetX + TileSize * 2f / 5f, offsetY + TileSize));
-                                    gCtx.EndFigure(true);
+                                    EditorRendering.DrawBeamVertical(offsetX, offsetY, TileSize, gCtx);
                                     break;
                             }
                         }
