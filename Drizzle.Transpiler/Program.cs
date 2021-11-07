@@ -91,8 +91,13 @@ namespace Drizzle.Transpiler
 
         private static void Main(string[] args)
         {
-            var sourcesRoot = Path.Combine("..", "..", "..", "..", "LingoSource");
-            var sourcesDest = Path.Combine("..", "..", "..", "..", "Drizzle.Ported", "Translated");
+            var drizzleRoot = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            if (drizzleRoot == null) {
+                throw new Exception("Build environment is not sane. What did you do???");
+            }
+            drizzleRoot = Path.Combine(drizzleRoot, "..", "..", "..", "..");
+            var sourcesRoot = Path.Combine(drizzleRoot, "LingoSource");
+            var sourcesDest = Path.Combine(drizzleRoot, "Drizzle.Ported", "Translated");
 
             if (args.Length == 2)
             {
