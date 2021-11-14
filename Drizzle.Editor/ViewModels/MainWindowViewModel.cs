@@ -66,10 +66,6 @@ namespace Drizzle.Editor.ViewModels
             return _zygoteRuntime;
         }
 
-        public void NewProject()
-        {
-        }
-
         public void OpenProjects(IEnumerable<string> files)
         {
             foreach (var file in files)
