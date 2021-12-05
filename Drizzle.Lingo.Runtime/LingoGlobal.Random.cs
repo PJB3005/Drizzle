@@ -10,11 +10,7 @@ namespace Drizzle.Lingo.Runtime
 
         public LingoNumber random(LingoNumber max)
         {
-            // todo: should this return int?
-            var sample = LingoRuntime.RngNext();
-            var scaled = sample * (1.0 / uint.MaxValue);
-
-            return (int)(scaled * max + 1).DecimalValue;
+            return LingoRuntime.Random(max.IntValue);
         }
     }
 }
