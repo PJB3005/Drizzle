@@ -220,15 +220,56 @@ namespace Drizzle.Lingo.Runtime
                 if (y == null)
                     return 1;
 
-                // Try a numeric compare if they're both numbers.
+                // Number <-> number.
                 if (x is LingoNumber decX && y is LingoNumber decY)
                     return decX.CompareTo(decY);
 
-                // Compare by string.
-                var strX = x.ToString();
-                var strY = y.ToString();
+                // String <-> string.
+                if (x is string strX && y is string strY)
+                    return string.CompareOrdinal(strX, strY);
+
+                // Number <-> vector comparisons.
+                if (x is LingoNumber decXc && y is ILingoVector vecY)
+                    return CompareNumVec(decXc, vecY);
+
+                if (x is ILingoVector vecX && y is LingoNumber decYc)
+                    return -CompareNumVec(decYc, vecX);
+
+                // Vector <-> Vector comparisons.
+                if (x is ILingoVector vecXc && y is ILingoVector vecYc)
+                {
+                    // If lengths don't match, vector with smaller length is always smaller.
+                    var count = vecXc.CountElems;
+                    var cmpLength = count.CompareTo(vecYc.CountElems);
+                    if (cmpLength != 0)
+                        return cmpLength;
+
+                    // If lengths DO match...
+                    for (var i = 0; i < count; i++)
+                    {
+                        var valX = vecXc[i];
+                        var valY = vecYc[i];
+
+                        // Compare by element.
+                        var cmp = Compare(valX, valY);
+                        if (cmp != 0)
+                            return cmp;
+                    }
+
+                    // All elements equal.
+                    return 0;
+                }
+
+                // Last case fallback: compare by string.
+                strX = x.ToString()!;
+                strY = y.ToString()!;
 
                 return string.Compare(strX, strY, StringComparison.Ordinal);
+            }
+
+            private static int CompareNumVec(LingoNumber num, ILingoVector vec)
+            {
+                throw new NotImplementedException();
             }
         }
     }
