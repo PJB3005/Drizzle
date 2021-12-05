@@ -170,7 +170,7 @@ internal static class Program
         EmitScriptBody(name, script, writer, ctx, isMovieScript: false);
 
         // End class and namespace.
-        writer.WriteLine("}\n}");
+        writer.WriteLine("}\n");
     }
 
     private static void OutputParentScripts(
@@ -239,7 +239,7 @@ internal static class Program
     {
         writer.WriteLine("using System;");
         writer.WriteLine("using Drizzle.Lingo.Runtime;");
-        writer.WriteLine("namespace {OutputNamespace};");
+        writer.WriteLine($"namespace {OutputNamespace};");
     }
 
     private static void OutputSingleMovieScript(
