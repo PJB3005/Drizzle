@@ -1,97 +1,96 @@
 ﻿using System;
 using Serilog;
 
-namespace Drizzle.Lingo.Runtime
+namespace Drizzle.Lingo.Runtime;
+
+public partial class LingoRuntime
 {
-    public partial class LingoRuntime
+    public LingoRuntime Clone()
     {
-        public LingoRuntime Clone()
+        Log.Debug("Cloning Lingo runtime...");
+        var newRuntime = new LingoRuntime(_assembly);
+        newRuntime.InitNoCast();
+        CloneCast(this, newRuntime);
+        CloneGlobals(this, newRuntime);
+
+        return newRuntime;
+    }
+
+    private static void CloneCast(LingoRuntime src, LingoRuntime dst)
+    {
+        Log.Debug("Cloning cast...");
+        dst.InitCastLibs();
+        dst._castMemberNameIndexDirty = true;
+
+        for (var i = 0; i < src._castLibs.Length; i++)
         {
-            Log.Debug("Cloning Lingo runtime...");
-            var newRuntime = new LingoRuntime(_assembly);
-            newRuntime.InitNoCast();
-            CloneCast(this, newRuntime);
-            CloneGlobals(this, newRuntime);
+            var srcLib = src._castLibs[i];
+            var dstLib = dst._castLibs[i];
 
-            return newRuntime;
-        }
-
-        private static void CloneCast(LingoRuntime src, LingoRuntime dst)
-        {
-            Log.Debug("Cloning cast...");
-            dst.InitCastLibs();
-            dst._castMemberNameIndexDirty = true;
-
-            for (var i = 0; i < src._castLibs.Length; i++)
+            for (var j = 1; j <= srcLib.NumMembers; j++)
             {
-                var srcLib = src._castLibs[i];
-                var dstLib = dst._castLibs[i];
+                var srcMem = srcLib.GetMember(j)!;
+                var dstMem = dstLib.GetMember(j)!;
 
-                for (var j = 1; j <= srcLib.NumMembers; j++)
-                {
-                    var srcMem = srcLib.GetMember(j)!;
-                    var dstMem = dstLib.GetMember(j)!;
-
-                    dstMem.CloneFrom(srcMem);
-                }
+                dstMem.CloneFrom(srcMem);
             }
         }
+    }
 
-        private static void CloneGlobals(LingoRuntime src, LingoRuntime dst)
+    private static void CloneGlobals(LingoRuntime src, LingoRuntime dst)
+    {
+        Log.Debug("Cloning globals...");
+
+        var srcMovieScript = src.MovieScriptInstance;
+        var dstMovieScript = dst.MovieScriptInstance;
+        foreach (var field in srcMovieScript.GetType().GetFields())
         {
-            Log.Debug("Cloning globals...");
+            if (!Attribute.IsDefined(field, typeof(LingoGlobalAttribute)))
+                continue;
 
-            var srcMovieScript = src.MovieScriptInstance;
-            var dstMovieScript = dst.MovieScriptInstance;
-            foreach (var field in srcMovieScript.GetType().GetFields())
+            var srcValue = field.GetValue(srcMovieScript);
+            field.SetValue(dstMovieScript, DeepClone(srcValue));
+        }
+
+        object? DeepClone(object? value)
+        {
+            if (value is LingoList list)
             {
-                if (!Attribute.IsDefined(field, typeof(LingoGlobalAttribute)))
-                    continue;
-
-                var srcValue = field.GetValue(srcMovieScript);
-                field.SetValue(dstMovieScript, DeepClone(srcValue));
+                var newList = new LingoList(list.List.Count);
+                foreach (var listValue in list.List)
+                {
+                    newList.List.Add(DeepClone(listValue));
+                }
+                return newList;
             }
 
-            object? DeepClone(object? value)
+            if (value is LingoPropertyList propList)
             {
-                if (value is LingoList list)
+                var newList = new LingoPropertyList(propList.Dict.Count);
+                foreach (var (key, dictValue) in propList.Dict)
                 {
-                    var newList = new LingoList(list.List.Count);
-                    foreach (var listValue in list.List)
-                    {
-                        newList.List.Add(DeepClone(listValue));
-                    }
-                    return newList;
+                    newList.Dict.Add(DeepClone(key), DeepClone(dictValue));
                 }
-
-                if (value is LingoPropertyList propList)
-                {
-                    var newList = new LingoPropertyList(propList.Dict.Count);
-                    foreach (var (key, dictValue) in propList.Dict)
-                    {
-                        newList.Dict.Add(DeepClone(key), DeepClone(dictValue));
-                    }
-                    return newList;
-                }
-
-                if (value is LingoScriptRuntimeBase script)
-                {
-                    var scriptType = script.GetType();
-                    var newScript = dst.InstantiateScriptType(scriptType);
-                    newScript.Init(dstMovieScript, dst.Global);
-
-                    foreach (var field in scriptType.GetFields())
-                    {
-                        if (!Attribute.IsDefined(field, typeof(LingoPropertyAttribute)))
-                            continue;
-
-                        var srcValue = field.GetValue(script);
-                        field.SetValue(newScript, DeepClone(srcValue));
-                    }
-                }
-
-                return value;
+                return newList;
             }
+
+            if (value is LingoScriptRuntimeBase script)
+            {
+                var scriptType = script.GetType();
+                var newScript = dst.InstantiateScriptType(scriptType);
+                newScript.Init(dstMovieScript, dst.Global);
+
+                foreach (var field in scriptType.GetFields())
+                {
+                    if (!Attribute.IsDefined(field, typeof(LingoPropertyAttribute)))
+                        continue;
+
+                    var srcValue = field.GetValue(script);
+                    field.SetValue(newScript, DeepClone(srcValue));
+                }
+            }
+
+            return value;
         }
     }
 }

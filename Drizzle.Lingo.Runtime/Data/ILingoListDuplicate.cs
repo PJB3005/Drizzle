@@ -1,7 +1,6 @@
-namespace Drizzle.Lingo.Runtime
+namespace Drizzle.Lingo.Runtime;
+
+public interface ILingoListDuplicate
 {
-    public interface ILingoListDuplicate
-    {
-        ILingoListDuplicate duplicate();
-    }
+    ILingoListDuplicate duplicate();
 }

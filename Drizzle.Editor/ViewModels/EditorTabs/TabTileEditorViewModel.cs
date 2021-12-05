@@ -1,7 +1,6 @@
-﻿namespace Drizzle.Editor.ViewModels.EditorTabs
+﻿namespace Drizzle.Editor.ViewModels.EditorTabs;
+
+public sealed class TabTileEditorViewModel : EditorTabViewModelBase
 {
-    public sealed class TabTileEditorViewModel : EditorTabViewModelBase
-    {
-        public override string Title => "Tiles";
-    }
+    public override string Title => "Tiles";
 }

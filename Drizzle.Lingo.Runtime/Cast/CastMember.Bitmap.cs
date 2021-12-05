@@ -1,43 +1,42 @@
-﻿namespace Drizzle.Lingo.Runtime.Cast
+﻿namespace Drizzle.Lingo.Runtime.Cast;
+
+public partial class CastMember
 {
-    public partial class CastMember
+    private LingoImage? _image;
+
+    public LingoImage? image
     {
-        private LingoImage? _image;
-
-        public LingoImage? image
+        get
         {
-            get
-            {
-                AssertType(CastMemberType.Bitmap);
-                return _image;
-            }
-            set
-            {
-                AssertType(CastMemberType.Bitmap);
-                _image = value;
-            }
+            AssertType(CastMemberType.Bitmap);
+            return _image;
         }
-
-        public LingoRect rect
+        set
         {
-            get
-            {
-                AssertType(CastMemberType.Bitmap);
-                return _image.rect;
-            }
+            AssertType(CastMemberType.Bitmap);
+            _image = value;
         }
+    }
 
-        public LingoNumber width => image.width;
-        public LingoNumber height => image.height;
-
-        public dynamic getpixel(int x, int y) => image.getpixel(x, y);
-        public dynamic getpixel(LingoNumber x, LingoNumber y) => image.getpixel(x, y);
-
-        public LingoPoint regpoint { get; set; }
-
-        private void ImportFileImplBitmap(string path)
+    public LingoRect rect
+    {
+        get
         {
-            image = LingoImage.LoadFromPath(path);
+            AssertType(CastMemberType.Bitmap);
+            return _image.rect;
         }
+    }
+
+    public LingoNumber width => image.width;
+    public LingoNumber height => image.height;
+
+    public dynamic getpixel(int x, int y) => image.getpixel(x, y);
+    public dynamic getpixel(LingoNumber x, LingoNumber y) => image.getpixel(x, y);
+
+    public LingoPoint regpoint { get; set; }
+
+    private void ImportFileImplBitmap(string path)
+    {
+        image = LingoImage.LoadFromPath(path);
     }
 }

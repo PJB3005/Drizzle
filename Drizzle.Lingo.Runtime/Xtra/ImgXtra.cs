@@ -1,24 +1,23 @@
 ﻿using System.IO;
 using SixLabors.ImageSharp;
 
-namespace Drizzle.Lingo.Runtime.Xtra
+namespace Drizzle.Lingo.Runtime.Xtra;
+
+public sealed class ImgXtra : BaseXtra
 {
-    public sealed class ImgXtra : BaseXtra
+    public override BaseXtra Duplicate()
     {
-        public override BaseXtra Duplicate()
-        {
-            return new ImgXtra();
-        }
+        return new ImgXtra();
+    }
 
-        public int ix_saveimage(LingoPropertyList props)
-        {
-            var img = (LingoImage)props["image"]!;
-            var fileName = (string)props["filename"]!;
+    public int ix_saveimage(LingoPropertyList props)
+    {
+        var img = (LingoImage)props["image"]!;
+        var fileName = (string)props["filename"]!;
 
-            using var file = File.OpenWrite(fileName);
-            img.SaveAsPng(file);
+        using var file = File.OpenWrite(fileName);
+        img.SaveAsPng(file);
 
-            return 1;
-        }
+        return 1;
     }
 }

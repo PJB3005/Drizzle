@@ -1,30 +1,29 @@
 ﻿using System;
 using Serilog;
 
-namespace Drizzle.Lingo.Runtime
+namespace Drizzle.Lingo.Runtime;
+
+public sealed partial class LingoGlobal
 {
-    public sealed partial class LingoGlobal
+    public Global _global { get; private set; } = default!;
+
+    public sealed class Global
     {
-        public Global _global { get; private set; } = default!;
+        private readonly LingoGlobal _global;
 
-        public sealed class Global
+        public Global(LingoGlobal global)
         {
-            private readonly LingoGlobal _global;
+            _global = global;
+        }
 
-            public Global(LingoGlobal global)
+        public void clearglobals()
+        {
+            Log.Debug("Clearing globals");
+            var movieScript = _global.MovieScriptInstance;
+            foreach (var field in movieScript.GetType().GetFields())
             {
-                _global = global;
-            }
-
-            public void clearglobals()
-            {
-                Log.Debug("Clearing globals");
-                var movieScript = _global.MovieScriptInstance;
-                foreach (var field in movieScript.GetType().GetFields())
-                {
-                    if (Attribute.IsDefined(field, typeof(LingoGlobalAttribute)))
-                        field.SetValue(movieScript, null);
-                }
+                if (Attribute.IsDefined(field, typeof(LingoGlobalAttribute)))
+                    field.SetValue(movieScript, null);
             }
         }
     }

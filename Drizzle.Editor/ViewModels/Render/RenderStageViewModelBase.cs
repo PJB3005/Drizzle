@@ -1,9 +1,8 @@
 ﻿using Drizzle.Logic;
 
-namespace Drizzle.Editor.ViewModels.Render
+namespace Drizzle.Editor.ViewModels.Render;
+
+public abstract class RenderStageViewModelBase : ViewModelBase
 {
-    public abstract class RenderStageViewModelBase : ViewModelBase
-    {
-        public virtual (int max, int current)? Progress => default;
-    }
+    public virtual (int max, int current)? Progress => default;
 }

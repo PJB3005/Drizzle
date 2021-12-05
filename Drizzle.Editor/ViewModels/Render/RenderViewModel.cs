@@ -13,51 +13,51 @@ using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Serilog;
 
-namespace Drizzle.Editor.ViewModels.Render
+namespace Drizzle.Editor.ViewModels.Render;
+
+public sealed class RenderViewModel : ViewModelBase, ILingoRuntimeManager
 {
-    public sealed class RenderViewModel : ViewModelBase, ILingoRuntimeManager
+    private LevelRenderer? _renderer;
+    private Thread? _renderThread;
+    private readonly Subject<RenderStatus> _statusObservable = new();
+    private bool _isPaused;
+
+    [Reactive] public string LevelName { get; private set; } = "";
+    [Reactive] public int CameraIndex { get; private set; }
+    [Reactive] public RenderStage StageEnum { get; private set; }
+    [Reactive] public RenderStageViewModelBase? StageViewModel { get; private set; }
+    [Reactive] public int RenderProgressMax { get; private set; }
+    [Reactive] public int RenderProgress { get; private set; }
+    [Reactive] public bool RenderStageProgressAvailable { get; private set; }
+    [Reactive] public int RenderStageProgressMax { get; private set; }
+    [Reactive] public int RenderStageProgress { get; private set; }
+
+    public bool IsPaused
     {
-        private LevelRenderer? _renderer;
-        private Thread? _renderThread;
-        private readonly Subject<RenderStatus> _statusObservable = new();
-        private bool _isPaused;
-
-        [Reactive] public string LevelName { get; private set; } = "";
-        [Reactive] public int CameraIndex { get; private set; }
-        [Reactive] public RenderStage StageEnum { get; private set; }
-        [Reactive] public RenderStageViewModelBase? StageViewModel { get; private set; }
-        [Reactive] public int RenderProgressMax { get; private set; }
-        [Reactive] public int RenderProgress { get; private set; }
-        [Reactive] public bool RenderStageProgressAvailable { get; private set; }
-        [Reactive] public int RenderStageProgressMax { get; private set; }
-        [Reactive] public int RenderStageProgress { get; private set; }
-
-        public bool IsPaused
+        get => _isPaused;
+        set
         {
-            get => _isPaused;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref _isPaused, value);
-                _renderer?.SetPaused(value);
-            }
+            this.RaiseAndSetIfChanged(ref _isPaused, value);
+            _renderer?.SetPaused(value);
         }
+    }
 
-        public void StartRendering(LingoRuntime clonedRuntime, int? singleCamera)
-        {
-            var movie = (MovieScript)clonedRuntime.MovieScriptInstance;
-            LevelName = movie.gLoadedName;
-            var countCameras = singleCamera != null ? 1 : (int)movie.gCameraProps.cameras.count;
+    public void StartRendering(LingoRuntime clonedRuntime, int? singleCamera)
+    {
+        var movie = (MovieScript)clonedRuntime.MovieScriptInstance;
+        LevelName = movie.gLoadedName;
+        var countCameras = singleCamera != null ? 1 : (int)movie.gCameraProps.cameras.count;
 
-            RenderProgressMax = countCameras * 10 + 1;
+        RenderProgressMax = countCameras * 10 + 1;
 
-            _renderer = new LevelRenderer(clonedRuntime, null, singleCamera);
-            _renderThread = new Thread(RenderThread) { Name = $"Render {LevelName}" };
-            _renderer.StatusChanged += status => _statusObservable.OnNext(status);
+        _renderer = new LevelRenderer(clonedRuntime, null, singleCamera);
+        _renderThread = new Thread(RenderThread) { Name = $"Render {LevelName}" };
+        _renderer.StatusChanged += status => _statusObservable.OnNext(status);
 
-            _statusObservable
-                .Sample(TimeSpan.FromMilliseconds(15))
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(
+        _statusObservable
+            .Sample(TimeSpan.FromMilliseconds(15))
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(
                 // onNext
                 x =>
                 {
@@ -116,59 +116,58 @@ namespace Drizzle.Editor.ViewModels.Render
                     RenderStageProgressMax = 1;
                 });
 
-            _renderThread.Start();
-        }
+        _renderThread.Start();
+    }
 
-        private void RenderThread()
+    private void RenderThread()
+    {
+        Debug.Assert(_renderer != null);
+
+        try
         {
-            Debug.Assert(_renderer != null);
-
-            try
-            {
-                _renderer.DoRender();
-            }
-            catch (Exception e)
-            {
-                _statusObservable.OnError(e);
-                Log.Error(e, "Exception while rendering!");
-            }
-
-            _statusObservable.OnCompleted();
+            _renderer.DoRender();
         }
-
-        public void StopRender()
+        catch (Exception e)
         {
-            if (_renderThread?.IsAlive == true)
-            {
-                _renderer!.CancelRender();
-                _renderThread.Join();
-            }
+            _statusObservable.OnError(e);
+            Log.Error(e, "Exception while rendering!");
         }
 
-        public void SingleStep()
+        _statusObservable.OnCompleted();
+    }
+
+    public void StopRender()
+    {
+        if (_renderThread?.IsAlive == true)
         {
-            _renderer?.SingleStep();
+            _renderer!.CancelRender();
+            _renderThread.Join();
         }
+    }
 
-        public void OpenCastViewer()
-        {
-            new LingoCastViewer { DataContext = new LingoCastViewerViewModel(this) }.Show();
-        }
+    public void SingleStep()
+    {
+        _renderer?.SingleStep();
+    }
 
-        public Task Exec(Action<LingoRuntime> action)
-        {
-            if (_renderer == null)
-                throw new InvalidOperationException();
+    public void OpenCastViewer()
+    {
+        new LingoCastViewer { DataContext = new LingoCastViewerViewModel(this) }.Show();
+    }
 
-            return _renderer.Exec(action);
-        }
+    public Task Exec(Action<LingoRuntime> action)
+    {
+        if (_renderer == null)
+            throw new InvalidOperationException();
 
-        public Task<T> Exec<T>(Func<LingoRuntime, T> func)
-        {
-            if (_renderer == null)
-                throw new InvalidOperationException();
+        return _renderer.Exec(action);
+    }
 
-            return _renderer.Exec(func);
-        }
+    public Task<T> Exec<T>(Func<LingoRuntime, T> func)
+    {
+        if (_renderer == null)
+            throw new InvalidOperationException();
+
+        return _renderer.Exec(func);
     }
 }

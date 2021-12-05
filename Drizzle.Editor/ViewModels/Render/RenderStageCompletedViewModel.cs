@@ -1,7 +1,6 @@
-﻿namespace Drizzle.Editor.ViewModels.Render
-{
-    public sealed class RenderStageCompletedViewModel : RenderStageViewModelBase
-    {
+﻿namespace Drizzle.Editor.ViewModels.Render;
 
-    }
+public sealed class RenderStageCompletedViewModel : RenderStageViewModelBase
+{
+
 }

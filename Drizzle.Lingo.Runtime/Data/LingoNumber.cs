@@ -1,176 +1,175 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Drizzle.Lingo.Runtime
+namespace Drizzle.Lingo.Runtime;
+
+[SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
+public readonly struct LingoNumber : IEquatable<LingoNumber>, IComparable<LingoNumber>
 {
-    [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
-    public readonly struct LingoNumber : IEquatable<LingoNumber>, IComparable<LingoNumber>
+    private readonly double _decimalValue;
+    private readonly int _intValue;
+    public readonly bool IsDecimal;
+
+    public double DecimalValue => IsDecimal ? _decimalValue : _intValue;
+    public int IntValue => IsDecimal ? (int)Math.Round(DecimalValue, MidpointRounding.AwayFromZero) : _intValue;
+
+    public LingoNumber integer => IntValue;
+    public LingoNumber @float => DecimalValue;
+
+    public LingoNumber(double decimalValue)
     {
-        private readonly double _decimalValue;
-        private readonly int _intValue;
-        public readonly bool IsDecimal;
+        IsDecimal = true;
+        _intValue = default;
+        _decimalValue = decimalValue;
+    }
 
-        public double DecimalValue => IsDecimal ? _decimalValue : _intValue;
-        public int IntValue => IsDecimal ? (int)Math.Round(DecimalValue, MidpointRounding.AwayFromZero) : _intValue;
+    public LingoNumber(int intValue)
+    {
+        IsDecimal = false;
+        _decimalValue = default;
+        _intValue = intValue;
+    }
 
-        public LingoNumber integer => IntValue;
-        public LingoNumber @float => DecimalValue;
+    // just...
+    public LingoNumber findpos(object val) => int.MinValue;
 
-        public LingoNumber(double decimalValue)
-        {
-            IsDecimal = true;
-            _intValue = default;
-            _decimalValue = decimalValue;
-        }
+    public static LingoNumber Parse(ReadOnlySpan<char> text)
+    {
+        if (int.TryParse(text, out var intValue))
+            return new LingoNumber(intValue);
 
-        public LingoNumber(int intValue)
-        {
-            IsDecimal = false;
-            _decimalValue = default;
-            _intValue = intValue;
-        }
+        return new LingoNumber(double.Parse(text));
+    }
 
-        // just...
-        public LingoNumber findpos(object val) => int.MinValue;
+    public static LingoNumber Abs(LingoNumber dec)
+    {
+        if (dec.IsDecimal)
+            return new(Math.Abs(dec._decimalValue));
 
-        public static LingoNumber Parse(ReadOnlySpan<char> text)
-        {
-            if (int.TryParse(text, out var intValue))
-                return new LingoNumber(intValue);
+        return new(Math.Abs(dec.IntValue));
+    }
 
-            return new LingoNumber(double.Parse(text));
-        }
+    public static LingoNumber Sqrt(LingoNumber dec)
+    {
+        var val = new LingoNumber(Math.Sqrt(dec.DecimalValue));
+        return dec.IsDecimal ? val : val.integer;
+    }
 
-        public static LingoNumber Abs(LingoNumber dec)
-        {
-            if (dec.IsDecimal)
-                return new(Math.Abs(dec._decimalValue));
+    // Trig functions are always float.
+    public static LingoNumber Cos(LingoNumber dec) => new(Math.Cos(dec.DecimalValue));
+    public static LingoNumber Sin(LingoNumber dec) => new(Math.Sin(dec.DecimalValue));
+    public static LingoNumber Tan(LingoNumber dec) => new(Math.Tan(dec.DecimalValue));
+    public static LingoNumber Atan(LingoNumber dec) => new(Math.Atan(dec.DecimalValue));
 
-            return new(Math.Abs(dec.IntValue));
-        }
+    // Pow is always float
+    public static LingoNumber Pow(LingoNumber @base, LingoNumber exp) =>
+        new(Math.Pow(@base.DecimalValue, exp.DecimalValue));
 
-        public static LingoNumber Sqrt(LingoNumber dec)
-        {
-            var val = new LingoNumber(Math.Sqrt(dec.DecimalValue));
-            return dec.IsDecimal ? val : val.integer;
-        }
+    public override string ToString() => IsDecimal ? DecimalValue.ToString("F4") : IntValue.ToString();
 
-        // Trig functions are always float.
-        public static LingoNumber Cos(LingoNumber dec) => new(Math.Cos(dec.DecimalValue));
-        public static LingoNumber Sin(LingoNumber dec) => new(Math.Sin(dec.DecimalValue));
-        public static LingoNumber Tan(LingoNumber dec) => new(Math.Tan(dec.DecimalValue));
-        public static LingoNumber Atan(LingoNumber dec) => new(Math.Atan(dec.DecimalValue));
+    public static LingoNumber operator -(LingoNumber dec) =>
+        dec.IsDecimal ? new(-dec.DecimalValue) : new(-dec.IntValue);
 
-        // Pow is always float
-        public static LingoNumber Pow(LingoNumber @base, LingoNumber exp) =>
-            new(Math.Pow(@base.DecimalValue, exp.DecimalValue));
+    public static LingoNumber operator +(LingoNumber dec) =>
+        dec.IsDecimal ? new(+dec.DecimalValue) : new(+dec.IntValue);
 
-        public override string ToString() => IsDecimal ? DecimalValue.ToString("F4") : IntValue.ToString();
+    public static LingoNumber operator +(LingoNumber a, LingoNumber b)
+    {
+        if (!a.IsDecimal && !b.IsDecimal)
+            return new(a._intValue + b._intValue);
 
-        public static LingoNumber operator -(LingoNumber dec) =>
-            dec.IsDecimal ? new(-dec.DecimalValue) : new(-dec.IntValue);
+        return new(a.DecimalValue + b.DecimalValue);
+    }
 
-        public static LingoNumber operator +(LingoNumber dec) =>
-            dec.IsDecimal ? new(+dec.DecimalValue) : new(+dec.IntValue);
+    public static LingoNumber operator -(LingoNumber a, LingoNumber b)
+    {
+        if (!a.IsDecimal && !b.IsDecimal)
+            return new(a._intValue - b._intValue);
 
-        public static LingoNumber operator +(LingoNumber a, LingoNumber b)
-        {
-            if (!a.IsDecimal && !b.IsDecimal)
-                return new(a._intValue + b._intValue);
+        return new(a.DecimalValue - b.DecimalValue);
+    }
 
-            return new(a.DecimalValue + b.DecimalValue);
-        }
+    public static LingoNumber operator *(LingoNumber a, LingoNumber b)
+    {
+        if (!a.IsDecimal && !b.IsDecimal)
+            return new(a._intValue * b._intValue);
 
-        public static LingoNumber operator -(LingoNumber a, LingoNumber b)
-        {
-            if (!a.IsDecimal && !b.IsDecimal)
-                return new(a._intValue - b._intValue);
+        return new(a.DecimalValue * b.DecimalValue);
+    }
 
-            return new(a.DecimalValue - b.DecimalValue);
-        }
+    public static LingoNumber operator /(LingoNumber a, LingoNumber b)
+    {
+        if (!a.IsDecimal && !b.IsDecimal)
+            return new(a._intValue / b._intValue);
 
-        public static LingoNumber operator *(LingoNumber a, LingoNumber b)
-        {
-            if (!a.IsDecimal && !b.IsDecimal)
-                return new(a._intValue * b._intValue);
+        return new(a.DecimalValue / b.DecimalValue);
+    }
 
-            return new(a.DecimalValue * b.DecimalValue);
-        }
+    public static LingoNumber operator %(LingoNumber a, LingoNumber b)
+    {
+        if (!a.IsDecimal && !b.IsDecimal)
+            return new(a._intValue % b._intValue);
 
-        public static LingoNumber operator /(LingoNumber a, LingoNumber b)
-        {
-            if (!a.IsDecimal && !b.IsDecimal)
-                return new(a._intValue / b._intValue);
+        return new(a.DecimalValue % b.DecimalValue);
+    }
 
-            return new(a.DecimalValue / b.DecimalValue);
-        }
+    public static implicit operator LingoNumber(int x) => new(x);
+    public static implicit operator LingoNumber(float x) => new(x);
+    public static implicit operator LingoNumber(double x) => new(x);
+    public static explicit operator int(LingoNumber x) => x.IntValue;
+    public static explicit operator float(LingoNumber x) => (float)x.DecimalValue;
+    public static explicit operator double(LingoNumber x) => x.DecimalValue;
 
-        public static LingoNumber operator %(LingoNumber a, LingoNumber b)
-        {
-            if (!a.IsDecimal && !b.IsDecimal)
-                return new(a._intValue % b._intValue);
+    public bool Equals(LingoNumber other)
+    {
+        if (IsDecimal || other.IsDecimal)
+            return DecimalValue.Equals(other.DecimalValue);
 
-            return new(a.DecimalValue % b.DecimalValue);
-        }
+        return _intValue == other._intValue;
+    }
 
-        public static implicit operator LingoNumber(int x) => new(x);
-        public static implicit operator LingoNumber(float x) => new(x);
-        public static implicit operator LingoNumber(double x) => new(x);
-        public static explicit operator int(LingoNumber x) => x.IntValue;
-        public static explicit operator float(LingoNumber x) => (float)x.DecimalValue;
-        public static explicit operator double(LingoNumber x) => x.DecimalValue;
+    public override bool Equals(object? obj)
+    {
+        return obj is LingoNumber other && Equals(other);
+    }
 
-        public bool Equals(LingoNumber other)
-        {
-            if (IsDecimal || other.IsDecimal)
-                return DecimalValue.Equals(other.DecimalValue);
+    public override int GetHashCode()
+    {
+        return DecimalValue.GetHashCode();
+    }
 
-            return _intValue == other._intValue;
-        }
+    public static bool operator ==(LingoNumber left, LingoNumber right)
+    {
+        return left.Equals(right);
+    }
 
-        public override bool Equals(object? obj)
-        {
-            return obj is LingoNumber other && Equals(other);
-        }
+    public static bool operator !=(LingoNumber left, LingoNumber right)
+    {
+        return !left.Equals(right);
+    }
 
-        public override int GetHashCode()
-        {
-            return DecimalValue.GetHashCode();
-        }
+    public int CompareTo(LingoNumber other)
+    {
+        return DecimalValue.CompareTo(other.DecimalValue);
+    }
 
-        public static bool operator ==(LingoNumber left, LingoNumber right)
-        {
-            return left.Equals(right);
-        }
+    public static bool operator <(LingoNumber left, LingoNumber right)
+    {
+        return left.CompareTo(right) < 0;
+    }
 
-        public static bool operator !=(LingoNumber left, LingoNumber right)
-        {
-            return !left.Equals(right);
-        }
+    public static bool operator >(LingoNumber left, LingoNumber right)
+    {
+        return left.CompareTo(right) > 0;
+    }
 
-        public int CompareTo(LingoNumber other)
-        {
-            return DecimalValue.CompareTo(other.DecimalValue);
-        }
+    public static bool operator <=(LingoNumber left, LingoNumber right)
+    {
+        return left.CompareTo(right) <= 0;
+    }
 
-        public static bool operator <(LingoNumber left, LingoNumber right)
-        {
-            return left.CompareTo(right) < 0;
-        }
-
-        public static bool operator >(LingoNumber left, LingoNumber right)
-        {
-            return left.CompareTo(right) > 0;
-        }
-
-        public static bool operator <=(LingoNumber left, LingoNumber right)
-        {
-            return left.CompareTo(right) <= 0;
-        }
-
-        public static bool operator >=(LingoNumber left, LingoNumber right)
-        {
-            return left.CompareTo(right) >= 0;
-        }
+    public static bool operator >=(LingoNumber left, LingoNumber right)
+    {
+        return left.CompareTo(right) >= 0;
     }
 }

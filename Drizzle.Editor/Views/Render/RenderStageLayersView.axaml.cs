@@ -1,18 +1,17 @@
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
-namespace Drizzle.Editor.Views.Render
-{
-    public partial class RenderStageLayersView : UserControl
-    {
-        public RenderStageLayersView()
-        {
-            InitializeComponent();
-        }
+namespace Drizzle.Editor.Views.Render;
 
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
-        }
+public partial class RenderStageLayersView : UserControl
+{
+    public RenderStageLayersView()
+    {
+        InitializeComponent();
+    }
+
+    private void InitializeComponent()
+    {
+        AvaloniaXamlLoader.Load(this);
     }
 }

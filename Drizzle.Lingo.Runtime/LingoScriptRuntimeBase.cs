@@ -1,7 +1,6 @@
-﻿namespace Drizzle.Lingo.Runtime
+﻿namespace Drizzle.Lingo.Runtime;
+
+public abstract class LingoScriptRuntimeBase
 {
-    public abstract class LingoScriptRuntimeBase
-    {
-        public abstract void Init(object movieScript, LingoGlobal global);
-    }
+    public abstract void Init(object movieScript, LingoGlobal global);
 }

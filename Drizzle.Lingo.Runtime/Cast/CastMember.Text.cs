@@ -1,44 +1,43 @@
 ﻿using System.IO;
 using System.Text;
 
-namespace Drizzle.Lingo.Runtime.Cast
+namespace Drizzle.Lingo.Runtime.Cast;
+
+public sealed partial class CastMember
 {
-    public sealed partial class CastMember
+    private string _text = "";
+
+    public string text
     {
-        private string _text = "";
-
-        public string text
+        get
         {
-            get
-            {
-                AssertType(CastMemberType.Text);
-                return _text;
-            }
-            set
-            {
-                AssertType(CastMemberType.Text);
-                _text = value;
-            }
+            AssertType(CastMemberType.Text);
+            return _text;
+        }
+        set
+        {
+            AssertType(CastMemberType.Text);
+            _text = value;
+        }
+    }
+
+    public LingoSymbol alignment { get; set; }
+
+    private void ImportFileImplText(string path)
+    {
+        using var sr = new StreamReader(path);
+        var sb = new StringBuilder();
+
+        while (true)
+        {
+            var line = sr.ReadLine();
+            if (line == null)
+                break;
+
+            sb.Append(line);
+            sb.Append('\r');
         }
 
-        public LingoSymbol alignment { get; set; }
-
-        private void ImportFileImplText(string path)
-        {
-            using var sr = new StreamReader(path);
-            var sb = new StringBuilder();
-
-            while (true)
-            {
-                var line = sr.ReadLine();
-                if (line == null)
-                    break;
-
-                sb.Append(line);
-                sb.Append('\r');
-            }
-
-            text = sb.ToString();
-        }
+        text = sb.ToString();
     }
 }

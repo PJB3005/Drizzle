@@ -1,8 +1,7 @@
-﻿namespace Drizzle.Lingo.Runtime
+﻿namespace Drizzle.Lingo.Runtime;
+
+public interface ILingoVector
 {
-    public interface ILingoVector
-    {
-        int CountElems { get; }
-        object? this[int index] { get; }
-    }
+    int CountElems { get; }
+    object? this[int index] { get; }
 }

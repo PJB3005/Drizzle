@@ -6,37 +6,36 @@ using Drizzle.Lingo.Runtime;
 using Drizzle.Logic;
 using Drizzle.Ported;
 
-namespace Drizzle.Editor.ViewModels
+namespace Drizzle.Editor.ViewModels;
+
+public sealed class EditorContentViewModel : ViewModelBase, ILingoRuntimeManager
 {
-    public sealed class EditorContentViewModel : ViewModelBase, ILingoRuntimeManager
+    public LingoRuntime Runtime { get; }
+
+    public IReadOnlyList<EditorTabViewModelBase> EditorTabs { get; }
+    public int CountCameras => (int) MovieScript.gCameraProps.cameras.count;
+    private MovieScript MovieScript => (MovieScript)Runtime.MovieScriptInstance;
+
+    public EditorContentViewModel(LingoRuntime runtime)
     {
-        public LingoRuntime Runtime { get; }
+        Runtime = runtime;
 
-        public IReadOnlyList<EditorTabViewModelBase> EditorTabs { get; }
-        public int CountCameras => (int) MovieScript.gCameraProps.cameras.count;
-        private MovieScript MovieScript => (MovieScript)Runtime.MovieScriptInstance;
-
-        public EditorContentViewModel(LingoRuntime runtime)
+        EditorTabs = new EditorTabViewModelBase[]
         {
-            Runtime = runtime;
+            new TabLevelOverviewViewModel(this),
+            new TabGeometryEditorViewModel(this),
+            new TabTileEditorViewModel()
+        };
+    }
 
-            EditorTabs = new EditorTabViewModelBase[]
-            {
-                new TabLevelOverviewViewModel(this),
-                new TabGeometryEditorViewModel(this),
-                new TabTileEditorViewModel()
-            };
-        }
+    public Task Exec(Action<LingoRuntime> action)
+    {
+        action(Runtime);
+        return Task.CompletedTask;
+    }
 
-        public Task Exec(Action<LingoRuntime> action)
-        {
-            action(Runtime);
-            return Task.CompletedTask;
-        }
-
-        public Task<T> Exec<T>(Func<LingoRuntime, T> func)
-        {
-            return Task.FromResult(func(Runtime));
-        }
+    public Task<T> Exec<T>(Func<LingoRuntime, T> func)
+    {
+        return Task.FromResult(func(Runtime));
     }
 }

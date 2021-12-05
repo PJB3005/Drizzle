@@ -1,21 +1,20 @@
 ﻿using Drizzle.Lingo.Runtime;
 
-namespace Drizzle.Ported
+namespace Drizzle.Ported;
+
+public abstract class LingoScriptBase : LingoScriptRuntimeBase
 {
-    public abstract class LingoScriptBase : LingoScriptRuntimeBase
+    protected MovieScript _movieScript;
+    protected LingoGlobal _global;
+
+    public void Init(MovieScript movieScript, LingoGlobal global)
     {
-        protected MovieScript _movieScript;
-        protected LingoGlobal _global;
+        _movieScript = movieScript;
+        _global = global;
+    }
 
-        public void Init(MovieScript movieScript, LingoGlobal global)
-        {
-            _movieScript = movieScript;
-            _global = global;
-        }
-
-        public sealed override void Init(object movieScript, LingoGlobal global)
-        {
-            Init((MovieScript) movieScript, global);
-        }
+    public sealed override void Init(object movieScript, LingoGlobal global)
+    {
+        Init((MovieScript) movieScript, global);
     }
 }

@@ -1,21 +1,20 @@
 ﻿using System;
 
-namespace Drizzle.Lingo.Runtime
+namespace Drizzle.Lingo.Runtime;
+
+public sealed partial class LingoGlobal
 {
-    public sealed partial class LingoGlobal
+    public System _system { get; private set; } = default!;
+
+    public sealed class System
     {
-        public System _system { get; private set; } = default!;
+        private readonly LingoGlobal _global;
 
-        public sealed class System
+        public System(LingoGlobal global)
         {
-            private readonly LingoGlobal _global;
-
-            public System(LingoGlobal global)
-            {
-                _global = global;
-            }
-
-            public LingoNumber milliseconds => (int)_global.LingoRuntime.Stopwatch.ElapsedMilliseconds;
+            _global = global;
         }
+
+        public LingoNumber milliseconds => (int)_global.LingoRuntime.Stopwatch.ElapsedMilliseconds;
     }
 }

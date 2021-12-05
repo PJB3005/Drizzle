@@ -1,7 +1,6 @@
-﻿namespace Drizzle.Ported
+﻿namespace Drizzle.Ported;
+
+public class LingoBehaviorScript : LingoScriptBase
 {
-    public class LingoBehaviorScript : LingoScriptBase
-    {
-        public int spritenum { get; set; }
-    }
+    public int spritenum { get; set; }
 }

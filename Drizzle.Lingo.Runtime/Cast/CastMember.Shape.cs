@@ -1,21 +1,20 @@
-namespace Drizzle.Lingo.Runtime.Cast
-{
-    public sealed partial class CastMember
-    {
-        public int _lineDirection;
+namespace Drizzle.Lingo.Runtime.Cast;
 
-        public int linedirection
+public sealed partial class CastMember
+{
+    public int _lineDirection;
+
+    public int linedirection
+    {
+        get
         {
-            get
-            {
-                AssertType(CastMemberType.Shape);
-                return _lineDirection;
-            }
-            set
-            {
-                AssertType(CastMemberType.Shape);
-                _lineDirection = value;
-            }
+            AssertType(CastMemberType.Shape);
+            return _lineDirection;
+        }
+        set
+        {
+            AssertType(CastMemberType.Shape);
+            _lineDirection = value;
         }
     }
 }

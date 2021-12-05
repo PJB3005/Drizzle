@@ -1,22 +1,21 @@
-﻿namespace Drizzle.Lingo.Runtime
+﻿namespace Drizzle.Lingo.Runtime;
+
+public sealed partial class LingoGlobal
 {
-    public sealed partial class LingoGlobal
+    public Mouse _mouse { get; private set; } = default!;
+
+    public sealed class Mouse
     {
-        public Mouse _mouse { get; private set; } = default!;
+        private readonly LingoGlobal _global;
 
-        public sealed class Mouse
+        public Mouse(LingoGlobal global)
         {
-            private readonly LingoGlobal _global;
-
-            public Mouse(LingoGlobal global)
-            {
-                _global = global;
-            }
-
-            public LingoPoint mouseloc => default;
-            public LingoNumber mousedown => 0;
-            public LingoNumber rightmousedown => 0;
+            _global = global;
         }
 
+        public LingoPoint mouseloc => default;
+        public LingoNumber mousedown => 0;
+        public LingoNumber rightmousedown => 0;
     }
+
 }

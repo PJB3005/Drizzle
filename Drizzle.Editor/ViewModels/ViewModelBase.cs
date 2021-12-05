@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using ReactiveUI;
 
-namespace Drizzle.Editor.ViewModels
+namespace Drizzle.Editor.ViewModels;
+
+public class ViewModelBase : ReactiveObject
 {
-    public class ViewModelBase : ReactiveObject
-    {
-    }
 }

@@ -4,183 +4,182 @@ using System.Dynamic;
 using System.IO;
 using System.Runtime.CompilerServices;
 
-namespace Drizzle.Lingo.Runtime
+namespace Drizzle.Lingo.Runtime;
+
+public sealed partial class LingoGlobal
 {
-    public sealed partial class LingoGlobal
+    // Cache these values because Lingo accesses them a lot and we want to avoid O(n^2) behavior here.
+    private static readonly ConditionalWeakTable<string, StringLineData> StringLineCache = new();
+
+    private static StringLineData GetCachedStringLineData(string str)
     {
-        // Cache these values because Lingo accesses them a lot and we want to avoid O(n^2) behavior here.
-        private static readonly ConditionalWeakTable<string, StringLineData> StringLineCache = new();
+        return StringLineCache.GetValue(str, CacheStringLineData);
+    }
 
-        private static StringLineData GetCachedStringLineData(string str)
+    private static StringLineData CacheStringLineData(string key)
+    {
+        var list = new List<int>();
+
+        for (var i = 0; i < key.Length; i++)
         {
-            return StringLineCache.GetValue(str, CacheStringLineData);
+            var chr = key[i];
+            // Lingo cares ONLY about CR, nothing else.
+            if (chr == '\r')
+                list.Add(i);
         }
 
-        private static StringLineData CacheStringLineData(string key)
+        return new StringLineData
         {
-            var list = new List<int>();
+            NewlineIndices = list.ToArray()
+        };
+    }
 
-            for (var i = 0; i < key.Length; i++)
+    public static LingoNumber thenumberoflines_helper(string value)
+    {
+        var cacheData = GetCachedStringLineData(value);
+        return cacheData.NewlineIndices.Length + 1;
+    }
+
+    public static string lineof_helper(LingoNumber idx, string collection)
+    {
+        return linemember_helper(collection)[idx];
+    }
+
+    public static string charof_helper(LingoNumber idx, string str)
+    {
+        var iVal = idx.IntValue;
+        // This is such a cursed program god damn.
+        if (iVal < 1)
+            return str;
+
+        if (iVal > str.Length)
+            return "";
+
+        return str[iVal - 1].ToString();
+    }
+
+    public static dynamic charmember_helper(string d)
+    {
+        return new StringCharIndex(d);
+    }
+
+    public static dynamic linemember_helper(string d)
+    {
+        return new StringLineIndex(d);
+    }
+
+    public static dynamic lengthmember_helper(dynamic d)
+    {
+        if (d is string str)
+        {
+            return str.Length;
+        }
+
+        return d.length;
+    }
+
+    private sealed class StringCharIndex : DynamicObject, ISliceable
+    {
+        public StringCharIndex(string s)
+        {
+            String = s;
+        }
+
+        public string String { get; }
+
+        public string this[int idx] => String[idx - 1].ToString();
+        public string this[LingoNumber idx] => this[(int) idx];
+
+        // I have no idea why this is necessary.
+        public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object? result)
+        {
+            result = this[(int)(LingoNumber)indexes[0]];
+            return true;
+        }
+
+        public object this[Range idx]
+        {
+            get
             {
-                var chr = key[i];
-                // Lingo cares ONLY about CR, nothing else.
-                if (chr == '\r')
-                    list.Add(i);
+                if (idx.Start.IsFromEnd || idx.End.IsFromEnd)
+                    throw new ArgumentException();
+
+                return String[(idx.Start.Value - 1)..(idx.End.Value)];
             }
+        }
+    }
 
-            return new StringLineData
+    private sealed class StringLineIndex : DynamicObject, ISliceable
+    {
+        public StringLineIndex(string s)
+        {
+            String = s;
+        }
+
+        public string String { get; }
+
+        public string this[LingoNumber value]
+        {
+            get
             {
-                NewlineIndices = list.ToArray()
-            };
-        }
+                if (value <= 0)
+                    return String;
 
-        public static LingoNumber thenumberoflines_helper(string value)
-        {
-            var cacheData = GetCachedStringLineData(value);
-            return cacheData.NewlineIndices.Length + 1;
-        }
+                var cacheData = GetCachedStringLineData(String);
+                var indices = cacheData.NewlineIndices;
+                var idx = (int) value - 1;
 
-        public static string lineof_helper(LingoNumber idx, string collection)
-        {
-            return linemember_helper(collection)[idx];
-        }
+                if (idx > indices.Length)
+                    return "";
 
-        public static string charof_helper(LingoNumber idx, string str)
-        {
-            var iVal = idx.IntValue;
-            // This is such a cursed program god damn.
-            if (iVal < 1)
-                return str;
+                var endIdx = String.Length;
+                if (idx < indices.Length)
+                    endIdx = indices[idx];
 
-            if (iVal > str.Length)
-                return "";
+                var startIdx = 0;
+                if (idx > 0)
+                    startIdx = indices[idx-1] + 1;
 
-            return str[iVal - 1].ToString();
-        }
+                return String[startIdx..endIdx];
 
-        public static dynamic charmember_helper(string d)
-        {
-            return new StringCharIndex(d);
-        }
+                /*var curLine = 1;
 
-        public static dynamic linemember_helper(string d)
-        {
-            return new StringLineIndex(d);
-        }
 
-        public static dynamic lengthmember_helper(dynamic d)
-        {
-            if (d is string str)
-            {
-                return str.Length;
-            }
+                var sr = new StringReader(String);
 
-            return d.length;
-        }
-
-        private sealed class StringCharIndex : DynamicObject, ISliceable
-        {
-            public StringCharIndex(string s)
-            {
-                String = s;
-            }
-
-            public string String { get; }
-
-            public string this[int idx] => String[idx - 1].ToString();
-            public string this[LingoNumber idx] => this[(int) idx];
-
-            // I have no idea why this is necessary.
-            public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object? result)
-            {
-                result = this[(int)(LingoNumber)indexes[0]];
-                return true;
-            }
-
-            public object this[Range idx]
-            {
-                get
+                while (sr.ReadLine() is { } line)
                 {
-                    if (idx.Start.IsFromEnd || idx.End.IsFromEnd)
-                        throw new ArgumentException();
-
-                    return String[(idx.Start.Value - 1)..(idx.End.Value)];
+                    if (curLine++ == value)
+                        return line;
                 }
+
+                throw new IndexOutOfRangeException();*/
             }
         }
 
-        private sealed class StringLineIndex : DynamicObject, ISliceable
+        public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object? result)
         {
-            public StringLineIndex(string s)
-            {
-                String = s;
-            }
-
-            public string String { get; }
-
-            public string this[LingoNumber value]
-            {
-                get
-                {
-                    if (value <= 0)
-                        return String;
-
-                    var cacheData = GetCachedStringLineData(String);
-                    var indices = cacheData.NewlineIndices;
-                    var idx = (int) value - 1;
-
-                    if (idx > indices.Length)
-                        return "";
-
-                    var endIdx = String.Length;
-                    if (idx < indices.Length)
-                        endIdx = indices[idx];
-
-                    var startIdx = 0;
-                    if (idx > 0)
-                        startIdx = indices[idx-1] + 1;
-
-                    return String[startIdx..endIdx];
-
-                    /*var curLine = 1;
-
-
-                    var sr = new StringReader(String);
-
-                    while (sr.ReadLine() is { } line)
-                    {
-                        if (curLine++ == value)
-                            return line;
-                    }
-
-                    throw new IndexOutOfRangeException();*/
-                }
-            }
-
-            public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object? result)
-            {
-                result = this[(int)(LingoNumber)indexes[0]];
-                return true;
-            }
-
-            public object this[Range idx] => throw new NotImplementedException();
+            result = this[(int)(LingoNumber)indexes[0]];
+            return true;
         }
 
-        private object DoSliceString(string str, int start, int end)
-        {
-            throw new NotImplementedException();
-        }
+        public object this[Range idx] => throw new NotImplementedException();
+    }
 
-        public string numtochar(int num)
-        {
-            return ((char)num).ToString();
-        }
+    private object DoSliceString(string str, int start, int end)
+    {
+        throw new NotImplementedException();
+    }
 
-        public string numtochar(LingoNumber num) => numtochar((int)num);
+    public string numtochar(int num)
+    {
+        return ((char)num).ToString();
+    }
 
-        private sealed class StringLineData
-        {
-            public int[] NewlineIndices;
-        }
+    public string numtochar(LingoNumber num) => numtochar((int)num);
+
+    private sealed class StringLineData
+    {
+        public int[] NewlineIndices;
     }
 }

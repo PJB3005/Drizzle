@@ -1,18 +1,17 @@
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
-namespace Drizzle.Editor.Views.EditorTabs
-{
-    public partial class TabLevelOverviewView : UserControl
-    {
-        public TabLevelOverviewView()
-        {
-            InitializeComponent();
-        }
+namespace Drizzle.Editor.Views.EditorTabs;
 
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
-        }
+public partial class TabLevelOverviewView : UserControl
+{
+    public TabLevelOverviewView()
+    {
+        InitializeComponent();
+    }
+
+    private void InitializeComponent()
+    {
+        AvaloniaXamlLoader.Load(this);
     }
 }

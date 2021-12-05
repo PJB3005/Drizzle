@@ -4,33 +4,32 @@ using Drizzle.Logic;
 using ReactiveUI.Fody.Helpers;
 using Serilog;
 
-namespace Drizzle.Editor.ViewModels
+namespace Drizzle.Editor.ViewModels;
+
+public sealed class MainEditorTabViewModel : ViewModelBase
 {
-    public sealed class MainEditorTabViewModel : ViewModelBase
+    [Reactive] public string LevelName { get; private set; }
+    [Reactive] public EditorContentViewModel? Content { get; private set; }
+
+    public MainEditorTabViewModel(string levelName)
     {
-        [Reactive] public string LevelName { get; private set; }
-        [Reactive] public EditorContentViewModel? Content { get; private set; }
+        LevelName = levelName;
+    }
 
-        public MainEditorTabViewModel(string levelName)
+    public async void InitLoad(Task<LingoRuntime> zygote, string fullPath)
+    {
+        var zygoteInstance = await zygote;
+        var runtime = await Task.Run(() =>
         {
-            LevelName = levelName;
-        }
+            var cloned = zygoteInstance.Clone();
 
-        public async void InitLoad(Task<LingoRuntime> zygote, string fullPath)
-        {
-            var zygoteInstance = await zygote;
-            var runtime = await Task.Run(() =>
-            {
-                var cloned = zygoteInstance.Clone();
+            Log.Debug("Loading level...");
 
-                Log.Debug("Loading level...");
+            EditorRuntimeHelpers.RunLoadLevel(cloned, fullPath);
 
-                EditorRuntimeHelpers.RunLoadLevel(cloned, fullPath);
+            return cloned;
+        });
 
-                return cloned;
-            });
-
-            Content = new EditorContentViewModel(runtime);
-        }
+        Content = new EditorContentViewModel(runtime);
     }
 }

@@ -11,17 +11,17 @@ using Serilog.Sinks.SystemConsole.Themes;
 using SS14.Launcher;
 using LogEventLevel = Serilog.Events.LogEventLevel;
 
-namespace Drizzle.Editor
-{
-    public class App : Application
-    {
-        public override void Initialize()
-        {
-            AvaloniaXamlLoader.Load(this);
-        }
+namespace Drizzle.Editor;
 
-        public override void OnFrameworkInitializationCompleted()
-        {
+public class App : Application
+{
+    public override void Initialize()
+    {
+        AvaloniaXamlLoader.Load(this);
+    }
+
+    public override void OnFrameworkInitializationCompleted()
+    {
 #if DEBUG
             Logger.Sink = new AvaloniaSeriLogger(new LoggerConfiguration()
                 .MinimumLevel.Is(LogEventLevel.Warning)
@@ -32,22 +32,21 @@ namespace Drizzle.Editor
                 .CreateLogger());
 #endif
 
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            if (!CommandLineArgs.TryParse(desktop.Args, out var parsed))
+                Environment.Exit(1);
+
+            var viewModel = new MainWindowViewModel();
+            desktop.MainWindow = new MainWindow
             {
-                if (!CommandLineArgs.TryParse(desktop.Args, out var parsed))
-                    Environment.Exit(1);
+                DataContext = viewModel,
+            };
+            desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
 
-                var viewModel = new MainWindowViewModel();
-                desktop.MainWindow = new MainWindow
-                {
-                    DataContext = viewModel,
-                };
-                desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
-
-                viewModel.Init(parsed);
-            }
-
-            base.OnFrameworkInitializationCompleted();
+            viewModel.Init(parsed);
         }
+
+        base.OnFrameworkInitializationCompleted();
     }
 }

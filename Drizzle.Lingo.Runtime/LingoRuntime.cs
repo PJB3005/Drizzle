@@ -4,118 +4,117 @@ using System.Diagnostics;
 using System.Reflection;
 using Serilog;
 
-namespace Drizzle.Lingo.Runtime
+namespace Drizzle.Lingo.Runtime;
+
+/// <summary>
+///     Lingo runtime main class, wraps everything else.
+/// </summary>
+public partial class LingoRuntime
 {
-    /// <summary>
-    ///     Lingo runtime main class, wraps everything else.
-    /// </summary>
-    public partial class LingoRuntime
+    private readonly Assembly _assembly;
+    public LingoGlobal Global { get; }
+    public LingoScriptRuntimeBase MovieScriptInstance { get; private set; } = default!;
+
+    private readonly Dictionary<string, Type> _behaviorScripts = new(StringComparer.InvariantCultureIgnoreCase);
+    private readonly Dictionary<string, Type> _parentScripts = new(StringComparer.InvariantCultureIgnoreCase);
+
+    public Stopwatch Stopwatch { get; } = new();
+
+    public HashSet<int> KeysDown { get; } = new();
+
+    public LingoRuntime(Assembly assembly)
     {
-        private readonly Assembly _assembly;
-        public LingoGlobal Global { get; }
-        public LingoScriptRuntimeBase MovieScriptInstance { get; private set; } = default!;
+        _assembly = assembly;
+        Global = new LingoGlobal(this);
+    }
 
-        private readonly Dictionary<string, Type> _behaviorScripts = new(StringComparer.InvariantCultureIgnoreCase);
-        private readonly Dictionary<string, Type> _parentScripts = new(StringComparer.InvariantCultureIgnoreCase);
+    public void Init()
+    {
+        Log.Debug("Initializing Lingo, pebbles save us all...");
 
-        public Stopwatch Stopwatch { get; } = new();
+        InitNoCast();
+        LoadCast();
+    }
 
-        public HashSet<int> KeysDown { get; } = new();
+    private void InitNoCast()
+    {
+        Stopwatch.Start();
+        Global.Init();
+        InitScript();
+    }
 
-        public LingoRuntime(Assembly assembly)
+    private void InitScript()
+    {
+        Type? movieScriptType = null;
+        var parentScripts = new List<Type>();
+        var behaviorScripts = new List<Type>();
+
+        foreach (var type in _assembly.GetTypes())
         {
-            _assembly = assembly;
-            Global = new LingoGlobal(this);
+            if (Attribute.IsDefined(type, typeof(MovieScriptAttribute)))
+                movieScriptType = type;
+            if (Attribute.IsDefined(type, typeof(ParentScriptAttribute)))
+                parentScripts.Add(type);
+            if (Attribute.IsDefined(type, typeof(BehaviorScriptAttribute)))
+                behaviorScripts.Add(type);
         }
 
-        public void Init()
-        {
-            Log.Debug("Initializing Lingo, pebbles save us all...");
+        if (movieScriptType == null)
+            throw new Exception("Unable to find movie script type!");
 
-            InitNoCast();
-            LoadCast();
+        MovieScriptInstance = (LingoScriptRuntimeBase)Activator.CreateInstance(movieScriptType)!;
+        MovieScriptInstance.Init(MovieScriptInstance, Global);
+
+        foreach (var scriptType in behaviorScripts)
+        {
+            _behaviorScripts.Add(scriptType.Name, scriptType);
         }
 
-        private void InitNoCast()
+        foreach (var scriptType in parentScripts)
         {
-            Stopwatch.Start();
-            Global.Init();
-            InitScript();
+            _parentScripts.Add(scriptType.Name, scriptType);
         }
 
-        private void InitScript()
-        {
-            Type? movieScriptType = null;
-            var parentScripts = new List<Type>();
-            var behaviorScripts = new List<Type>();
+        Log.Debug("Instantiated movie script {MovieScriptType}", movieScriptType);
+        Log.Debug("Found {CountParentScripts} parent and {CountBehaviorScripts} behavior scripts",
+            parentScripts.Count, behaviorScripts.Count);
+    }
 
-            foreach (var type in _assembly.GetTypes())
-            {
-                if (Attribute.IsDefined(type, typeof(MovieScriptAttribute)))
-                    movieScriptType = type;
-                if (Attribute.IsDefined(type, typeof(ParentScriptAttribute)))
-                    parentScripts.Add(type);
-                if (Attribute.IsDefined(type, typeof(BehaviorScriptAttribute)))
-                    behaviorScripts.Add(type);
-            }
+    private LingoScriptRuntimeBase InstantiateBehaviorScript(string name) =>
+        InstantiateScriptType(_behaviorScripts[name]);
 
-            if (movieScriptType == null)
-                throw new Exception("Unable to find movie script type!");
+    private LingoScriptRuntimeBase InstantiateParentScript(string name) =>
+        InstantiateScriptType(_parentScripts[name]);
 
-            MovieScriptInstance = (LingoScriptRuntimeBase)Activator.CreateInstance(movieScriptType)!;
-            MovieScriptInstance.Init(MovieScriptInstance, Global);
+    private LingoScriptRuntimeBase InstantiateScriptType(Type type)
+    {
+        var instance = (LingoScriptRuntimeBase)Activator.CreateInstance(type)!;
+        instance.Init(MovieScriptInstance, Global);
 
-            foreach (var scriptType in behaviorScripts)
-            {
-                _behaviorScripts.Add(scriptType.Name, scriptType);
-            }
+        return instance;
+    }
 
-            foreach (var scriptType in parentScripts)
-            {
-                _parentScripts.Add(scriptType.Name, scriptType);
-            }
+    public LingoScriptRuntimeBase CreateScript(string type, LingoList list)
+    {
+        if (!_parentScripts.TryGetValue(type, out var scriptType)
+            && !_behaviorScripts.TryGetValue(type, out scriptType))
+            throw new ArgumentException("Unknown script type");
 
-            Log.Debug("Instantiated movie script {MovieScriptType}", movieScriptType);
-            Log.Debug("Found {CountParentScripts} parent and {CountBehaviorScripts} behavior scripts",
-                parentScripts.Count, behaviorScripts.Count);
-        }
+        var instance = InstantiateScriptType(scriptType)!;
 
-        private LingoScriptRuntimeBase InstantiateBehaviorScript(string name) =>
-            InstantiateScriptType(_behaviorScripts[name]);
+        var newMethod = instance.GetType().GetMethod("new");
+        newMethod?.Invoke(instance, list.List.ToArray());
 
-        private LingoScriptRuntimeBase InstantiateParentScript(string name) =>
-            InstantiateScriptType(_parentScripts[name]);
+        return instance;
+    }
 
-        private LingoScriptRuntimeBase InstantiateScriptType(Type type)
-        {
-            var instance = (LingoScriptRuntimeBase)Activator.CreateInstance(type)!;
-            instance.Init(MovieScriptInstance, Global);
+    public T CreateScript<T>(params object?[] args) where T : LingoScriptRuntimeBase
+    {
+        var inst = InstantiateScriptType(typeof(T));
 
-            return instance;
-        }
+        var newMethod = inst.GetType().GetMethod("new");
+        newMethod?.Invoke(inst, args);
 
-        public LingoScriptRuntimeBase CreateScript(string type, LingoList list)
-        {
-            if (!_parentScripts.TryGetValue(type, out var scriptType)
-                && !_behaviorScripts.TryGetValue(type, out scriptType))
-                throw new ArgumentException("Unknown script type");
-
-            var instance = InstantiateScriptType(scriptType)!;
-
-            var newMethod = instance.GetType().GetMethod("new");
-            newMethod?.Invoke(instance, list.List.ToArray());
-
-            return instance;
-        }
-
-        public T CreateScript<T>(params object?[] args) where T : LingoScriptRuntimeBase
-        {
-            var inst = InstantiateScriptType(typeof(T));
-
-            var newMethod = inst.GetType().GetMethod("new");
-            newMethod?.Invoke(inst, args);
-
-            return (T)inst;
-        }
+        return (T)inst;
     }
 }

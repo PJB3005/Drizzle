@@ -1,7 +1,6 @@
-﻿namespace Drizzle.Ported
-{
-    public abstract class LingoParentScript : LingoScriptBase
-    {
+﻿namespace Drizzle.Ported;
 
-    }
+public abstract class LingoParentScript : LingoScriptBase
+{
+
 }

@@ -1,16 +1,15 @@
 ﻿using System.Text;
 
-namespace Drizzle.Lingo.Runtime.Parser
+namespace Drizzle.Lingo.Runtime.Parser;
+
+public static class DebugPrint
 {
-    public static class DebugPrint
+    public static string PrintAstNode(AstNode.Base node)
     {
-        public static string PrintAstNode(AstNode.Base node)
-        {
-            var sb = new StringBuilder();
+        var sb = new StringBuilder();
 
-            node.DebugPrint(sb, 0);
+        node.DebugPrint(sb, 0);
 
-            return sb.ToString();
-        }
+        return sb.ToString();
     }
 }
