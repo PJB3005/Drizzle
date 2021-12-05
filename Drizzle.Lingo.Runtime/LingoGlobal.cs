@@ -335,6 +335,9 @@ namespace Drizzle.Lingo.Runtime
                 return false;
             }
 
+            if (a is string strA && b is string strB)
+                return string.Equals(strA, strB, StringComparison.InvariantCultureIgnoreCase);
+
             return a == b;
         }
 
