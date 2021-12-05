@@ -499,6 +499,7 @@ namespace Drizzle.Transpiler
             MakeLoopTmp(ctx, name, $"(LingoNumber){loopTmp}");
             WriteStatementBlock(node.Block, ctx);
 
+            ctx.Writer.WriteLine($"{loopTmp} = (int){WriteVariableNameCore(name, ctx)};");
             ctx.Writer.WriteLine("}");
 
             // ctx.LoopTempIdx--;
