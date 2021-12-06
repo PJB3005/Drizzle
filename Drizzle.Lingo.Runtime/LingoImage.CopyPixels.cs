@@ -224,18 +224,52 @@ public sealed unsafe partial class LingoImage
         where TWriter : struct, IPixelOps<TDstData>
         where TDstData : unmanaged
     {
+        // https://gamedev.stackexchange.com/a/174871/117798
+
+        var top = Vector2.Distance(destQuad.TopLeft, destQuad.TopRight);
+        var bot = Vector2.Distance(destQuad.BottomLeft, destQuad.BottomRight);
+        var lft = Vector2.Distance(destQuad.BottomLeft, destQuad.TopLeft);
+        var rgt = Vector2.Distance(destQuad.BottomRight, destQuad.TopRight);
+
+        float ztl = 1.0f;
+        float ztr = 1.0f;
+        float zbl = 1.0f;
+        float zbr = 1.0f;
+
+        if (top > bot)
+        {
+            ztl *= bot / top;
+            ztr *= bot / top;
+        }
+        else
+        {
+            zbl *= top / bot;
+            zbr *= top / bot;
+        }
+
+        if (lft > rgt)
+        {
+            ztl *= rgt / lft;
+            zbl *= rgt / lft;
+        }
+        else
+        {
+            ztr *= lft / rgt;
+            zbr *= lft / rgt;
+        }
+
         CopyPixelsQuadCoreScalarRasterize<TSrcData, TSampler, TDstData, TWriter>(
             src, dst,
-            destQuad.TopLeft, new Vector2(srcBox.X, srcBox.Y),
-            destQuad.TopRight, new Vector2(srcBox.Z, srcBox.Y),
-            destQuad.BottomRight, new Vector2(srcBox.Z, srcBox.W),
+            new Vector3(destQuad.TopLeft, ztl), new Vector2(srcBox.X, srcBox.Y),
+            new Vector3(destQuad.TopRight, ztr), new Vector2(srcBox.Z, srcBox.Y),
+            new Vector3(destQuad.BottomRight, zbr), new Vector2(srcBox.Z, srcBox.W),
             parameters);
 
         CopyPixelsQuadCoreScalarRasterize<TSrcData, TSampler, TDstData, TWriter>(
             src, dst,
-            destQuad.TopLeft, new Vector2(srcBox.X, srcBox.Y),
-            destQuad.BottomRight, new Vector2(srcBox.Z, srcBox.W),
-            destQuad.BottomLeft, new Vector2(srcBox.X, srcBox.W),
+            new Vector3(destQuad.TopLeft, ztl), new Vector2(srcBox.X, srcBox.Y),
+            new Vector3(destQuad.BottomRight, zbr), new Vector2(srcBox.Z, srcBox.W),
+            new Vector3(destQuad.BottomLeft, zbl), new Vector2(srcBox.X, srcBox.W),
             parameters);
     }
 
@@ -244,9 +278,9 @@ public sealed unsafe partial class LingoImage
     private static void CopyPixelsQuadCoreScalarRasterize<TSrcData, TSampler, TDstData, TWriter>(
         LingoImage src,
         LingoImage dst,
-        Vector2 v0, Vector2 v0st,
-        Vector2 v1, Vector2 v1st,
-        Vector2 v2, Vector2 v2st,
+        Vector3 v0, Vector2 v0st,
+        Vector3 v1, Vector2 v1st,
+        Vector3 v2, Vector2 v2st,
         in CopyPixelsParameters parameters)
         where TSampler : struct, IPixelOps<TSrcData>
         where TSrcData : unmanaged
@@ -259,12 +293,20 @@ public sealed unsafe partial class LingoImage
         var dstImgH = dst.Height;
 
         var boundsTL = Vector2.Min(
-            v0,
-            Vector2.Min(v1, v2));
+            new Vector2(v0.X, v0.Y),
+            Vector2.Min(new Vector2(v1.X, v1.Y), new Vector2(v2.X, v2.Y)));
 
         var boundsBR = Vector2.Max(
-            v0,
-            Vector2.Max(v1, v2));
+            new Vector2(v0.X, v0.Y),
+            Vector2.Max(new Vector2(v1.X, v1.Y), new Vector2(v2.X, v2.Y)));
+
+        // @formatter:off
+        v0st.X /= v0.Z; v0st.Y /= v0.Z;
+        v1st.X /= v1.Z; v1st.Y /= v1.Z;
+        v2st.X /= v2.Z; v2st.Y /= v2.Z;
+
+        v0.Z = 1 / v0.Z; v1.Z = 1 / v1.Z; v2.Z = 1 / v2.Z;
+        // @formatter:on
 
         var boundL = Math.Clamp((int)boundsTL.X, 0, dstImgW);
         var boundT = Math.Clamp((int)boundsTL.Y, 0, dstImgH);
@@ -292,7 +334,7 @@ public sealed unsafe partial class LingoImage
         {
             for (var x = boundL; x < boundR; x++)
             {
-                var p = new Vector2(x + 0.5f, y + 0.5f);
+                var p = new Vector3(x + 0.5f, y + 0.5f, 0);
 
                 var w0 = EdgeFunction(p, v2, v1);
                 var w1 = EdgeFunction(p, v0, v2);
@@ -309,11 +351,14 @@ public sealed unsafe partial class LingoImage
                     w2 = Math.Abs(w2);
 
                     var st = w0 * v0st + w1 * v1st + w2 * v2st;
+                    var z = 1 / (w0 * v0.Z + w1 * v1.Z + w2 * v2.Z);
+                    st *= z;
 
                     var dstPos = dstImgW * y + x;
 
                     var imgRow = (int)(st.Y * srcImgH) * srcImgW;
                     var color = DoSample(st.X, st.Y, srcImgW, sampler, srcSpan, imgRow);
+                    //var color = new LingoColor((int)(st.X * 255), (int)(st.Y * 255), 0).BitPack;
 
                     if (doBackgroundTransparent && color == LingoColor.PackWhite)
                         continue;
@@ -326,7 +371,7 @@ public sealed unsafe partial class LingoImage
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        static float EdgeFunction(Vector2 a, Vector2 b, Vector2 c)
+        static float EdgeFunction(Vector3 a, Vector3 b, Vector3 c)
         {
             return (c.X - a.X) * (b.Y - a.Y) - (c.Y - a.Y) * (b.X - a.X);
         }
@@ -343,10 +388,10 @@ public sealed unsafe partial class LingoImage
         Debug.Assert(!dest.IsPxl);
 
         // Integer coordinates for the purpose of rasterization.
-        var dstL = (int) destRect.left;
-        var dstT = (int) destRect.top;
-        var dstR = (int) destRect.right;
-        var dstB = (int) destRect.bottom;
+        var dstL = (int)destRect.left;
+        var dstT = (int)destRect.top;
+        var dstR = (int)destRect.right;
+        var dstB = (int)destRect.bottom;
 
         if (dstL > dest.width || dstT > dest.height || dstR < 0 || dstB < 0)
         {
