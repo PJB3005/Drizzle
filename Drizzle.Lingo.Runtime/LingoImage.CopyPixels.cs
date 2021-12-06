@@ -41,7 +41,7 @@ public sealed unsafe partial class LingoImage
         where TDstData : struct
     {
         var dstSpan = MemoryMarshal.Cast<byte, TDstData>(dst.ImageBuffer);
-        new TWriter().Fill(dstSpan, color.BitPack);
+        TWriter.Fill(dstSpan, color.BitPack);
     }
 
 
@@ -279,9 +279,6 @@ public sealed unsafe partial class LingoImage
         ReadOnlySpan<TSrcData> srcSpan = MemoryMarshal.Cast<byte, TSrcData>(src.ImageBuffer);
         var dstSpan = MemoryMarshal.Cast<byte, TDstData>(dst.ImageBuffer);
 
-        var sampler = new TSampler();
-        var writer = new TWriter();
-
         var area = Math.Abs(EdgeFunction(v2, v1, v0));
 
         if (area == 0)
@@ -313,13 +310,13 @@ public sealed unsafe partial class LingoImage
                     var dstPos = dstImgW * y + x;
 
                     var imgRow = (int)(st.Y * srcImgH) * srcImgW;
-                    var color = DoSample(st.X, st.Y, srcImgW, sampler, srcSpan, imgRow);
+                    var color = DoSample<TSrcData, TSampler>(st.X, st.Y, srcImgW, srcSpan, imgRow);
 
                     if (doBackgroundTransparent && color == LingoColor.PackWhite)
                         continue;
 
                     CopyPixelsCoreDoOutputScalar<TSrcData, TSampler, TDstData, TWriter>(
-                        parameters, color, fgc, doBlend, writer, dstSpan, dstPos);
+                        parameters, color, fgc, doBlend, dstSpan, dstPos);
                 }
             }
         }
@@ -533,9 +530,6 @@ public sealed unsafe partial class LingoImage
         ReadOnlySpan<TSrcData> srcSpan = MemoryMarshal.Cast<byte, TSrcData>(src.ImageBuffer);
         var dstSpan = MemoryMarshal.Cast<byte, TDstData>(dst.ImageBuffer);
 
-        var sampler = new TSampler();
-        var writer = new TWriter();
-
         var t = initT;
         for (var y = dstT; y < dstB; y++, t += incSrcT)
         {
@@ -557,14 +551,13 @@ public sealed unsafe partial class LingoImage
                         continue;
                 }
 
-                var color = DoSample<TSrcData, TSampler>(s, t, srcImgW, sampler, srcSpan,
-                    imgRow);
+                var color = DoSample<TSrcData, TSampler>(s, t, srcImgW, srcSpan, imgRow);
 
                 if (doBackgroundTransparent && color == LingoColor.PackWhite)
                     continue;
 
                 CopyPixelsCoreDoOutputScalar<TSrcData, TSampler, TDstData, TWriter>(
-                    parameters, color, fgc, doBlend, writer, dstSpan, dstPos);
+                    parameters, color, fgc, doBlend, dstSpan, dstPos);
             }
         }
     }
@@ -574,7 +567,6 @@ public sealed unsafe partial class LingoImage
         int color,
         LingoColor fgc,
         bool doBlend,
-        TWriter writer,
         Span<TDstData> dstSpan,
         int dstPos)
         where TSampler : struct, IPixelOps<TSrcData>
@@ -593,7 +585,7 @@ public sealed unsafe partial class LingoImage
 
         if (doBlend)
         {
-            var unpackedDst = LingoColor.BitUnpack(writer.Sample(dstSpan, dstPos));
+            var unpackedDst = LingoColor.BitUnpack(TWriter.Sample(dstSpan, dstPos));
 
             var blendSrc = new Vector4(r, g, b, 0);
             var blendDst = new Vector4(unpackedDst.RedByte, unpackedDst.GreenByte, unpackedDst.BlueByte, 0);
@@ -606,21 +598,20 @@ public sealed unsafe partial class LingoImage
         }
         else if (parameters.Ink == CopyPixelsInk.Darkest)
         {
-            var existing = LingoColor.BitUnpack(writer.Sample(dstSpan, dstPos));
+            var existing = LingoColor.BitUnpack(TWriter.Sample(dstSpan, dstPos));
 
             r = Math.Min(r, existing.RedByte);
             g = Math.Min(g, existing.GreenByte);
             b = Math.Min(b, existing.BlueByte);
         }
 
-        writer.Write(dstSpan, dstPos, new LingoColor(r, g, b).BitPack);
+        TWriter.Write(dstSpan, dstPos, new LingoColor(r, g, b).BitPack);
     }
 
     private static int DoSample<TSrcData, TSampler>(
         float s,
         float t,
         int srcImgW,
-        TSampler sampler,
         ReadOnlySpan<TSrcData> srcSpan,
         int imgRow)
         where TSampler : struct, IPixelOps<TSrcData>
@@ -631,7 +622,7 @@ public sealed unsafe partial class LingoImage
 
         var imgX = (int)(s * srcImgW);
 
-        return sampler.Sample(srcSpan, imgRow + imgX);
+        return TSampler.Sample(srcSpan, imgRow + imgX);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -649,9 +640,6 @@ public sealed unsafe partial class LingoImage
 
         var (initS, initT, incSrcS, incSrcT) =
             CopyPixelsRectCoreCopyCalcSampleCoords(srcBox, dstL, dstT, dstR, dstB);
-
-        var sampler = new TSampler();
-        var writer = new TWriter();
 
         ReadOnlySpan<TSrcData> srcSpan = MemoryMarshal.Cast<byte, TSrcData>(src.ImageBuffer);
         var dstSpan = MemoryMarshal.Cast<byte, TDstData>(dst.ImageBuffer);
@@ -700,17 +688,17 @@ public sealed unsafe partial class LingoImage
                         Avx.Multiply(vecS, Vector256.Create((float)srcImgW)));
 
                     var lowerCoord = coord.GetLower();
-                    var l0 = DoSample(sampler, srcSpan, srcImgW, imgRow, lowerCoord.GetElement(0));
-                    var l1 = DoSample(sampler, srcSpan, srcImgW, imgRow, lowerCoord.GetElement(1));
-                    var l2 = DoSample(sampler, srcSpan, srcImgW, imgRow, lowerCoord.GetElement(2));
-                    var l3 = DoSample(sampler, srcSpan, srcImgW, imgRow, lowerCoord.GetElement(3));
+                    var l0 = DoSample(srcSpan, srcImgW, imgRow, lowerCoord.GetElement(0));
+                    var l1 = DoSample(srcSpan, srcImgW, imgRow, lowerCoord.GetElement(1));
+                    var l2 = DoSample(srcSpan, srcImgW, imgRow, lowerCoord.GetElement(2));
+                    var l3 = DoSample(srcSpan, srcImgW, imgRow, lowerCoord.GetElement(3));
                     var lowerSample = Vector128.Create(l0, l1, l2, l3);
 
                     var upperCoord = coord.GetUpper();
-                    var u0 = DoSample(sampler, srcSpan, srcImgW, imgRow, upperCoord.GetElement(0));
-                    var u1 = DoSample(sampler, srcSpan, srcImgW, imgRow, upperCoord.GetElement(1));
-                    var u2 = DoSample(sampler, srcSpan, srcImgW, imgRow, upperCoord.GetElement(2));
-                    var u3 = DoSample(sampler, srcSpan, srcImgW, imgRow, upperCoord.GetElement(3));
+                    var u0 = DoSample(srcSpan, srcImgW, imgRow, upperCoord.GetElement(0));
+                    var u1 = DoSample(srcSpan, srcImgW, imgRow, upperCoord.GetElement(1));
+                    var u2 = DoSample(srcSpan, srcImgW, imgRow, upperCoord.GetElement(2));
+                    var u3 = DoSample(srcSpan, srcImgW, imgRow, upperCoord.GetElement(3));
                     var upperSample = Vector128.Create(u0, u1, u2, u3);
 
                     color = Vector256.Create(lowerSample, upperSample);
@@ -728,24 +716,24 @@ public sealed unsafe partial class LingoImage
                 if (doBlend)
                 {
                     var blendVec = Vector256.Create(parameters.Blend);
-                    var dstColor = writer.Read8(dstSpan, dstPos, writeMask);
+                    var dstColor = TWriter.Read8(dstSpan, dstPos, writeMask);
 
                     var res = DoBlend8Avx2(color.AsByte(), dstColor.AsByte(), blendVec);
 
                     color = res.AsInt32();
                 }
 
-                writer.Write8(dstSpan, dstPos, color, writeMask);
+                TWriter.Write8(dstSpan, dstPos, color, writeMask);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        static int DoSample(TSampler sampler, ReadOnlySpan<TSrcData> srcSpan, int srcImgW, int imgRow, int imgX)
+        static int DoSample(ReadOnlySpan<TSrcData> srcSpan, int srcImgW, int imgRow, int imgX)
         {
             if (imgX < 0 || imgX >= srcImgW)
                 return LingoColor.PackWhite;
 
-            return sampler.Sample(srcSpan, imgRow + imgX);
+            return TSampler.Sample(srcSpan, imgRow + imgX);
         }
     }
 
@@ -931,7 +919,6 @@ public sealed unsafe partial class LingoImage
         where TWriter : struct, IPixelOps<TDstData>
         where TDstData : unmanaged
     {
-        var writer = new TWriter();
         var dstSpan = MemoryMarshal.Cast<byte, TDstData>(dst.ImageBuffer);
         var (dstL, dstT, dstR, dstB) = dstBox;
 
@@ -947,7 +934,7 @@ public sealed unsafe partial class LingoImage
         if (dstL == 0 && dstT == 0 && dstR == dst.width && dstB == dst.height)
         {
             // Writing to the whole image with pxl is commonly used as a fill operation.
-            writer.Fill(dstSpan, packed);
+            TWriter.Fill(dstSpan, packed);
             return;
         }
 
@@ -957,7 +944,7 @@ public sealed unsafe partial class LingoImage
         {
             for (var x = dstL; x < dstR; x++)
             {
-                writer.Write(dstSpan, y * dstWidth + x, packed);
+                TWriter.Write(dstSpan, y * dstWidth + x, packed);
             }
         }
     }
@@ -980,24 +967,24 @@ public sealed unsafe partial class LingoImage
 
     private interface IPixelOps<TPixel>
     {
-        int Sample(ReadOnlySpan<TPixel> srcDat, int rowMajorPos);
-        Vector256<int> Read8(ReadOnlySpan<TPixel> dstDat, int rowMajorPos0, Vector256<int> readMask);
-        void Write(Span<TPixel> dstDat, int rowMajorPos, int value);
-        void Write8(Span<TPixel> dstDat, int rowMajorPos0, Vector256<int> pixelData, Vector256<int> writeMask);
-        void Fill(Span<TPixel> dstDat, int value);
+        static abstract int Sample(ReadOnlySpan<TPixel> srcDat, int rowMajorPos);
+        static abstract Vector256<int> Read8(ReadOnlySpan<TPixel> dstDat, int rowMajorPos0, Vector256<int> readMask);
+        static abstract void Write(Span<TPixel> dstDat, int rowMajorPos, int value);
+        static abstract void Write8(Span<TPixel> dstDat, int rowMajorPos0, Vector256<int> pixelData, Vector256<int> writeMask);
+        static abstract void Fill(Span<TPixel> dstDat, int value);
     }
 
     private struct PixelOpsBgra32 : IPixelOps<Bgra32>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public int Sample(ReadOnlySpan<Bgra32> srcDat, int rowMajorPos)
+        public static int Sample(ReadOnlySpan<Bgra32> srcDat, int rowMajorPos)
         {
             ref readonly var px = ref srcDat[rowMajorPos];
             return Unsafe.As<Bgra32, int>(ref Unsafe.AsRef(px));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public Vector256<int> Read8(ReadOnlySpan<Bgra32> dstDat, int rowMajorPos0, Vector256<int> readMask)
+        public static Vector256<int> Read8(ReadOnlySpan<Bgra32> dstDat, int rowMajorPos0, Vector256<int> readMask)
         {
             fixed (Bgra32* px = &dstDat[rowMajorPos0])
             {
@@ -1006,13 +993,13 @@ public sealed unsafe partial class LingoImage
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public void Write(Span<Bgra32> dstDat, int rowMajorPos, int value)
+        public static void Write(Span<Bgra32> dstDat, int rowMajorPos, int value)
         {
             dstDat[rowMajorPos] = Unsafe.As<int, Bgra32>(ref value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public void Write8(Span<Bgra32> dstDat, int rowMajorPos0, Vector256<int> pixelData,
+        public static void Write8(Span<Bgra32> dstDat, int rowMajorPos0, Vector256<int> pixelData,
             Vector256<int> writeMask)
         {
             fixed (Bgra32* ptr = &dstDat[rowMajorPos0])
@@ -1022,7 +1009,7 @@ public sealed unsafe partial class LingoImage
             }
         }
 
-        public void Fill(Span<Bgra32> dstDat, int value)
+        public static void Fill(Span<Bgra32> dstDat, int value)
         {
             dstDat.Fill(Unsafe.As<int, Bgra32>(ref value));
         }
@@ -1031,7 +1018,7 @@ public sealed unsafe partial class LingoImage
     private struct PixelOpsBgra5551 : IPixelOps<Bgra5551>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public int Sample(ReadOnlySpan<Bgra5551> srcDat, int rowMajorPos)
+        public static int Sample(ReadOnlySpan<Bgra5551> srcDat, int rowMajorPos)
         {
             // TODO: Make this fast.
             var bgra5551 = srcDat[rowMajorPos];
@@ -1040,19 +1027,19 @@ public sealed unsafe partial class LingoImage
             return (int)bgra.PackedValue;
         }
 
-        public Vector256<int> Read8(ReadOnlySpan<Bgra5551> dstDat, int rowMajorPos0, Vector256<int> readMask)
+        public static Vector256<int> Read8(ReadOnlySpan<Bgra5551> dstDat, int rowMajorPos0, Vector256<int> readMask)
         {
             throw new NotImplementedException();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public void Write(Span<Bgra5551> dstDat, int rowMajorPos, int value)
+        public static void Write(Span<Bgra5551> dstDat, int rowMajorPos, int value)
         {
             dstDat[rowMajorPos].FromBgra32(Unsafe.As<int, Bgra32>(ref value));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public void Write8(
+        public static void Write8(
             Span<Bgra5551> dstDat,
             int rowMajorPos0,
             Vector256<int> pixelData,
@@ -1068,7 +1055,7 @@ public sealed unsafe partial class LingoImage
             }
         }
 
-        public void Fill(Span<Bgra5551> dstDat, int value)
+        public static void Fill(Span<Bgra5551> dstDat, int value)
         {
             var px = new Bgra5551();
             px.FromBgra32(Unsafe.As<int, Bgra32>(ref value));
@@ -1079,26 +1066,26 @@ public sealed unsafe partial class LingoImage
     private struct PixelOpsPalette8 : IPixelOps<L8>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public int Sample(ReadOnlySpan<L8> srcDat, int rowMajorPos)
+        public static int Sample(ReadOnlySpan<L8> srcDat, int rowMajorPos)
         {
             var px = srcDat[rowMajorPos].PackedValue;
             var lingoColor = (LingoColor)px;
             return lingoColor.BitPack;
         }
 
-        public Vector256<int> Read8(ReadOnlySpan<L8> dstDat, int rowMajorPos0, Vector256<int> readMask)
+        public static Vector256<int> Read8(ReadOnlySpan<L8> dstDat, int rowMajorPos0, Vector256<int> readMask)
         {
             throw new NotImplementedException();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public void Write(Span<L8> dstDat, int rowMajorPos, int value)
+        public static void Write(Span<L8> dstDat, int rowMajorPos, int value)
         {
             dstDat[rowMajorPos] = ToPalettized(value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public void Write8(Span<L8> dstDat, int rowMajorPos0, Vector256<int> pixelData, Vector256<int> writeMask)
+        public static void Write8(Span<L8> dstDat, int rowMajorPos0, Vector256<int> pixelData, Vector256<int> writeMask)
         {
             // todo: make this fast.
 
@@ -1114,7 +1101,7 @@ public sealed unsafe partial class LingoImage
             }
         }
 
-        public void Fill(Span<L8> dstDat, int value)
+        public static void Fill(Span<L8> dstDat, int value)
         {
             dstDat.Fill(ToPalettized(value));
         }
@@ -1138,24 +1125,24 @@ public sealed unsafe partial class LingoImage
     private struct PixelOpsBit : IPixelOps<int>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public int Sample(ReadOnlySpan<int> srcDat, int rowMajorPos)
+        public static int Sample(ReadOnlySpan<int> srcDat, int rowMajorPos)
         {
             return DoBitRead(srcDat, rowMajorPos) ? LingoColor.PackWhite : LingoColor.PackBlack;
         }
 
-        public Vector256<int> Read8(ReadOnlySpan<int> dstDat, int rowMajorPos0, Vector256<int> readMask)
+        public static Vector256<int> Read8(ReadOnlySpan<int> dstDat, int rowMajorPos0, Vector256<int> readMask)
         {
             throw new NotImplementedException();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public void Write(Span<int> dstDat, int rowMajorPos, int value)
+        public static void Write(Span<int> dstDat, int rowMajorPos, int value)
         {
             DoBitWrite(dstDat, rowMajorPos, value == LingoColor.PackWhite);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public void Write8(Span<int> dstDat, int rowMajorPos0, Vector256<int> pixelData, Vector256<int> writeMask)
+        public static void Write8(Span<int> dstDat, int rowMajorPos0, Vector256<int> pixelData, Vector256<int> writeMask)
         {
             // todo: do these writes on int instead idk.
             var bytes = MemoryMarshal.Cast<int, byte>(dstDat);
@@ -1200,7 +1187,7 @@ public sealed unsafe partial class LingoImage
             }
         }
 
-        public void Fill(Span<int> dstDat, int value)
+        public static void Fill(Span<int> dstDat, int value)
         {
             dstDat.Fill(value != LingoColor.PackBlack ? -1 : 0);
         }
