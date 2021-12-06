@@ -77,7 +77,7 @@ public sealed partial class LevelRenderer
 
         var camera = (LingoPoint)Movie.gCameraProps.cameras[camIndex];
         _cameraIndex = camIndex;
-        Movie.gCurrentRenderCamera = camIndex;
+        Movie.gCurrentRenderCamera = new LingoNumber(camIndex);
         Movie.gRenderCameraTilePos =
             new LingoPoint(
                 (camera.loch / (LingoNumber)20.0 - (LingoNumber)0.49999).integer,
