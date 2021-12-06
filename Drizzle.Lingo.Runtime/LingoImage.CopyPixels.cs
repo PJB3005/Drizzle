@@ -224,19 +224,111 @@ public sealed unsafe partial class LingoImage
         where TWriter : struct, IPixelOps<TDstData>
         where TDstData : unmanaged
     {
-        CopyPixelsQuadCoreScalarRasterize<TSrcData, TSampler, TDstData, TWriter>(
-            src, dst,
-            destQuad.TopLeft, new Vector2(srcBox.X, srcBox.Y),
-            destQuad.TopRight, new Vector2(srcBox.Z, srcBox.Y),
-            destQuad.BottomRight, new Vector2(srcBox.Z, srcBox.W),
-            parameters);
+        var srcImgW = src.Width;
+        var srcImgH = src.Height;
+        var dstImgW = dst.Width;
+        var dstImgH = dst.Height;
 
-        CopyPixelsQuadCoreScalarRasterize<TSrcData, TSampler, TDstData, TWriter>(
-            src, dst,
-            destQuad.TopLeft, new Vector2(srcBox.X, srcBox.Y),
-            destQuad.BottomRight, new Vector2(srcBox.Z, srcBox.W),
-            destQuad.BottomLeft, new Vector2(srcBox.X, srcBox.W),
-            parameters);
+        var boundsTL = Vector2.Min(
+            destQuad.TopLeft,
+            Vector2.Min(
+                destQuad.TopRight,
+                Vector2.Min(destQuad.BottomLeft, destQuad.BottomRight)));
+
+        var boundsBR = Vector2.Max(
+            destQuad.TopLeft,
+            Vector2.Max(
+                destQuad.TopRight,
+                Vector2.Max(destQuad.BottomLeft, destQuad.BottomRight)));
+
+        var boundL = Math.Clamp((int)boundsTL.X, 0, dstImgW);
+        var boundT = Math.Clamp((int)boundsTL.Y, 0, dstImgH);
+        var boundR = Math.Clamp((int)MathF.Ceiling(boundsBR.X), 0, dstImgW);
+        var boundB = Math.Clamp((int)MathF.Ceiling(boundsBR.Y), 0, dstImgH);
+
+        var doBackgroundTransparent = parameters.Ink == CopyPixelsInk.BackgroundTransparent;
+
+        // ReSharper disable once CompareOfFloatsByEqualityOperator
+        var doBlend = parameters.Blend != 1;
+        var fgc = parameters.ForeColor;
+
+        ReadOnlySpan<TSrcData> srcSpan = MemoryMarshal.Cast<byte, TSrcData>(src.ImageBuffer);
+        var dstSpan = MemoryMarshal.Cast<byte, TDstData>(dst.ImageBuffer);
+
+        // TODO: guard against degenerate shape?
+
+        for (var y = boundT; y < boundB; y++)
+        {
+            for (var x = boundL; x < boundR; x++)
+            {
+                var p = new Vector2(x + 0.5f, y + 0.5f);
+
+                var st = InvBilinear(p, destQuad.TopLeft, destQuad.TopRight, destQuad.BottomRight, destQuad.BottomLeft);
+
+                if (MathF.Max(MathF.Abs(st.X - 0.5f), MathF.Abs(st.Y - 0.5f)) < 0.5f)
+                {
+                    st.X = Lerp(srcBox.X, srcBox.Z, st.X);
+                    st.Y = Lerp(srcBox.Y, srcBox.W, st.Y);
+
+                    var dstPos = dstImgW * y + x;
+
+                    var imgRow = (int)(st.Y * srcImgH) * srcImgW;
+                    var color = DoSample<TSrcData, TSampler>(st.X, st.Y, srcImgW, srcSpan, imgRow);
+
+                    if (doBackgroundTransparent && color == LingoColor.PackWhite)
+                        continue;
+
+                    CopyPixelsCoreDoOutputScalar<TSrcData, TSampler, TDstData, TWriter>(
+                        parameters, color, fgc, doBlend, dstSpan, dstPos);
+                }
+            }
+        }
+
+        static float Lerp(float x, float y, float a) => x + a * (y - x);
+
+        static float Cross2d(Vector2 a, Vector2 b) => a.X * b.Y - a.Y * b.X;
+
+        // https://iquilezles.org/www/articles/ibilinear/ibilinear.htm
+        static Vector2 InvBilinear(Vector2 p, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+        {
+            Vector2 res;
+
+            var e = b - a;
+            var f = d - a;
+            var g = a - b + c - d;
+            var h = p - a;
+
+            var k2 = Cross2d(g, f);
+            var k1 = Cross2d(e, f) + Cross2d(h, g);
+            var k0 = Cross2d(h, e);
+
+            // if edges are parallel, this is a linear equation
+            if (MathF.Abs(k2) < 0.001)
+            {
+                res = new Vector2((h.X * k1 + f.X * k0) / (e.X * k1 - g.X * k0), -k0 / k1);
+            }
+            // otherwise, it's a quadratic
+            else
+            {
+                var w = k1 * k1 - 4.0f * k0 * k2;
+                if (w < 0.0) return new Vector2(-1.0f);
+                w = MathF.Sqrt(w);
+
+                var ik2 = 0.5f / k2;
+                var v = (-k1 - w) * ik2;
+                var u = (h.X - f.X * v) / (e.X + g.X * v);
+
+                if (u < 0.0 || u > 1.0 || v < 0.0 || v > 1.0)
+                {
+                    v = (-k1 + w) * ik2;
+                    u = (h.X - f.X * v) / (e.X + g.X * v);
+                }
+
+                res = new Vector2(u, v);
+            }
+
+            return res;
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -321,7 +413,6 @@ public sealed unsafe partial class LingoImage
             }
         }
 
-
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         static float EdgeFunction(Vector2 a, Vector2 b, Vector2 c)
         {
@@ -340,10 +431,10 @@ public sealed unsafe partial class LingoImage
         Debug.Assert(!dest.IsPxl);
 
         // Integer coordinates for the purpose of rasterization.
-        var dstL = (int) destRect.left;
-        var dstT = (int) destRect.top;
-        var dstR = (int) destRect.right;
-        var dstB = (int) destRect.bottom;
+        var dstL = (int)destRect.left;
+        var dstT = (int)destRect.top;
+        var dstR = (int)destRect.right;
+        var dstB = (int)destRect.bottom;
 
         if (dstL > dest.width || dstT > dest.height || dstR < 0 || dstB < 0)
         {
@@ -970,7 +1061,10 @@ public sealed unsafe partial class LingoImage
         static abstract int Sample(ReadOnlySpan<TPixel> srcDat, int rowMajorPos);
         static abstract Vector256<int> Read8(ReadOnlySpan<TPixel> dstDat, int rowMajorPos0, Vector256<int> readMask);
         static abstract void Write(Span<TPixel> dstDat, int rowMajorPos, int value);
-        static abstract void Write8(Span<TPixel> dstDat, int rowMajorPos0, Vector256<int> pixelData, Vector256<int> writeMask);
+
+        static abstract void Write8(Span<TPixel> dstDat, int rowMajorPos0, Vector256<int> pixelData,
+            Vector256<int> writeMask);
+
         static abstract void Fill(Span<TPixel> dstDat, int value);
     }
 
@@ -1142,7 +1236,8 @@ public sealed unsafe partial class LingoImage
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Write8(Span<int> dstDat, int rowMajorPos0, Vector256<int> pixelData, Vector256<int> writeMask)
+        public static void Write8(Span<int> dstDat, int rowMajorPos0, Vector256<int> pixelData,
+            Vector256<int> writeMask)
         {
             // todo: do these writes on int instead idk.
             var bytes = MemoryMarshal.Cast<int, byte>(dstDat);
