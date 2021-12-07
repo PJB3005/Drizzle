@@ -173,10 +173,11 @@ on loadLevel me, lvlName, fullPath
     gCameraProps = value(l2.line[7])
   end if
   
-  if (value(l2.line[8]) = void)sor(value(l2.line[8]).findpos(#waterLevel) = void) then
+  valEnv = value(l2.line[8])
+  if (valEnv = void)sor(ilk(valEnv) <> "proplist")sor(valEnv.findpos(#waterLevel) = void) then
     resetgEnvEditorProps()
   else
-    gEnvEditorProps = value(l2.line[8])
+    gEnvEditorProps = valEnv
   end if
   
   if (value(l2.line[9]) = void)or(chars(l2.line[9], 1, 6) <> "[#prop")then -- = " color") then
