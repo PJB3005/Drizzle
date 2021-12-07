@@ -1937,10 +1937,14 @@ on renderTileMaterial(layer, material, frntImg)
         end repeat
       end repeat
       
-      delL = []
+      delL = [:]
+      tlsBlock = [:]
+      repeat with tl in tls then
+        tlsBlock[tl] = 1
+      end repeat
       repeat with tl in tls then
         the randomSeed = seedForTile(tl, gLOprops.tileSeed + layer)
-        if delL.getPos(tl)=0 then
+        if delL.findPos(tl)=void then
           
           randomOrderList = []
           repeat with w = 1 to randomMachines.count then
@@ -1962,13 +1966,13 @@ on renderTileMaterial(layer, material, frntImg)
                 testPoint = tl + point(a,b)
                 spec = testTile.specs[(b+1) + (a*testTile.sz.locV)]
                 
-                if(tls.getPos(testPoint)=0)then
+                if(tlsBlock.findPos(testPoint)=void)then
                   legalToPlace = false
                   exit repeat
                 end if
                 
                 if(spec > -1)then
-                  if(delL.getPos(testPoint)>0)then
+                  if(delL.findPos(testPoint)<>void)then
                     legalToPlace = false
                     exit repeat
                   end if
@@ -1992,7 +1996,7 @@ on renderTileMaterial(layer, material, frntImg)
                 repeat with b = 0 to testTile.sz.locV-1 then
                   spec = testTile.specs[(b+1) + (a*testTile.sz.locV)]
                   if(spec > -1)then
-                    delL.add(tl+point(a,b))
+                    delL[tl+point(a,b)] = 1
                   end if
                 end repeat
               end repeat
