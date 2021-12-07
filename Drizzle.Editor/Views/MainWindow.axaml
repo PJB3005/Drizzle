@@ -37,6 +37,8 @@
                           InputGesture="Ctrl+Shift+R"
                           IsEnabled="{Binding TabContent,Converter={x:Static ObjectConverters.IsNotNull}}" />
                 <MenuItem Name="MenuRenderCamera" Header="Render _Camera" 
+                          IsEnabled="{Binding TabContent,Converter={x:Static ObjectConverters.IsNotNull}}" />
+                <MenuItem Header="Text Output" Command="{Binding TestRenderProject}" 
                           IsEnabled="{Binding TabContent,Converter={x:Static ObjectConverters.IsNotNull}}">
                     <!--<MenuItem.ItemTemplate>
                         <DataTemplate DataType="system:Int32">

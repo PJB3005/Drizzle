@@ -119,6 +119,16 @@ public class MainWindowViewModel : ViewModelBase, ILingoRuntimeManager
         window.Show();
     }
 
+    public void TestRenderProject()
+    {
+        if (SelectedTab?.Content == null)
+            return;
+
+        var runtime = SelectedTab.Content.Runtime;
+        var movie = runtime.MovieScript();
+        movie.newmakelevel(movie.gLoadedName);
+    }
+
     public void CastViewerProject()
     {
         if (SelectedTab?.Content == null)
