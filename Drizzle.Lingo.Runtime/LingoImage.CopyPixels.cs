@@ -303,7 +303,7 @@ public sealed unsafe partial class LingoImage
             var k0 = Cross2d(h, e);
 
             // if edges are parallel, this is a linear equation
-            if (MathF.Abs(k2) < 0.001)
+            if (MathF.Abs(k2) < 0.01f)
             {
                 res = new Vector2((h.X * k1 + f.X * k0) / (e.X * k1 - g.X * k0), -k0 / k1);
             }
