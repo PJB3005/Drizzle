@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
 using System.Threading;
 using System.Threading.Tasks;
 using Drizzle.ConsoleApp;
@@ -8,6 +10,7 @@ using Drizzle.Lingo.Runtime;
 using Drizzle.Logic;
 using Drizzle.Logic.Rendering;
 using Drizzle.Ported;
+using Meow;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 
@@ -56,6 +59,8 @@ int DoCmdRender(CommandLineArgs.VerbRender options)
             EditorRuntimeHelpers.RunLoadLevel(renderRuntime, s);
 
             var renderer = new LevelRenderer(renderRuntime, null);
+            if (options.checksums)
+                renderer.OnScreenRenderCompleted += (cam, img) => PrintChecksum(levelName, cam, img);
 
             renderer.DoRender();
         }
@@ -77,6 +82,35 @@ int DoCmdRender(CommandLineArgs.VerbRender options)
 
     Console.WriteLine($"Finished rendering in {sw.Elapsed}. {errors} errored, {success} succeeded");
     return errors != 0 ? 1 : 0;
+}
+
+static void PrintChecksum(string name, int cameraIndex, LingoImage finalImg)
+{
+    Span<byte> hash = stackalloc byte[16];
+    CalcChecksum(finalImg, hash);
+    var hashHex = Convert.ToHexString(hash);
+
+    Console.WriteLine($"checksum {name} cam {cameraIndex}: {hashHex}");
+}
+
+static void CalcChecksum(LingoImage img, Span<byte> outData)
+{
+    unsafe
+    {
+        Debug.Assert(sizeof(Vector128<byte>) == outData.Length);
+    }
+
+    if (img.depth.IntValue == 1)
+    {
+        // 1-bit images have padding bytes to make certain ops easier.
+        // These bytes can contain undefined garbage,
+        // and I can't be bothered to clear them to make sure the hash is consistent.
+        // Just make it not supported for now, it's fine for the final images (those are 32bpp).
+        throw new NotSupportedException();
+    }
+
+    var hash = MeowHash.Hash(MeowHash.MeowDefaultSeed, img.ImageBuffer);
+    Unsafe.WriteUnaligned(ref outData[0], hash);
 }
 
 static LingoRuntime MakeZygoteRuntime()

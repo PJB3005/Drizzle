@@ -59,7 +59,9 @@ public sealed partial class LevelRenderer
                     $"{Movie.gLoadedName}_{camIndex}.png");
 
                 var file = File.OpenWrite(fileName);
-                _runtime.GetCastMember("finalImage")!.image!.SaveAsPng(file);
+                var image = _runtime.GetCastMember("finalImage")!.image!;
+                OnScreenRenderCompleted?.Invoke(camIndex, image);
+                image.SaveAsPng(file);
 
                 _countCamerasDone += 1;
             }

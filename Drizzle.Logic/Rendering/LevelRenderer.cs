@@ -15,6 +15,8 @@ public sealed partial class LevelRenderer : ILingoRuntimeManager
 
     // NOTE: This is fired on the render thread, use fancy Rx ObserveOn if you use this!
     public event Action<RenderStatus>? StatusChanged;
+    // That's cam, final image.
+    public event Action<int, LingoImage>? OnScreenRenderCompleted;
     private readonly Channel<RenderCmd> _cmdChannel;
 
     private readonly RenderStage? _pauseOnStage;

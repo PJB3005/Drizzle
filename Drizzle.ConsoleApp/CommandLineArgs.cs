@@ -8,12 +8,13 @@ public sealed record CommandLineArgs(CommandLineArgs.BaseVerb Verb)
 {
     public abstract record BaseVerb;
 
-    public sealed record VerbRender(int MaxParallelism, List<string> Levels) : BaseVerb
+    public sealed record VerbRender(int MaxParallelism, List<string> Levels, bool checksums) : BaseVerb
     {
         public static VerbRender? ContinueParse(IEnumerator<string> enumerator)
         {
             var levels = new List<string>();
             var parallelism = 0;
+            var genChecksums = false;
 
             while (enumerator.MoveNext())
             {
@@ -27,6 +28,10 @@ public sealed record CommandLineArgs(CommandLineArgs.BaseVerb Verb)
                     }
 
                     parallelism = int.Parse(enumerator.Current);
+                }
+                else if (arg == "--gen-checksums")
+                {
+                    genChecksums = true;
                 }
                 else if (arg == "--help")
                 {
@@ -45,7 +50,7 @@ public sealed record CommandLineArgs(CommandLineArgs.BaseVerb Verb)
                 return null;
             }
 
-            return new VerbRender(parallelism, levels);
+            return new VerbRender(parallelism, levels, genChecksums);
         }
 
         private static void PrintVerbHelp()
@@ -56,6 +61,7 @@ Arguments:
 
 Options:
   --parallelism PARALLELISM   Maximum amount of threads to use. Leave out or 0 to select automatically.
+  --gen-checksums             Generate checksums of generated level images.
   --help                      Print help then exit.
 ");
         }
