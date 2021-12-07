@@ -45,8 +45,11 @@ public sealed unsafe partial class LingoImage
     }
 
 
-    public void copypixels(LingoImage source, LingoList destQuad, LingoRect sourceRect, LingoPropertyList paramList)
+    public void copypixels(LingoImage source, LingoList? destQuad, LingoRect sourceRect, LingoPropertyList paramList)
     {
+        if (destQuad == null)
+            return;
+
         ParseCommonCopyPixelsParameters(paramList, out var parameters);
 
         var quad = new DestQuad
