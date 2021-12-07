@@ -127,6 +127,10 @@ public sealed class RenderViewModel : ViewModelBase, ILingoRuntimeManager
         {
             _renderer.DoRender();
         }
+        catch (RenderCancelledException)
+        {
+            // Nada.
+        }
         catch (Exception e)
         {
             _statusObservable.OnError(e);
