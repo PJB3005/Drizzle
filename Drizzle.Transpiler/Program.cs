@@ -540,12 +540,18 @@ internal static class Program
         {
             ctx.Writer.Write("switch (");
             if (allInts)
-                ctx.Writer.Write("(int)");
+                ctx.Writer.Write("(int?)");
             ctx.Writer.Write(WriteExpression(node.Expression, ctx));
             // If this is a string switch, .ToLower() it and switch on lowercase values.
             // to avoid any case problems.
             if (node.Cases.Length > 0 && node.Cases[0].exprs[0] is AstNode.String)
                 ctx.Writer.Write(".ToLowerInvariant()");
+            else if (allInts)
+            {
+                // Handle null int value in switch case.
+                // I'm gonna assume Joar never felt like using int.MaxValue anywhere.
+                ctx.Writer.Write("?? int.MaxValue");
+            }
             ctx.Writer.WriteLine(") {");
 
             foreach (var (exprs, block) in node.Cases)
