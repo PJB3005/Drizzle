@@ -257,13 +257,25 @@ public sealed unsafe partial class LingoImage
 
         // TODO: guard against degenerate shape?
 
+        var a = destQuad.TopLeft;
+        var b = destQuad.TopRight;
+        var c = destQuad.BottomRight;
+        var d = destQuad.BottomLeft;
+
+        // Pull out parameters in InvBilinear that do not change for the quad.
+        var e = b - a;
+        var f = d - a;
+        var g = a - b + c - d;
+
+        var k2 = Cross2d(g, f);
+
         for (var y = boundT; y < boundB; y++)
         {
             for (var x = boundL; x < boundR; x++)
             {
                 var p = new Vector2(x + 0.5f, y + 0.5f);
 
-                var st = InvBilinear(p, destQuad.TopLeft, destQuad.TopRight, destQuad.BottomRight, destQuad.BottomLeft);
+                var st = InvBilinear(p, a, e, f, g, k2);
 
                 if (MathF.Max(MathF.Abs(st.X - 0.5f), MathF.Abs(st.Y - 0.5f)) < 0.5f)
                 {
@@ -289,16 +301,12 @@ public sealed unsafe partial class LingoImage
         static float Cross2d(Vector2 a, Vector2 b) => a.X * b.Y - a.Y * b.X;
 
         // https://iquilezles.org/www/articles/ibilinear/ibilinear.htm
-        static Vector2 InvBilinear(Vector2 p, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+        static Vector2 InvBilinear(Vector2 p, Vector2 a, Vector2 e, Vector2 f, Vector2 g, float k2)
         {
             Vector2 res;
 
-            var e = b - a;
-            var f = d - a;
-            var g = a - b + c - d;
             var h = p - a;
 
-            var k2 = Cross2d(g, f);
             var k1 = Cross2d(e, f) + Cross2d(h, g);
             var k0 = Cross2d(h, e);
 
