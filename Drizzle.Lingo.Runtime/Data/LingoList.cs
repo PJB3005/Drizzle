@@ -142,8 +142,14 @@ public class LingoList : IEnumerable<object>, ILingoListDuplicate, IEquatable<Li
         return new(a.Select(e => (dynamic)e / b));
     }
 
-    public static bool operator ==(LingoList a, LingoList b)
+    public static bool operator ==(LingoList? a, LingoList? b)
     {
+        if (ReferenceEquals(a, b))
+            return true;
+
+        if (a is null || b is null)
+            return false;
+
         if (a.count != b.count)
             return false;
 
@@ -160,7 +166,7 @@ public class LingoList : IEnumerable<object>, ILingoListDuplicate, IEquatable<Li
     }
 
 
-    public static bool operator !=(LingoList a, LingoList b)
+    public static bool operator !=(LingoList? a, LingoList? b)
     {
         return !(a == b);
     }
