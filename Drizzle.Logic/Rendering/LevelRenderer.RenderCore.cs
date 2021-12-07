@@ -63,6 +63,11 @@ public sealed partial class LevelRenderer
 
                 _countCamerasDone += 1;
             }
+            catch (RenderCancelledException)
+            {
+                // Pass through.
+                throw;
+            }
             catch (Exception e)
             {
                 throw new RenderCameraException($"Exception on camera {camIndex}", e);
