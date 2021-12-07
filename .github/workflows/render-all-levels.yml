@@ -55,8 +55,7 @@ jobs:
       run: |
         $env:COMPlus_gcServer=1
         $blackList = @{
-          "demos" = @{"DemoEffects3"=1};
-          "Multi" = @{"Sky Island"=1}
+          "World/Multi" = @{"Sky Island"=1}
         }
         $folder = "${{ matrix.folder }}"
         $path = join-path "Data/LevelEditorProjects" $folder "*.txt"
