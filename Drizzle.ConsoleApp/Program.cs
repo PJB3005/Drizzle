@@ -50,6 +50,7 @@ int DoCmdRender(CommandLineArgs.VerbRender options)
 
         var levelName = Path.GetFileNameWithoutExtension(s);
 
+        var levelSw = Stopwatch.StartNew();
         try
         {
             EditorRuntimeHelpers.RunLoadLevel(renderRuntime, s);
@@ -70,7 +71,7 @@ int DoCmdRender(CommandLineArgs.VerbRender options)
             return;
         }
 
-        Console.WriteLine($"{levelName}: Render succeeded");
+        Console.WriteLine($"{levelName}: Render succeeded in {levelSw.Elapsed}");
         Interlocked.Increment(ref success);
     });
 
