@@ -49,6 +49,8 @@ public class LingoList : IEnumerable<object>, ILingoListDuplicate, IEquatable<Li
         return List.IndexOf(value) + 1;
     }
 
+    public object? findpos(object? value) => null;
+
     public void add(object? value)
     {
         Add(value);
