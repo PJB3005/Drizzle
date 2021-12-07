@@ -5,7 +5,7 @@ public sealed partial class LingoGlobal
     public LingoNumber the_randomSeed
     {
         get => (int) LingoRuntime.RngSeed;
-        set => LingoRuntime.RngSeed = (uint) value.integer;
+        set => LingoRuntime.RngSeed = (uint) value.IntValue;
     }
 
     public LingoNumber random(LingoNumber max)
