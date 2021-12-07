@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -37,28 +38,35 @@ public sealed partial class LevelRenderer
 
         foreach (var camIndex in camOrder)
         {
-            RenderSetupCamera(camIndex);
+            try
+            {
+                RenderSetupCamera(camIndex);
 
-            RenderLayers();
-            RenderPropsPreEffects();
-            RenderEffects();
-            RenderPropsPostEffects();
-            RenderLight();
-            RenderFinalize();
-            RenderColors();
-            RenderFinished();
+                RenderLayers();
+                RenderPropsPreEffects();
+                RenderEffects();
+                RenderPropsPostEffects();
+                RenderLight();
+                RenderFinalize();
+                RenderColors();
+                RenderFinished();
 
-            RenderStartFrame(RenderStage.SaveFile);
-            // Save image.
-            var fileName = Path.Combine(
-                LingoRuntime.MovieBasePath,
-                "Levels",
-                $"{Movie.gLoadedName}_{camIndex}.png");
+                RenderStartFrame(RenderStage.SaveFile);
+                // Save image.
+                var fileName = Path.Combine(
+                    LingoRuntime.MovieBasePath,
+                    "Levels",
+                    $"{Movie.gLoadedName}_{camIndex}.png");
 
-            var file = File.OpenWrite(fileName);
-            _runtime.GetCastMember("finalImage")!.image!.SaveAsPng(file);
+                var file = File.OpenWrite(fileName);
+                _runtime.GetCastMember("finalImage")!.image!.SaveAsPng(file);
 
-            _countCamerasDone += 1;
+                _countCamerasDone += 1;
+            }
+            catch (Exception e)
+            {
+                throw new RenderCameraException($"Exception on camera {camIndex}", e);
+            }
         }
 
         // Output level data.

@@ -27,3 +27,19 @@ public class RenderCancelledException : OperationCanceledException
     {
     }
 }
+
+[Serializable]
+public class RenderCameraException : Exception
+{
+    public RenderCameraException()
+    {
+    }
+
+    public RenderCameraException(string message) : base(message)
+    {
+    }
+
+    public RenderCameraException(string message, Exception inner) : base(message, inner)
+    {
+    }
+}
