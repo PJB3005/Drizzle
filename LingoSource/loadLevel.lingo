@@ -256,15 +256,25 @@ on versionFix me
             end if
           end if
           
+          found = 0
           if huntNew <> "" then
             gTEprops.tlMatrix[q][c][d].data = [point(2, 1), "NOT FOUND"]
             repeat with cat = 1 to gTiles.count then
               repeat with tl = 1 to gTiles[cat].tls.count then
                 if gTiles[cat].tls[tl].nm = huntNew then
                   gTEprops.tlMatrix[q][c][d].data = [point(cat, tl), huntNew]
+                  found = 1
+                  exit repeat
                 end if
               end repeat
+              if found then 
+                exit repeat
+              end if
             end repeat
+            if not found then
+              put "Warning: unknown tile '" & huntNew & "' in map file. Replacing with default material."
+              gTEprops.tlMatrix[q][c][d] = [#tp: "default", #data: 0]
+            end if
           end if
         end if
       end repeat 
