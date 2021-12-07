@@ -54,6 +54,10 @@ jobs:
       shell: pwsh
       run: |
         $env:COMPlus_gcServer=1
-        $path = join-path "Data/LevelEditorProjects" ${{ matrix.folder }} "*.txt"
-        $files = (get-childitem -Recurse $path)
+        $blackList = @{
+          "EditorSamples" = @{"SS_AI"=1}
+        }
+        $folder = "${{ matrix.folder }}"
+        $path = join-path "Data/LevelEditorProjects" $folder "*.txt"
+        $files = (get-childitem -Recurse $path) | where-object { $blackList[$folder] -eq $null -or $blackList[$folder][[System.IO.Path]::GetFileNameWithoutExtension($_)] -ne 1 }
         dotnet run --no-build -c Release --project Drizzle.ConsoleApp/Drizzle.ConsoleApp.csproj -- render --parallelism 2 $files
