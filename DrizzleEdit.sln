@@ -25,6 +25,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drizzle.Ported", "Drizzle.P
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drizzle.Logic", "Drizzle.Logic\Drizzle.Logic.csproj", "{B10D3756-F3EE-4ADD-9FBD-0C6DA3D9EF3D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{537A9832-F03E-4537-B293-C569CA2A1A78}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Workflows", "Workflows", "{3CA25907-B5B9-46BC-8A64-D3E2BD13091E}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\render-all-levels.yml = .github\workflows\render-all-levels.yml
+		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -122,5 +130,9 @@ Global
 		{B10D3756-F3EE-4ADD-9FBD-0C6DA3D9EF3D}.Release|x64.Build.0 = Release|Any CPU
 		{B10D3756-F3EE-4ADD-9FBD-0C6DA3D9EF3D}.Release|x86.ActiveCfg = Release|Any CPU
 		{B10D3756-F3EE-4ADD-9FBD-0C6DA3D9EF3D}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{537A9832-F03E-4537-B293-C569CA2A1A78} = {3E91A48B-6C72-4705-B488-DD806374DE8C}
+		{3CA25907-B5B9-46BC-8A64-D3E2BD13091E} = {537A9832-F03E-4537-B293-C569CA2A1A78}
 	EndGlobalSection
 EndGlobal
