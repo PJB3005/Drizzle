@@ -247,12 +247,7 @@ public sealed class GeometryEditorControl : ReactiveUserControl<TabGeometryEdito
     {
         base.Render(context);
 
-        context.Custom(
-            new TrickHitTestOperation(
-                new Rect(0, 0, Bounds.Width, Bounds.Height),
-#pragma warning disable 618
-                context.CurrentContainerTransform.Invert()));
-#pragma warning restore 618
+        context.Custom(new TrickHitTestOperation(new Rect(0, 0, Bounds.Width, Bounds.Height)));
 
         var mv = MovieScript;
 
