@@ -180,6 +180,6 @@ public sealed partial class LingoGlobal
 
     private sealed class StringLineData
     {
-        public int[] NewlineIndices;
+        public int[] NewlineIndices = default!;
     }
 }

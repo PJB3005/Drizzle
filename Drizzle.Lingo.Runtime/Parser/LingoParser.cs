@@ -444,7 +444,9 @@ public static class LingoParser
     private static readonly Parser<char, AstNode.Base> ExpressionNoEquals = ExpressionFunc(false, true);
     private static readonly Parser<char, AstNode.Base> ExpressionNoBinOps = ExpressionFunc(false, false);
 
+#pragma warning disable CS8603
     public static readonly Parser<char, AstNode.Base> ExpressionNoOps = ExpressionTerm(Rec(() => ExpressionNoOps));
+#pragma warning restore CS8603
 
     private static Parser<char, AstNode.Base> ExpressionFunc(bool allowEquals, bool allowBinOps) =>
         ExpressionParser.Build<char, AstNode.Base>(

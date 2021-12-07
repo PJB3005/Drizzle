@@ -51,10 +51,12 @@ public class LingoPropertyList : DynamicObject, ILingoListDuplicate
 
     public void addprop(object? key, object? value)
     {
-        if (Dict.ContainsKey(key))
+        // Void is a valid dict key in Lingo, not in C#.
+        // Yeah I don't think anything relies on the former property.
+        if (Dict.ContainsKey(key!))
             Log.Warning("addprop duplicate key: {Key}", key);
 
-        Dict[key] = value;
+        Dict[key!] = value;
     }
 
     private static readonly object FindPosTrueResult = new();

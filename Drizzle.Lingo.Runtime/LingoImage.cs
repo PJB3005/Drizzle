@@ -112,9 +112,6 @@ public sealed partial class LingoImage
                 Log.Warning("getpixel(): Unimplemented image depth: {Depth}", Depth);
                 return default;
         }
-
-        // Log.Warning("getpixel unimplemented image depth: {ImageDepth}", Depth);
-        return default;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]

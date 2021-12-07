@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Serilog;
 
 namespace Drizzle.Lingo.Runtime;
@@ -52,6 +53,7 @@ public partial class LingoRuntime
             field.SetValue(dstMovieScript, DeepClone(srcValue));
         }
 
+        [return: NotNullIfNotNull("value")]
         object? DeepClone(object? value)
         {
             if (value is LingoList list)

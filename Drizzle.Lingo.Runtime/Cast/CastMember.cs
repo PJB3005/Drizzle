@@ -35,7 +35,7 @@ public sealed partial class CastMember
     public void erase()
     {
         Type = CastMemberType.Empty;
-        _text = null;
+        _text = "";
         _image = null;
     }
 
