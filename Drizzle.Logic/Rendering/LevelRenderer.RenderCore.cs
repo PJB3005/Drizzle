@@ -195,6 +195,9 @@ public sealed partial class LevelRenderer
         RenderStartFrame(RenderStage.RenderLight);
         _runtime.CreateScript<renderLightStart>().exitframe();
 
+        if (Movie.gLOprops.light == new LingoNumber(0))
+            return;
+
         var script = _runtime.CreateScript<renderLight>();
         while (Movie.keepLooping == 1)
         {
