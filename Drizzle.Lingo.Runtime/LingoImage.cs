@@ -173,7 +173,7 @@ public sealed partial class LingoImage
     {
         var newBuf = GC.AllocateUninitializedArray<byte>(ImageBuffer.Length);
         ImageBuffer.AsSpan().CopyTo(newBuf);
-        return new LingoImage(newBuf, Width, Height, Depth) { IsPxl = IsPxl };
+        return new LingoImage(newBuf, Width, Height, Depth);
     }
 
     public LingoImage DuplicateShared()
