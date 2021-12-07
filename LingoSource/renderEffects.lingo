@@ -1796,7 +1796,7 @@ on applyShadowPlants me, q, c, eftc
       
       tlt = 0
       repeat with q = -1 to 1 then
-        if (q<>0)and (lstGridPos.locH + q > 0)and(lstGridPos.locH + q < gEEprops.effects[r].mtrx.count)and(lstGridPos.locV+1 > 0)and(lstGridPos.locV-1 < gEEprops.effects[r].mtrx[1].count) then
+        if (q<>0)and (lstGridPos.locH + q > 0)and(lstGridPos.locH + q < gEEprops.effects[r].mtrx.count)and(lstGridPos.locV+1 > 0)and(lstGridPos.locV+1 < gEEprops.effects[r].mtrx[1].count) then
           tlt = tlt + gEEprops.effects[r].mtrx[lstGridPos.locH+q][lstGridPos.locV+1]*q
         end if
       end repeat
