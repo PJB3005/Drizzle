@@ -57,10 +57,12 @@ public class LingoPropertyList : DynamicObject, ILingoListDuplicate
         Dict[key] = value;
     }
 
+    private static readonly object FindPosTrueResult = new();
+
     public object? findpos(object key)
     {
         // findpos is only used as a "does it exist in the list" check so this is fine.
-        return Dict.ContainsKey(key) ? new object() : null;
+        return Dict.ContainsKey(key) ? FindPosTrueResult : null;
     }
 
     public override bool TryGetMember(GetMemberBinder binder, out object? result)
