@@ -3,6 +3,8 @@ global gTiles, tileSetIndex, gCurrentRenderCamera, gAnyDecals, firstCamRepeat, s
 on exitFrame me
   put "Start render"
   
+  gLOprops.pal
+  
   firstCamRepeat = true
   gCurrentRenderCamera = 0
   gAnyDecals = 0
