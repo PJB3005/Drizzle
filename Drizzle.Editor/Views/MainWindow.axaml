@@ -62,24 +62,27 @@
                 <MenuItem Header="_GitHub" Command="{Binding OpenGitHub}" />
             </MenuItem>
         </Menu>
-        <TabControl Items="{Binding MainTabs}" SelectedItem="{Binding SelectedTab}">
-            <TabControl.ItemTemplate>
-                <DataTemplate DataType="vm:MainEditorTabViewModel">
-                    <TextBlock Text="{Binding LevelName}" />
-                </DataTemplate>
-            </TabControl.ItemTemplate>
-            <TabControl.ContentTemplate>
-                <DataTemplate DataType="vm:MainEditorTabViewModel">
-                    <Panel>
-                        <TextBlock IsVisible="{Binding Content, Converter={x:Static ObjectConverters.IsNull}}"
-                                   Text="Loading, hang tight..." FontSize="36"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        <ContentControl Content="{Binding Content}"
-                                        IsVisible="{Binding Content, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                    </Panel>
-                </DataTemplate>
-            </TabControl.ContentTemplate>
-        </TabControl>
+        <Panel>
+            <TabControl Items="{Binding MainTabs}" SelectedItem="{Binding SelectedTab}">
+                <TabControl.ItemTemplate>
+                    <DataTemplate DataType="vm:MainEditorTabViewModel">
+                        <TextBlock Text="{Binding LevelName}" />
+                    </DataTemplate>
+                </TabControl.ItemTemplate>
+                <TabControl.ContentTemplate>
+                    <DataTemplate DataType="vm:MainEditorTabViewModel">
+                        <Panel>
+                            <TextBlock IsVisible="{Binding Content, Converter={x:Static ObjectConverters.IsNull}}"
+                                       Text="Loading, hang tight..." FontSize="36"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <ContentControl Content="{Binding Content}"
+                                            IsVisible="{Binding Content, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        </Panel>
+                    </DataTemplate>
+                </TabControl.ContentTemplate>
+            </TabControl>
+            <TextBlock HorizontalAlignment="Right" VerticalAlignment="Bottom" Text="{Binding VersionString}" Foreground="Gray" />
+        </Panel>
         <!--<views:LingoStatus DockPanel.Dock="Bottom" DataContext="{Binding MapEditorVM.Lingo}" />-->
         <!--<ContentControl Margin="4" Content="{Binding MapEditorVM.Lingo.Frame}" />-->
     </DockPanel>

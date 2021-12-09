@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Runtime;
 using System.Threading.Tasks;
 using Drizzle.Editor.ViewModels.Render;
@@ -28,6 +29,8 @@ public class MainWindowViewModel : ViewModelBase, ILingoRuntimeManager
 
     [Reactive] public MainEditorTabViewModel? SelectedTab { get; set; }
     public EditorContentViewModel? TabContent => SelectedTab?.Content;
+
+    public static string VersionString => Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "";
 
     private Task<LingoRuntime> _zygoteInitialized = default!;
 
