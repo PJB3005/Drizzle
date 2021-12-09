@@ -13,7 +13,7 @@
     <ItemGroup>
         <PackageReference Include="Avalonia" Version="0.10.10" />
         <PackageReference Include="Avalonia.Desktop" Version="0.10.10" />
-        <PackageReference Include="Avalonia.Diagnostics" Version="0.10.10" />
+        <PackageReference Include="Avalonia.Diagnostics" Version="0.10.10" Condition="'$(Configuration)' == 'Debug'" />
         <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.10" />
         <PackageReference Include="Avalonia.Controls.PanAndZoom" Version="4.3.0" />
         <PackageReference Include="DynamicData" Version="7.4.3" />

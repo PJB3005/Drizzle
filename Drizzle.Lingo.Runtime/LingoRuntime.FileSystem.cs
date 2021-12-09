@@ -10,7 +10,11 @@ public partial class LingoRuntime
 
     static LingoRuntime()
     {
+#if FULL_RELEASE
+        var path = Path.Combine(Assembly.GetEntryAssembly()!.Location, "..", "Data");
+#else
         var path = Path.Combine(Assembly.GetEntryAssembly()!.Location, "..", "..", "..", "..", "..", "Data");
+#endif
         MovieBasePath = Path.GetFullPath(path) + Path.DirectorySeparatorChar;
         CastPath = Path.Combine(MovieBasePath, "Cast");
     }
