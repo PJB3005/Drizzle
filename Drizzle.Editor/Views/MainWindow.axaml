@@ -17,18 +17,18 @@
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
-                <MenuItem Header="_New" Command="{Binding NewProject}" HotKey="Ctrl+N" InputGesture="Ctrl+N" />
+                <MenuItem Header="_New" Command="{Binding NewProject}" HotKey="Ctrl+N" InputGesture="Ctrl+N" IsVisible="False" />
                 <MenuItem Header="_Open..." Command="{Binding $parent[views:MainWindow].OpenProject}" HotKey="Ctrl+O" InputGesture="Ctrl+O" />
                 <MenuItem Header="_Save" Command="{Binding SaveProject}" HotKey="Ctrl+S" InputGesture="Ctrl+S"
-                          IsEnabled="{Binding TabContent,Converter={x:Static ObjectConverters.IsNotNull}}" />
+                          IsEnabled="{Binding TabContent,Converter={x:Static ObjectConverters.IsNotNull}}" IsVisible="False" />
                 <MenuItem Header="Save _As..." Command="{Binding SaveAsProject}" HotKey="Ctrl+Shift+S"
                           InputGesture="Ctrl+Shift+S"
-                          IsEnabled="{Binding TabContent,Converter={x:Static ObjectConverters.IsNotNull}}" />
+                          IsEnabled="{Binding TabContent,Converter={x:Static ObjectConverters.IsNotNull}}" IsVisible="False" />
                 <MenuItem Header="_Close" Command="{Binding CloseProject}" HotKey="Ctrl+W"
                           InputGesture="Ctrl+W"
                           IsEnabled="{Binding SelectedTab,Converter={x:Static ObjectConverters.IsNotNull}}" />
             </MenuItem>
-            <MenuItem Header="_Edit">
+            <MenuItem Header="_Edit"  IsVisible="False">
                 <MenuItem Header="_Undo" InputGesture="Ctrl+Z" HotKey="Ctrl+Z" />
                 <MenuItem Header="_Redo" InputGesture="Ctrl+Shift+Z" HotKey="Ctrl+Shift+Z" />
             </MenuItem>
