@@ -59,5 +59,6 @@ jobs:
         }
         $folder = "${{ matrix.folder }}"
         $path = join-path "Data/LevelEditorProjects" $folder "*.txt"
+        $checksum = join-path "Data/LevelEditorProjects" $folder "checksums.json" 
         $files = (get-childitem -Recurse $path) | where-object { $blackList[$folder] -eq $null -or $blackList[$folder][[System.IO.Path]::GetFileNameWithoutExtension($_)] -ne 1 }
-        dotnet run --no-build -c Release --project Drizzle.ConsoleApp/Drizzle.ConsoleApp.csproj -- render --parallelism 2 --gen-checksums $files
+        dotnet run --no-build -c Release --project Drizzle.ConsoleApp/Drizzle.ConsoleApp.csproj -- render --parallelism 2 --compare-checksums $checksum $files
