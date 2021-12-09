@@ -148,6 +148,15 @@ public class MainWindowViewModel : ViewModelBase, ILingoRuntimeManager
         GC.Collect();
     }
 
+    public void OpenGitHub()
+    {
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = "https://github.com/PJB3005/Drizzle",
+            UseShellExecute = true,
+        });
+    }
+
     public async Task Exec(Action<LingoRuntime> action)
     {
         var runtime = await _zygoteInitialized;

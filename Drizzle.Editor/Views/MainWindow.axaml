@@ -58,6 +58,9 @@
                 <MenuItem Header="Run GC" Command="{Binding RunGC}" HotKey="Ctrl+F11"
                           InputGesture="Ctrl+F11" />
             </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Header="_GitHub" Command="{Binding OpenGitHub}" />
+            </MenuItem>
         </Menu>
         <TabControl Items="{Binding MainTabs}" SelectedItem="{Binding SelectedTab}">
             <TabControl.ItemTemplate>
