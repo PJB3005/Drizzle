@@ -8,13 +8,14 @@ public sealed record CommandLineArgs(CommandLineArgs.BaseVerb Verb)
 {
     public abstract record BaseVerb;
 
-    public sealed record VerbRender(int MaxParallelism, List<string> Levels, bool checksums) : BaseVerb
+    public sealed record VerbRender(int MaxParallelism, List<string> Levels, bool Checksums, string? CompareChecksums) : BaseVerb
     {
         public static VerbRender? ContinueParse(IEnumerator<string> enumerator)
         {
             var levels = new List<string>();
             var parallelism = 0;
             var genChecksums = false;
+            string? compareChecksums = null;
 
             while (enumerator.MoveNext())
             {
@@ -33,6 +34,18 @@ public sealed record CommandLineArgs(CommandLineArgs.BaseVerb Verb)
                 {
                     genChecksums = true;
                 }
+                else if (arg == "--compare-checksums")
+                {
+                    genChecksums = true;
+
+                    if (!enumerator.MoveNext())
+                    {
+                        C.WriteLine("Expected checksum comparison file");
+                        return null;
+                    }
+
+                    compareChecksums = enumerator.Current;
+                }
                 else if (arg == "--help")
                 {
                     PrintVerbHelp();
@@ -50,7 +63,7 @@ public sealed record CommandLineArgs(CommandLineArgs.BaseVerb Verb)
                 return null;
             }
 
-            return new VerbRender(parallelism, levels, genChecksums);
+            return new VerbRender(parallelism, levels, genChecksums, compareChecksums);
         }
 
         private static void PrintVerbHelp()
@@ -62,6 +75,9 @@ Arguments:
 Options:
   --parallelism PARALLELISM   Maximum amount of threads to use. Leave out or 0 to select automatically.
   --gen-checksums             Generate checksums of generated level images.
+  --compare-checksums <file>  Checksums file to compare against.
+                              The checksum of the generated image will be looked up and compared,
+                              and an error will be raised if it does not match.
   --help                      Print help then exit.
 ");
         }

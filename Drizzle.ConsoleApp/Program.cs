@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Drizzle.ConsoleApp;
@@ -18,6 +20,7 @@ if (!CommandLineArgs.TryParse(args, out var parsedArgs))
     return 1;
 
 var isCi = Environment.GetEnvironmentVariable("CI") == "true";
+var checksumErrors = 0;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Error()
@@ -47,6 +50,13 @@ int DoCmdRender(CommandLineArgs.VerbRender options)
         MaxDegreeOfParallelism = options.MaxParallelism == 0 ? -1 : options.MaxParallelism
     };
 
+    Dictionary<string, Dictionary<string, string>>? checksums = null;
+    if (options.CompareChecksums is { } chkFileName)
+    {
+        using var chkFile = File.OpenRead(chkFileName);
+        checksums = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(chkFile);
+    }
+
     Parallel.ForEach(options.Levels, parallelOptions, s =>
     {
         var renderRuntime = zygote.Clone();
@@ -59,8 +69,8 @@ int DoCmdRender(CommandLineArgs.VerbRender options)
             EditorRuntimeHelpers.RunLoadLevel(renderRuntime, s);
 
             var renderer = new LevelRenderer(renderRuntime, null);
-            if (options.checksums)
-                renderer.OnScreenRenderCompleted += (cam, img) => PrintChecksum(levelName, cam, img);
+            if (options.Checksums)
+                renderer.OnScreenRenderCompleted += (cam, img) => HandleChecksum(levelName, cam, img, checksums);
 
             renderer.DoRender();
         }
@@ -81,16 +91,42 @@ int DoCmdRender(CommandLineArgs.VerbRender options)
     });
 
     Console.WriteLine($"Finished rendering in {sw.Elapsed}. {errors} errored, {success} succeeded");
-    return errors != 0 ? 1 : 0;
+    if (checksums != null)
+        Console.WriteLine($"{checksumErrors} checksum failures.");
+
+    return errors != 0 && checksumErrors != 0 ? 1 : 0;
 }
 
-static void PrintChecksum(string name, int cameraIndex, LingoImage finalImg)
+void HandleChecksum(string name, int cameraIndex, LingoImage finalImg,
+    Dictionary<string, Dictionary<string, string>>? checksums)
 {
     Span<byte> hash = stackalloc byte[16];
     CalcChecksum(finalImg, hash);
     var hashHex = Convert.ToHexString(hash);
 
     Console.WriteLine($"checksum {name} cam {cameraIndex}: {hashHex}");
+    if (checksums == null)
+        return;
+
+    if (!checksums.TryGetValue(name, out var cameras) ||
+        !cameras.TryGetValue(cameraIndex.ToString(), out var checksum))
+    {
+        Console.WriteLine(
+            $"{(isCi ? "::notice::" : "")}{name}#{cameraIndex} not found in checksum manifest.");
+        return;
+    }
+
+    if (checksum != hashHex)
+    {
+        Console.WriteLine(
+            $"{(isCi ? "::error::" : "")}{name}#{cameraIndex} mismatches checksum! New: {hashHex} old: {checksum}.");
+
+        Interlocked.Increment(ref checksumErrors);
+    }
+    else
+    {
+        Console.WriteLine($"{name}#{cameraIndex}: Checksums passed");
+    }
 }
 
 static void CalcChecksum(LingoImage img, Span<byte> outData)
