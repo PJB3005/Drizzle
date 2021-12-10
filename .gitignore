@@ -11,3 +11,8 @@ Desktop.ini
 .DS_Store
 .desktop
 /Drizzle.Ported/Translated
+
+# Temporary directory used when making release builds.
+ReleaseBuild/
+# Directory containing release builds.
+Release/
