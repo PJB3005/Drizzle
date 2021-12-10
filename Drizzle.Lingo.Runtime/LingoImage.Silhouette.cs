@@ -36,7 +36,7 @@ public sealed partial class LingoImage
         var srcBuf = MemoryMarshal.Cast<byte, uint>(src.ImageBuffer);
         var dstBuf = MemoryMarshal.Cast<byte, uint>(dst.ImageBuffer);
 
-        var xorMask = inverted ? 0u : 0xFF_FF_FF_FFu;
+        var xorMask = inverted ? 0xFF_FF_FF_FFu : 0u;
 
         for (var i = 0; i < srcBuf.Length; i += 32)
         {
