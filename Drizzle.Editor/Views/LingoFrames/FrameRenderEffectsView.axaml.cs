@@ -2,7 +2,7 @@
 
 namespace Drizzle.Editor.Views.LingoFrames;
 
-public sealed class FrameRenderEffectsView : UserControl
+public sealed partial class FrameRenderEffectsView : UserControl
 {
 
 }

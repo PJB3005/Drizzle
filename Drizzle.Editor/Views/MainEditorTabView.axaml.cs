@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Drizzle.Editor.Views;
 
 [UsedImplicitly]
-public sealed class MainEditorTabView : UserControl
+public sealed partial class MainEditorTabView : UserControl
 {
     public MainEditorTabView()
     {

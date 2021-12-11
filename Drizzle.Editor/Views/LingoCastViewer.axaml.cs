@@ -6,7 +6,7 @@ using Drizzle.Editor.ViewModels;
 
 namespace Drizzle.Editor.Views;
 
-public sealed class LingoCastViewer : Window
+public sealed partial class LingoCastViewer : Window
 {
     public LingoCastViewer()
     {

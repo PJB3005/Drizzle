@@ -3,7 +3,7 @@ using Avalonia.Markup.Xaml;
 
 namespace Drizzle.Editor.Views;
 
-public sealed class EditorContentView : UserControl
+public sealed partial class EditorContentView : UserControl
 {
     public EditorContentView()
     {

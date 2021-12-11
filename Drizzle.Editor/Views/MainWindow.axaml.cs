@@ -95,4 +95,9 @@ public partial class MainWindow : ReactiveWindow<MainWindowViewModel>
 
         ViewModel!.OpenProjects(result);
     }
+
+    private void OpenAbout(object? sender, RoutedEventArgs e)
+    {
+        new AboutWindow().Show(this);
+    }
 }

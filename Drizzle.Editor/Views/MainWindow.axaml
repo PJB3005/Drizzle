@@ -85,6 +85,7 @@
             </MenuItem>
             <MenuItem Header="_Help">
                 <MenuItem Header="_GitHub" Command="{Binding OpenGitHub}" />
+                <MenuItem Header="_About" Click="OpenAbout" />
             </MenuItem>
         </Menu>
         <Panel>
