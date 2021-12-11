@@ -9,36 +9,61 @@
         Icon="/Assets/avalonia-logo.ico"
         Title="Drizzle.Editor" Width="1024" Height="600"
         KeyDown="OnKeyDown" KeyUp="OnKeyUp">
-
     <Design.DataContext>
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
+    <Window.KeyBindings>
+        <!-- File -->
+        <KeyBinding Gesture="Ctrl+N" Command="{Binding NewProject}" />
+        <KeyBinding Gesture="Ctrl+O" Command="{Binding $parent[views:MainWindow].OpenProject}" />
+        <KeyBinding Gesture="Ctrl+S" Command="{Binding SaveProject}" />
+        <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding SaveAsProject}" />
+        <KeyBinding Gesture="Ctrl+W" Command="{Binding CloseProject}" />
+
+        <!-- Edit -->
+        <KeyBinding Gesture="Ctrl+Z" />
+        <KeyBinding Gesture="Ctrl+Y" />
+        <KeyBinding Gesture="Ctrl+Shift+Z" />
+
+        <!-- Project -->
+        <KeyBinding Gesture="Ctrl+Shift+R" Command="{Binding RenderProject}" />
+
+        <!-- Debug -->
+        <KeyBinding Gesture="Shift+F10" Command="{Binding CastViewerZygote}" />
+        <KeyBinding Gesture="Ctrl+F10" Command="{Binding CastViewerProject}" />
+        <KeyBinding Gesture="Ctrl+F11" Command="{Binding RunGC}" />
+
+    </Window.KeyBindings>
+
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
-                <MenuItem Header="_New" Command="{Binding NewProject}" HotKey="Ctrl+N" InputGesture="Ctrl+N" IsVisible="False" />
-                <MenuItem Header="_Open..." Command="{Binding $parent[views:MainWindow].OpenProject}" HotKey="Ctrl+O" InputGesture="Ctrl+O" />
-                <MenuItem Header="_Save" Command="{Binding SaveProject}" HotKey="Ctrl+S" InputGesture="Ctrl+S"
-                          IsEnabled="{Binding TabContent,Converter={x:Static ObjectConverters.IsNotNull}}" IsVisible="False" />
-                <MenuItem Header="Save _As..." Command="{Binding SaveAsProject}" HotKey="Ctrl+Shift+S"
+                <MenuItem Header="_New" Command="{Binding NewProject}" InputGesture="Ctrl+N" IsVisible="False" />
+                <MenuItem Header="_Open..." Command="{Binding $parent[views:MainWindow].OpenProject}"
+                          InputGesture="Ctrl+O" />
+                <MenuItem Header="_Save" Command="{Binding SaveProject}" InputGesture="Ctrl+S"
+                          IsEnabled="{Binding TabContent,Converter={x:Static ObjectConverters.IsNotNull}}"
+                          IsVisible="False" />
+                <MenuItem Header="Save _As..." Command="{Binding SaveAsProject}"
                           InputGesture="Ctrl+Shift+S"
-                          IsEnabled="{Binding TabContent,Converter={x:Static ObjectConverters.IsNotNull}}" IsVisible="False" />
-                <MenuItem Header="_Close" Command="{Binding CloseProject}" HotKey="Ctrl+W"
+                          IsEnabled="{Binding TabContent,Converter={x:Static ObjectConverters.IsNotNull}}"
+                          IsVisible="False" />
+                <MenuItem Header="_Close" Command="{Binding CloseProject}"
                           InputGesture="Ctrl+W"
                           IsEnabled="{Binding SelectedTab,Converter={x:Static ObjectConverters.IsNotNull}}" />
             </MenuItem>
-            <MenuItem Header="_Edit"  IsVisible="False">
-                <MenuItem Header="_Undo" InputGesture="Ctrl+Z" HotKey="Ctrl+Z" />
-                <MenuItem Header="_Redo" InputGesture="Ctrl+Shift+Z" HotKey="Ctrl+Shift+Z" />
+            <MenuItem Header="_Edit" IsVisible="False">
+                <MenuItem Header="_Undo" InputGesture="Ctrl+Z" />
+                <MenuItem Header="_Redo" InputGesture="Ctrl+Y" />
             </MenuItem>
             <MenuItem Header="_Project">
-                <MenuItem Header="_Render" Command="{Binding RenderProject}" HotKey="Ctrl+Shift+R"
+                <MenuItem Header="_Render" Command="{Binding RenderProject}"
                           InputGesture="Ctrl+Shift+R"
                           IsEnabled="{Binding TabContent,Converter={x:Static ObjectConverters.IsNotNull}}" />
-                <MenuItem Name="MenuRenderCamera" Header="Render _Camera" 
+                <MenuItem Name="MenuRenderCamera" Header="Render _Camera"
                           IsEnabled="{Binding TabContent,Converter={x:Static ObjectConverters.IsNotNull}}" />
-                <MenuItem Header="Text Output" Command="{Binding TestRenderProject}" 
+                <MenuItem Header="Text Output" Command="{Binding TestRenderProject}"
                           IsEnabled="{Binding TabContent,Converter={x:Static ObjectConverters.IsNotNull}}">
                     <!--<MenuItem.ItemTemplate>
                         <DataTemplate DataType="system:Int32">
@@ -50,12 +75,12 @@
                 </MenuItem>
             </MenuItem>
             <MenuItem Header="_Debug">
-                <MenuItem Header="Cast Viewer (Zygote)" Command="{Binding CastViewerZygote}" HotKey="Shift+F10"
+                <MenuItem Header="Cast Viewer (Zygote)" Command="{Binding CastViewerZygote}"
                           InputGesture="Shift+F10" />
-                <MenuItem Header="Cast Viewer (Project)" Command="{Binding CastViewerProject}" HotKey="Ctrl+F10"
+                <MenuItem Header="Cast Viewer (Project)" Command="{Binding CastViewerProject}"
                           InputGesture="Ctrl+F10"
                           IsEnabled="{Binding TabContent,Converter={x:Static ObjectConverters.IsNotNull}}" />
-                <MenuItem Header="Run GC" Command="{Binding RunGC}" HotKey="Ctrl+F11"
+                <MenuItem Header="Run GC" Command="{Binding RunGC}"
                           InputGesture="Ctrl+F11" />
             </MenuItem>
             <MenuItem Header="_Help">
@@ -81,7 +106,8 @@
                     </DataTemplate>
                 </TabControl.ContentTemplate>
             </TabControl>
-            <TextBlock HorizontalAlignment="Right" VerticalAlignment="Bottom" Text="{Binding VersionString}" Foreground="Gray" />
+            <TextBlock HorizontalAlignment="Right" VerticalAlignment="Bottom" Text="{Binding VersionString}"
+                       Foreground="Gray" />
         </Panel>
         <!--<views:LingoStatus DockPanel.Dock="Bottom" DataContext="{Binding MapEditorVM.Lingo}" />-->
         <!--<ContentControl Margin="4" Content="{Binding MapEditorVM.Lingo.Frame}" />-->
