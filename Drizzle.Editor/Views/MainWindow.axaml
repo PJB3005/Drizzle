@@ -7,7 +7,7 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Drizzle.Editor.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
-        Title="Drizzle.Editor" Width="1024" Height="600"
+        Title="{Binding Title}" Width="1024" Height="600"
         KeyDown="OnKeyDown" KeyUp="OnKeyUp">
     <Design.DataContext>
         <vm:MainWindowViewModel />

@@ -32,6 +32,8 @@ public class MainWindowViewModel : ViewModelBase, ILingoRuntimeManager
 
     public static string VersionString => Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "";
 
+    public string Title => SelectedTab == null ? "Drizzle Editor" : $"Drizzle Editor - {SelectedTab.LevelName}";
+
     private Task<LingoRuntime> _zygoteInitialized = default!;
 
     public MainWindowViewModel()
@@ -43,7 +45,11 @@ public class MainWindowViewModel : ViewModelBase, ILingoRuntimeManager
         MainTabs = tabs;
 
         this.WhenAnyValue(x => x.SelectedTab, x => x.SelectedTab!.Content)
-            .Subscribe(_ => this.RaisePropertyChanged(nameof(TabContent)));
+            .Subscribe(_ =>
+            {
+                this.RaisePropertyChanged(nameof(Title));
+                this.RaisePropertyChanged(nameof(TabContent));
+            });
     }
 
     public void Init(CommandLineArgs commandLineArgs)
