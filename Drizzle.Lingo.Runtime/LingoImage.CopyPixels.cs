@@ -216,7 +216,7 @@ public sealed unsafe partial class LingoImage
     }
 
 
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+
     private static void CopyPixelsQuadCoreScalar<TSrcData, TSampler, TDstData, TWriter>(
         LingoImage src, LingoImage dst,
         in DestQuad destQuad,
@@ -511,7 +511,6 @@ public sealed unsafe partial class LingoImage
                 parameters);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CopyPixelsRectCoreCopyScalar<TSrcData, TSampler, TDstData, TWriter>(
         LingoImage src, LingoImage dst,
         Vector4 srcBox,
@@ -638,7 +637,6 @@ public sealed unsafe partial class LingoImage
         return TSampler.Sample(srcSpan, imgRow + imgX);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CopyPixelsRectCoreCopyAvx2<TSrcData, TSampler, TDstData, TWriter>(
         LingoImage src, LingoImage dst,
         Vector4 srcBox,
@@ -740,7 +738,7 @@ public sealed unsafe partial class LingoImage
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static int DoSample(ReadOnlySpan<TSrcData> srcSpan, int srcImgW, int imgRow, int imgX)
         {
             if (imgX < 0 || imgX >= srcImgW)
@@ -750,7 +748,7 @@ public sealed unsafe partial class LingoImage
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Vector256<byte> DoBlend8Avx2(Vector256<byte> src, Vector256<byte> dst, Vector256<float> blend)
     {
         var res = Vector256.Create(0xFF_00_00_00).AsByte();
@@ -838,7 +836,7 @@ public sealed unsafe partial class LingoImage
 
         return Avx2.Or(res, Avx2.Shuffle(resRed, rInvMask));
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static Vector256<byte> DoSingleBlend(
             Vector256<byte> srcColor, Vector256<byte> dstColor,
             Vector256<float> blend, Vector256<float> blendInv)
@@ -856,7 +854,7 @@ public sealed unsafe partial class LingoImage
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void CopyPixelsRectCoreCopyClampDst(
         ref int dst0,
         ref int dst1,
@@ -873,7 +871,7 @@ public sealed unsafe partial class LingoImage
         dst1 = Math.Min(dst1, dstImg);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static (float initS, float initT, float incSrcS, float incSrcT) CopyPixelsRectCoreCopyCalcSampleCoords(
         Vector4 srcBox, int dstL, int dstT, int dstR, int dstB)
     {
@@ -924,7 +922,6 @@ public sealed unsafe partial class LingoImage
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CopyPixelsPxlRectCore<TDstData, TWriter>(
         LingoImage dst,
         (int l, int t, int r, int b) dstBox,
@@ -992,14 +989,14 @@ public sealed unsafe partial class LingoImage
 
     private struct PixelOpsBgra32 : IPixelOps<Bgra32>
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Sample(ReadOnlySpan<Bgra32> srcDat, int rowMajorPos)
         {
             ref readonly var px = ref srcDat[rowMajorPos];
             return Unsafe.As<Bgra32, int>(ref Unsafe.AsRef(px));
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector256<int> Read8(ReadOnlySpan<Bgra32> dstDat, int rowMajorPos0, Vector256<int> readMask)
         {
             fixed (Bgra32* px = &dstDat[rowMajorPos0])
@@ -1008,13 +1005,13 @@ public sealed unsafe partial class LingoImage
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Write(Span<Bgra32> dstDat, int rowMajorPos, int value)
         {
             dstDat[rowMajorPos] = Unsafe.As<int, Bgra32>(ref value);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Write8(Span<Bgra32> dstDat, int rowMajorPos0, Vector256<int> pixelData,
             Vector256<int> writeMask)
         {
@@ -1033,7 +1030,7 @@ public sealed unsafe partial class LingoImage
 
     private struct PixelOpsBgra5551 : IPixelOps<Bgra5551>
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Sample(ReadOnlySpan<Bgra5551> srcDat, int rowMajorPos)
         {
             // TODO: Make this fast.
@@ -1048,13 +1045,13 @@ public sealed unsafe partial class LingoImage
             throw new NotImplementedException();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Write(Span<Bgra5551> dstDat, int rowMajorPos, int value)
         {
             dstDat[rowMajorPos].FromBgra32(Unsafe.As<int, Bgra32>(ref value));
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Write8(
             Span<Bgra5551> dstDat,
             int rowMajorPos0,
@@ -1081,7 +1078,7 @@ public sealed unsafe partial class LingoImage
 
     private struct PixelOpsPalette8 : IPixelOps<L8>
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Sample(ReadOnlySpan<L8> srcDat, int rowMajorPos)
         {
             var px = srcDat[rowMajorPos].PackedValue;
@@ -1094,13 +1091,13 @@ public sealed unsafe partial class LingoImage
             throw new NotImplementedException();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Write(Span<L8> dstDat, int rowMajorPos, int value)
         {
             dstDat[rowMajorPos] = ToPalettized(value);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Write8(Span<L8> dstDat, int rowMajorPos0, Vector256<int> pixelData, Vector256<int> writeMask)
         {
             // todo: make this fast.
@@ -1122,7 +1119,7 @@ public sealed unsafe partial class LingoImage
             dstDat.Fill(ToPalettized(value));
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static L8 ToPalettized(int color)
         {
             // Red.
@@ -1140,7 +1137,7 @@ public sealed unsafe partial class LingoImage
 
     private struct PixelOpsBit : IPixelOps<int>
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Sample(ReadOnlySpan<int> srcDat, int rowMajorPos)
         {
             return DoBitRead(srcDat, rowMajorPos) ? LingoColor.PackWhite : LingoColor.PackBlack;
@@ -1151,13 +1148,13 @@ public sealed unsafe partial class LingoImage
             throw new NotImplementedException();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Write(Span<int> dstDat, int rowMajorPos, int value)
         {
             DoBitWrite(dstDat, rowMajorPos, value == LingoColor.PackWhite);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Write8(Span<int> dstDat, int rowMajorPos0, Vector256<int> pixelData,
             Vector256<int> writeMask)
         {
@@ -1210,7 +1207,7 @@ public sealed unsafe partial class LingoImage
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void DoBitWrite(Span<int> buf, int rowMajorPos, bool white)
     {
         var bytePos = rowMajorPos >> 5;
@@ -1223,7 +1220,7 @@ public sealed unsafe partial class LingoImage
             val &= ~mask;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool DoBitRead(ReadOnlySpan<int> buf, int rowMajorPos)
     {
         var bytePos = rowMajorPos >> 5;
