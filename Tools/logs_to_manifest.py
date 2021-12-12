@@ -5,7 +5,7 @@ from collections import defaultdict
 from typing import Dict, DefaultDict
 
 LOG_FILE_NAME_RE = re.compile(r"\d+_build \((.+?)\).txt")
-LOG_CHECKSUM_RE = re.compile(r"(\S+)#(\d+):\s+checksum\s+([A-F0-9]+)", re.IGNORECASE)
+LOG_CHECKSUM_RE = re.compile(r"checksum\s+(.+?)\s+cam\s+(\d+):\s+([A-F0-9]+)", re.IGNORECASE)
 
 checksums_parsed: Dict[str, DefaultDict[str, Dict[str, str]]] = {}
 
