@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
@@ -178,7 +178,7 @@ public sealed unsafe partial class LingoImage
         switch (src.Depth)
         {
             case 32:
-                CopyPixelsQuadCoreScalar<Bgra32, PixelOpsBgra32, TDstData, TWriter>(
+                CopyPixelsQuadCore<Bgra32, PixelOpsBgra32, TDstData, TWriter>(
                     src,
                     dst,
                     destQuad,
@@ -186,7 +186,7 @@ public sealed unsafe partial class LingoImage
                     parameters);
                 break;
             case 16:
-                CopyPixelsQuadCoreScalar<Bgra5551, PixelOpsBgra5551, TDstData, TWriter>(
+                CopyPixelsQuadCore<Bgra5551, PixelOpsBgra5551, TDstData, TWriter>(
                     src,
                     dst,
                     destQuad,
@@ -194,7 +194,7 @@ public sealed unsafe partial class LingoImage
                     parameters);
                 break;
             case 8:
-                CopyPixelsQuadCoreScalar<L8, PixelOpsPalette8, TDstData, TWriter>(
+                CopyPixelsQuadCore<L8, PixelOpsPalette8, TDstData, TWriter>(
                     src,
                     dst,
                     destQuad,
@@ -202,7 +202,7 @@ public sealed unsafe partial class LingoImage
                     parameters);
                 break;
             case 1:
-                CopyPixelsQuadCoreScalar<int, PixelOpsBit, TDstData, TWriter>(
+                CopyPixelsQuadCore<int, PixelOpsBit, TDstData, TWriter>(
                     src,
                     dst,
                     destQuad,
@@ -215,7 +215,31 @@ public sealed unsafe partial class LingoImage
         }
     }
 
-
+    private static void CopyPixelsQuadCore<TSrcData, TSampler, TDstData, TWriter>(
+        LingoImage src, LingoImage dst,
+        in DestQuad destQuad,
+        Vector4 srcBox,
+        in CopyPixelsParameters parameters)
+        where TSampler : struct, IPixelOps<TSrcData>
+        where TSrcData : unmanaged
+        where TWriter : struct, IPixelOps<TDstData>
+        where TDstData : unmanaged
+    {
+        // Advanced copy features not implemented on AVX code path, they're rare so it's fine probably.
+        var mustScalar = parameters.Ink == CopyPixelsInk.Darkest || parameters.Mask != null;
+        if (Avx2.IsSupported && !mustScalar)
+        {
+            CopyPixelsQuadCoreAvx2<TSrcData, TSampler, TDstData, TWriter>(
+                src, dst,
+                destQuad, srcBox,
+                parameters);
+        }
+        else
+            CopyPixelsQuadCoreScalar<TSrcData, TSampler, TDstData, TWriter>(
+                src, dst,
+                destQuad, srcBox,
+                parameters);
+    }
 
     private static void CopyPixelsQuadCoreScalar<TSrcData, TSampler, TDstData, TWriter>(
         LingoImage src, LingoImage dst,
@@ -301,8 +325,6 @@ public sealed unsafe partial class LingoImage
 
         static float Lerp(float x, float y, float a) => x + a * (y - x);
 
-        static float Cross2d(Vector2 a, Vector2 b) => a.X * b.Y - a.Y * b.X;
-
         // https://iquilezles.org/www/articles/ibilinear/ibilinear.htm
         static Vector2 InvBilinear(Vector2 p, Vector2 a, Vector2 e, Vector2 f, Vector2 g, float k2)
         {
@@ -340,6 +362,235 @@ public sealed unsafe partial class LingoImage
 
             return res;
         }
+    }
+
+    private static float Cross2d(Vector2 a, Vector2 b) => a.X * b.Y - a.Y * b.X;
+
+    private static void CopyPixelsQuadCoreAvx2<TSrcData, TSampler, TDstData, TWriter>(
+        LingoImage src, LingoImage dst,
+        in DestQuad destQuad,
+        Vector4 srcBox,
+        in CopyPixelsParameters parameters)
+        where TSampler : struct, IPixelOps<TSrcData>
+        where TSrcData : unmanaged
+        where TWriter : struct, IPixelOps<TDstData>
+        where TDstData : unmanaged
+    {
+        var srcImgW = src.Width;
+        var srcImgH = src.Height;
+        var dstImgW = dst.Width;
+        var dstImgH = dst.Height;
+
+        var boundsTL = Vector2.Min(
+            destQuad.TopLeft,
+            Vector2.Min(
+                destQuad.TopRight,
+                Vector2.Min(destQuad.BottomLeft, destQuad.BottomRight)));
+
+        var boundsBR = Vector2.Max(
+            destQuad.TopLeft,
+            Vector2.Max(
+                destQuad.TopRight,
+                Vector2.Max(destQuad.BottomLeft, destQuad.BottomRight)));
+
+        var boundL = Math.Clamp((int)boundsTL.X, 0, dstImgW);
+        var boundT = Math.Clamp((int)boundsTL.Y, 0, dstImgH);
+        var boundR = Math.Clamp((int)MathF.Ceiling(boundsBR.X), 0, dstImgW);
+        var boundB = Math.Clamp((int)MathF.Ceiling(boundsBR.Y), 0, dstImgH);
+
+        var doBackgroundTransparent = parameters.Ink == CopyPixelsInk.BackgroundTransparent;
+
+        // ReSharper disable once CompareOfFloatsByEqualityOperator
+        var doBlend = parameters.Blend != 1;
+        var fgc = parameters.ForeColor;
+        var fgVec = Vector256.Create(fgc.BitPack).AsByte();
+
+        ReadOnlySpan<TSrcData> srcSpan = MemoryMarshal.Cast<byte, TSrcData>(src.ImageBuffer);
+        var dstSpan = MemoryMarshal.Cast<byte, TDstData>(dst.ImageBuffer);
+
+        // TODO: guard against degenerate shape?
+
+        var a = destQuad.TopLeft;
+        var b = destQuad.TopRight;
+        var c = destQuad.BottomRight;
+        var d = destQuad.BottomLeft;
+
+        // Pull out parameters in InvBilinear that do not change for the quad.
+        var e = b - a;
+        var f = d - a;
+        var g = a - b + c - d;
+
+        var k2 = Cross2d(g, f);
+
+        var posMask = Vector256.Create(0, 1, 2, 3, 4, 5, 6, 7);
+        var widthVec = Vector256.Create(boundR);
+
+        for (var y = boundT; y < boundB; y++)
+        {
+            var yVec = Vector256.Create(y + 0.5f);
+
+            for (var x = boundL; x < boundR; x += 8)
+            {
+                var pos = Avx2.Add(posMask, Vector256.Create(x));
+                var writeMask = Avx2.CompareGreaterThan(widthVec, pos);
+
+                var xVec = Avx.Add(Avx.ConvertToVector256Single(pos), Vector256.Create(0.5f));
+                var (s, t) = QuadInvBilinearAvx2(xVec, yVec, a, e, f, g, k2);
+
+                var vecHalf = Vector256.Create(0.5f);
+                var maskNeg = Vector256.Create(-0.0f);
+
+                // Pixels in mask = in quad.
+                writeMask = Avx2.And(writeMask, Avx.And(
+                    Avx.CompareLessThan(Avx.AndNot(maskNeg, Avx.Subtract(s, vecHalf)), vecHalf),
+                    Avx.CompareLessThan(Avx.AndNot(maskNeg, Avx.Subtract(t, vecHalf)), vecHalf)
+                ).AsInt32());
+
+                if (writeMask.Equals(Vector256<int>.Zero))
+                    continue;
+
+                // apply srcBox via simple lerp.
+                s = Lerp(Vector256.Create(srcBox.X), Vector256.Create(srcBox.Z), s);
+                t = Lerp(Vector256.Create(srcBox.Y), Vector256.Create(srcBox.W), t);
+
+                // The above transformation for srcBox can actually cause us to go outside the legal source box.
+                // So we need another mask just for reading.
+                var readMask = Avx2.And(
+                    Avx.And(
+                        Avx.CompareLessThan(Avx.AndNot(maskNeg, Avx.Subtract(s, vecHalf)), vecHalf),
+                        Avx.CompareLessThan(Avx.AndNot(maskNeg, Avx.Subtract(t, vecHalf)), vecHalf)
+                    ).AsInt32(), writeMask);
+
+                var imgX = Avx.ConvertToVector256Int32WithTruncation(Avx.Multiply(s, Vector256.Create((float)srcImgW)));
+                var imgY = Avx.ConvertToVector256Int32WithTruncation(Avx.Multiply(t, Vector256.Create((float)srcImgH)));
+
+                var imgPos = Avx2.Add(Avx2.MultiplyLow(imgY, Vector256.Create(srcImgW)), imgX);
+
+                var posL = imgPos.GetLower();
+                var maskL = readMask.GetLower();
+                var l0 = DoSample(posL.GetElement(0), maskL.GetElement(0), srcSpan);
+                var l1 = DoSample(posL.GetElement(1), maskL.GetElement(1), srcSpan);
+                var l2 = DoSample(posL.GetElement(2), maskL.GetElement(2), srcSpan);
+                var l3 = DoSample(posL.GetElement(3), maskL.GetElement(3), srcSpan);
+                var lowerSample = Vector128.Create(l0, l1, l2, l3);
+
+                var posU = imgPos.GetUpper();
+                var maskU = readMask.GetUpper();
+                var u0 = DoSample(posU.GetElement(0), maskU.GetElement(0), srcSpan);
+                var u1 = DoSample(posU.GetElement(1), maskU.GetElement(1), srcSpan);
+                var u2 = DoSample(posU.GetElement(2), maskU.GetElement(2), srcSpan);
+                var u3 = DoSample(posU.GetElement(3), maskU.GetElement(3), srcSpan);
+                var upperSample = Vector128.Create(u0, u1, u2, u3);
+
+                var color = Vector256.Create(lowerSample, upperSample);
+
+                CopyPixelsCoreDoOutputAvx2<TDstData, TWriter>(
+                    doBackgroundTransparent,
+                    writeMask,
+                    color,
+                    fgVec,
+                    dstImgW,
+                    x, y,
+                    doBlend,
+                    parameters,
+                    dstSpan);
+            }
+        }
+
+        static Vector256<float> Lerp(Vector256<float> x, Vector256<float> y, Vector256<float> a) =>
+            Avx.Add(x, Avx.Multiply(a, Avx.Subtract(y, x)));
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static int DoSample(
+            int pos,
+            int mask,
+            ReadOnlySpan<TSrcData> srcSpan)
+        {
+            if (mask == 0)
+                return LingoColor.PackWhite;
+
+            return TSampler.Sample(srcSpan, pos);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Vector256<float> Cross2dAvx2(
+        Vector256<float> aX, Vector256<float> aY, Vector256<float> bX, Vector256<float> bY) =>
+        Avx.Subtract(Avx.Multiply(aX, bY), Avx.Multiply(aY, bX));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static (Vector256<float> s, Vector256<float> t)
+        QuadInvBilinearAvx2(Vector256<float> pX, Vector256<float> pY, Vector2 a, Vector2 e, Vector2 f, Vector2 g,
+            float k2s)
+    {
+        // Please refer to the scalar version up above to have the slightest of a clue what is going on here.
+        var aX = Vector256.Create(a.X);
+        var aY = Vector256.Create(a.Y);
+
+        var hX = Avx.Subtract(pX, aX);
+        var hY = Avx.Subtract(pY, aY);
+
+        var eX = Vector256.Create(e.X);
+        var eY = Vector256.Create(e.Y);
+
+        var fX = Vector256.Create(f.X);
+        var fY = Vector256.Create(f.Y);
+
+        var gX = Vector256.Create(g.X);
+        var gY = Vector256.Create(g.Y);
+
+        var k1 = Avx.Add(Cross2dAvx2(eX, eY, fX, fY), Cross2dAvx2(hX, hY, gX, gY));
+        var k0 = Cross2dAvx2(hX, hY, eX, eY);
+
+        // if edges are parallel, this is a linear equation
+        if (MathF.Abs(k2s) < 0.01f)
+        {
+            var rX = Avx.Divide(
+                Avx.Add(
+                    Avx.Multiply(hX, k1),
+                    Avx.Multiply(fX, k0)
+                ),
+                Avx.Subtract(
+                    Avx.Multiply(eX, k1),
+                    Avx.Multiply(gX, k0))
+            );
+            var rY = Avx.Divide(Avx.Subtract(Vector256<float>.Zero, k0), k1);
+            return (rX, rY);
+        }
+
+        // otherwise, it's a quadratic
+        var k2 = Vector256.Create(k2s);
+        var w = Avx.Subtract(
+            Avx.Multiply(k1, k1),
+            Avx.Multiply(Vector256.Create(4.0f), Avx.Multiply(k0, k2)));
+
+        var wMask = Avx.CompareLessThan(w, Vector256<float>.Zero);
+
+        w = Avx.Sqrt(w);
+
+        var ik2 = Avx.Divide(Vector256.Create(0.5f), k2);
+        var v = Avx.Multiply(Avx.Subtract(Avx.Subtract(Vector256<float>.Zero, k1), w), ik2);
+        var u = Avx.Divide(Avx.Subtract(hX, Avx.Multiply(fX, v)), Avx.Add(eX, Avx.Multiply(gX, v)));
+
+        var vec1 = Vector256.Create(1f);
+
+        var oobMask = Avx.Or(
+            Avx.Or(Avx.CompareLessThan(u, Vector256<float>.Zero), Avx.CompareGreaterThan(u, vec1)),
+            Avx.Or(Avx.CompareLessThan(v, Vector256<float>.Zero), Avx.CompareGreaterThan(v, vec1)));
+
+        v = Avx.BlendVariable(v, Avx.Multiply(Avx.Subtract(w, k1), ik2), oobMask);
+        u = Avx.BlendVariable(
+            u,
+            Avx.Divide(
+                Avx.Subtract(hX, Avx.Multiply(fX, v)),
+                Avx.Add(eX, Avx.Multiply(gX, v))),
+            oobMask);
+
+        var negativeOne = Vector256.Create(-1f);
+        u = Avx.BlendVariable(u, negativeOne, wMask);
+        v = Avx.BlendVariable(v, negativeOne, wMask);
+
+        return (u, v);
     }
 
     private static void CopyPixelsImpl(
@@ -715,26 +966,16 @@ public sealed unsafe partial class LingoImage
                     color = Vector256.Create(lowerSample, upperSample);
                 }
 
-                // Don't write if sampled color is white (== transparent)
-                if (doBackgroundTransparent)
-                    writeMask = Avx2.AndNot(Avx2.CompareEqual(color, Vector256<int>.AllBitsSet), writeMask);
-
-                // Add foreground color.
-                color = Avx2.AddSaturate(color.AsByte(), fgVec).AsInt32();
-
-                var dstPos = dstImgW * y + x;
-
-                if (doBlend)
-                {
-                    var blendVec = Vector256.Create(parameters.Blend);
-                    var dstColor = TWriter.Read8(dstSpan, dstPos, writeMask);
-
-                    var res = DoBlend8Avx2(color.AsByte(), dstColor.AsByte(), blendVec);
-
-                    color = res.AsInt32();
-                }
-
-                TWriter.Write8(dstSpan, dstPos, color, writeMask);
+                CopyPixelsCoreDoOutputAvx2<TDstData, TWriter>(
+                    doBackgroundTransparent,
+                    writeMask,
+                    color,
+                    fgVec,
+                    dstImgW,
+                    x, y,
+                    doBlend,
+                    parameters,
+                    dstSpan);
             }
         }
 
@@ -852,6 +1093,42 @@ public sealed unsafe partial class LingoImage
             var res = Avx.ConvertToVector256Int32WithTruncation(resFloat);
             return res.AsByte();
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void CopyPixelsCoreDoOutputAvx2<TDstData, TWriter>(
+        bool doBackgroundTransparent,
+        Vector256<int> writeMask,
+        Vector256<int> color,
+        Vector256<byte> fgVec,
+        int dstImgW,
+        int x, int y,
+        bool doBlend,
+        in CopyPixelsParameters parameters,
+        Span<TDstData> dstSpan)
+        where TWriter : struct, IPixelOps<TDstData>
+        where TDstData : unmanaged
+    {
+        // Don't write if sampled color is white (== transparent)
+        if (doBackgroundTransparent)
+            writeMask = Avx2.AndNot(Avx2.CompareEqual(color, Vector256<int>.AllBitsSet), writeMask);
+
+        // Add foreground color.
+        color = Avx2.AddSaturate(color.AsByte(), fgVec).AsInt32();
+
+        var dstPos = dstImgW * y + x;
+
+        if (doBlend)
+        {
+            var blendVec = Vector256.Create(parameters.Blend);
+            var dstColor = TWriter.Read8(dstSpan, dstPos, writeMask);
+
+            var res = DoBlend8Avx2(color.AsByte(), dstColor.AsByte(), blendVec);
+
+            color = res.AsInt32();
+        }
+
+        TWriter.Write8(dstSpan, dstPos, color, writeMask);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
