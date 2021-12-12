@@ -468,18 +468,18 @@ public sealed unsafe partial class LingoImage
 
                 var posL = imgPos.GetLower();
                 var maskL = readMask.GetLower();
-                var l0 = DoSample(posL.GetElement(0), maskL.GetElement(0), srcSpan);
-                var l1 = DoSample(posL.GetElement(1), maskL.GetElement(1), srcSpan);
-                var l2 = DoSample(posL.GetElement(2), maskL.GetElement(2), srcSpan);
-                var l3 = DoSample(posL.GetElement(3), maskL.GetElement(3), srcSpan);
+                var l0 = CoreAvx2DoMaskedSample<TSrcData, TSampler>(posL.GetElement(0), maskL.GetElement(0), srcSpan);
+                var l1 = CoreAvx2DoMaskedSample<TSrcData, TSampler>(posL.GetElement(1), maskL.GetElement(1), srcSpan);
+                var l2 = CoreAvx2DoMaskedSample<TSrcData, TSampler>(posL.GetElement(2), maskL.GetElement(2), srcSpan);
+                var l3 = CoreAvx2DoMaskedSample<TSrcData, TSampler>(posL.GetElement(3), maskL.GetElement(3), srcSpan);
                 var lowerSample = Vector128.Create(l0, l1, l2, l3);
 
                 var posU = imgPos.GetUpper();
                 var maskU = readMask.GetUpper();
-                var u0 = DoSample(posU.GetElement(0), maskU.GetElement(0), srcSpan);
-                var u1 = DoSample(posU.GetElement(1), maskU.GetElement(1), srcSpan);
-                var u2 = DoSample(posU.GetElement(2), maskU.GetElement(2), srcSpan);
-                var u3 = DoSample(posU.GetElement(3), maskU.GetElement(3), srcSpan);
+                var u0 = CoreAvx2DoMaskedSample<TSrcData, TSampler>(posU.GetElement(0), maskU.GetElement(0), srcSpan);
+                var u1 = CoreAvx2DoMaskedSample<TSrcData, TSampler>(posU.GetElement(1), maskU.GetElement(1), srcSpan);
+                var u2 = CoreAvx2DoMaskedSample<TSrcData, TSampler>(posU.GetElement(2), maskU.GetElement(2), srcSpan);
+                var u3 = CoreAvx2DoMaskedSample<TSrcData, TSampler>(posU.GetElement(3), maskU.GetElement(3), srcSpan);
                 var upperSample = Vector128.Create(u0, u1, u2, u3);
 
                 var color = Vector256.Create(lowerSample, upperSample);
@@ -500,17 +500,21 @@ public sealed unsafe partial class LingoImage
         static Vector256<float> Lerp(Vector256<float> x, Vector256<float> y, Vector256<float> a) =>
             Avx.Add(x, Avx.Multiply(a, Avx.Subtract(y, x)));
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static int DoSample(
-            int pos,
-            int mask,
-            ReadOnlySpan<TSrcData> srcSpan)
-        {
-            if (mask == 0)
-                return LingoColor.PackWhite;
 
-            return TSampler.Sample(srcSpan, pos);
-        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int CoreAvx2DoMaskedSample<TSrcData, TSampler>(
+        int pos,
+        int mask,
+        ReadOnlySpan<TSrcData> srcSpan)
+        where TSampler : struct, IPixelOps<TSrcData>
+        where TSrcData : unmanaged
+    {
+        if (mask == 0)
+            return LingoColor.PackWhite;
+
+        return TSampler.Sample(srcSpan, pos);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -928,10 +932,13 @@ public sealed unsafe partial class LingoImage
         var initVecS = Vector256.Create(initS);
         var incVecS = Vector256.Create(incSrcS * 8);
 
+        var srcImgWVec = Vector256.Create(srcImgW);
+
         var t = initT;
         for (var y = dstT; y < dstB; y++, t += incSrcT)
         {
             var imgRow = (int)(t * srcImgH) * srcImgW;
+            var imgRowVec = Vector256.Create(imgRow);
             var s = initVecS;
             for (var x = dstL; x < dstR; x += 8, s = Avx.Add(s, incVecS))
             {
@@ -949,18 +956,26 @@ public sealed unsafe partial class LingoImage
                     var coord = Avx.ConvertToVector256Int32WithTruncation(
                         Avx.Multiply(vecS, Vector256.Create((float)srcImgW)));
 
-                    var lowerCoord = coord.GetLower();
-                    var l0 = DoSample(srcSpan, srcImgW, imgRow, lowerCoord.GetElement(0));
-                    var l1 = DoSample(srcSpan, srcImgW, imgRow, lowerCoord.GetElement(1));
-                    var l2 = DoSample(srcSpan, srcImgW, imgRow, lowerCoord.GetElement(2));
-                    var l3 = DoSample(srcSpan, srcImgW, imgRow, lowerCoord.GetElement(3));
+                    var readMask = Avx2.And(
+                        Avx2.CompareGreaterThan(coord, Vector256<int>.AllBitsSet),
+                        Avx2.CompareGreaterThan(srcImgWVec, coord));
+
+                    var imgPos = Avx2.Add(imgRowVec, coord);
+
+                    var posL = imgPos.GetLower();
+                    var maskL = readMask.GetLower();
+                    var l0 = CoreAvx2DoMaskedSample<TSrcData, TSampler>(posL.GetElement(0), maskL.GetElement(0), srcSpan);
+                    var l1 = CoreAvx2DoMaskedSample<TSrcData, TSampler>(posL.GetElement(1), maskL.GetElement(1), srcSpan);
+                    var l2 = CoreAvx2DoMaskedSample<TSrcData, TSampler>(posL.GetElement(2), maskL.GetElement(2), srcSpan);
+                    var l3 = CoreAvx2DoMaskedSample<TSrcData, TSampler>(posL.GetElement(3), maskL.GetElement(3), srcSpan);
                     var lowerSample = Vector128.Create(l0, l1, l2, l3);
 
-                    var upperCoord = coord.GetUpper();
-                    var u0 = DoSample(srcSpan, srcImgW, imgRow, upperCoord.GetElement(0));
-                    var u1 = DoSample(srcSpan, srcImgW, imgRow, upperCoord.GetElement(1));
-                    var u2 = DoSample(srcSpan, srcImgW, imgRow, upperCoord.GetElement(2));
-                    var u3 = DoSample(srcSpan, srcImgW, imgRow, upperCoord.GetElement(3));
+                    var posU = imgPos.GetUpper();
+                    var maskU = readMask.GetUpper();
+                    var u0 = CoreAvx2DoMaskedSample<TSrcData, TSampler>(posU.GetElement(0), maskU.GetElement(0), srcSpan);
+                    var u1 = CoreAvx2DoMaskedSample<TSrcData, TSampler>(posU.GetElement(1), maskU.GetElement(1), srcSpan);
+                    var u2 = CoreAvx2DoMaskedSample<TSrcData, TSampler>(posU.GetElement(2), maskU.GetElement(2), srcSpan);
+                    var u3 = CoreAvx2DoMaskedSample<TSrcData, TSampler>(posU.GetElement(3), maskU.GetElement(3), srcSpan);
                     var upperSample = Vector128.Create(u0, u1, u2, u3);
 
                     color = Vector256.Create(lowerSample, upperSample);
@@ -977,15 +992,6 @@ public sealed unsafe partial class LingoImage
                     parameters,
                     dstSpan);
             }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static int DoSample(ReadOnlySpan<TSrcData> srcSpan, int srcImgW, int imgRow, int imgX)
-        {
-            if (imgX < 0 || imgX >= srcImgW)
-                return LingoColor.PackWhite;
-
-            return TSampler.Sample(srcSpan, imgRow + imgX);
         }
     }
 
