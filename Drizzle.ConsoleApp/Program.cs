@@ -97,7 +97,7 @@ int DoCmdRender(CommandLineArgs.VerbRender options)
     if (checksums != null)
         Console.WriteLine($"{checksumErrors} checksum failures.");
 
-    return errors != 0 && checksumErrors != 0 ? 1 : 0;
+    return errors != 0 || checksumErrors != 0 ? 1 : 0;
 }
 
 void HandleChecksum(string name, int cameraIndex, LingoImage finalImg,
