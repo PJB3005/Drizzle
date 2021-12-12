@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.ReactiveUI;
+using Drizzle.Lingo.Runtime.Utils;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 
@@ -12,6 +13,8 @@ class Program
     // yet and stuff might break.
     public static void Main(string[] args)
     {
+        CultureFix.FixCulture();
+
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .WriteTo.Console(theme: AnsiConsoleTheme.Literate)

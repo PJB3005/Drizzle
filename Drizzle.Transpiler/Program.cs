@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using Drizzle.Lingo.Runtime;
 using Drizzle.Lingo.Runtime.Parser;
+using Drizzle.Lingo.Runtime.Utils;
 using Pidgin;
 
 namespace Drizzle.Transpiler;
@@ -91,6 +93,8 @@ internal static class Program
 
     private static void Main(string[] args)
     {
+        CultureFix.FixCulture();
+
         var drizzleRoot = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         if (drizzleRoot == null) {
             throw new Exception("Build environment is not sane. What did you do???");

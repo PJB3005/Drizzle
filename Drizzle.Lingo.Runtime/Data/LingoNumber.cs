@@ -66,7 +66,7 @@ public readonly struct LingoNumber : IEquatable<LingoNumber>, IComparable<LingoN
     public static LingoNumber Pow(LingoNumber @base, LingoNumber exp) =>
         new(Math.Pow(@base.DecimalValue, exp.DecimalValue));
 
-    public override string ToString() => IsDecimal ? DecimalValue.ToString("F4") : IntValue.ToString();
+    public override string ToString() => IsDecimal ? DecimalValue.ToString("F4", CultureInfo.InvariantCulture) : IntValue.ToString(CultureInfo.InvariantCulture);
 
     public static LingoNumber operator -(LingoNumber dec) =>
         dec.IsDecimal ? new(-dec.DecimalValue) : new(-dec.IntValue);

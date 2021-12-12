@@ -9,12 +9,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using Drizzle.ConsoleApp;
 using Drizzle.Lingo.Runtime;
+using Drizzle.Lingo.Runtime.Utils;
 using Drizzle.Logic;
 using Drizzle.Logic.Rendering;
 using Drizzle.Ported;
 using Meow;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
+
+CultureFix.FixCulture();
 
 if (!CommandLineArgs.TryParse(args, out var parsedArgs))
     return 1;
