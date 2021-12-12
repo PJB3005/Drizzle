@@ -12,6 +12,8 @@ namespace Drizzle.Lingo.Runtime;
 
 public sealed unsafe partial class LingoImage
 {
+    private const float QuadInvBilinearLinearCutOff = 0.05f;
+
     // Not used by the editor (but there is a similar lingo API)
     // Mostly just for unit tests right now.
     // Maybe optimizations for the editor later.
@@ -336,7 +338,7 @@ public sealed unsafe partial class LingoImage
             var k0 = Cross2d(h, e);
 
             // if edges are parallel, this is a linear equation
-            if (MathF.Abs(k2) < 0.01f)
+            if (MathF.Abs(k2) < QuadInvBilinearLinearCutOff)
             {
                 res = new Vector2((h.X * k1 + f.X * k0) / (e.X * k1 - g.X * k0), -k0 / k1);
             }
@@ -547,7 +549,7 @@ public sealed unsafe partial class LingoImage
         var k0 = Cross2dAvx2(hX, hY, eX, eY);
 
         // if edges are parallel, this is a linear equation
-        if (MathF.Abs(k2s) < 0.01f)
+        if (MathF.Abs(k2s) < QuadInvBilinearLinearCutOff)
         {
             var rX = Avx.Divide(
                 Avx.Add(
