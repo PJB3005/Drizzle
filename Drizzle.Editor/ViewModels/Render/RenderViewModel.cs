@@ -4,6 +4,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using Drizzle.Editor.Views;
 using Drizzle.Lingo.Runtime;
 using Drizzle.Logic;
@@ -21,6 +22,7 @@ public sealed class RenderViewModel : ViewModelBase, ILingoRuntimeManager
     private Thread? _renderThread;
     private readonly Subject<RenderStatus> _statusObservable = new();
     private bool _isPaused;
+    private readonly Stopwatch _renderStopwatch = new();
 
     [Reactive] public string LevelName { get; private set; } = "";
     [Reactive] public int CameraIndex { get; private set; }
@@ -32,6 +34,8 @@ public sealed class RenderViewModel : ViewModelBase, ILingoRuntimeManager
     [Reactive] public int RenderStageProgressMax { get; private set; }
     [Reactive] public int RenderStageProgress { get; private set; }
 
+    public TimeSpan RenderTimeElapsed => _renderStopwatch.Elapsed;
+
     public bool IsPaused
     {
         get => _isPaused;
@@ -39,6 +43,11 @@ public sealed class RenderViewModel : ViewModelBase, ILingoRuntimeManager
         {
             this.RaiseAndSetIfChanged(ref _isPaused, value);
             _renderer?.SetPaused(value);
+
+            if (value)
+                _renderStopwatch.Stop();
+            else
+                _renderStopwatch.Start();
         }
     }
 
@@ -104,6 +113,7 @@ public sealed class RenderViewModel : ViewModelBase, ILingoRuntimeManager
                 // onError
                 e =>
                 {
+                    _renderStopwatch.Stop();
                     StageViewModel = new RenderStageErrorViewModel(e);
                 },
                 // onCompleted.
@@ -114,8 +124,10 @@ public sealed class RenderViewModel : ViewModelBase, ILingoRuntimeManager
                     RenderStageProgressAvailable = true;
                     RenderStageProgress = 1;
                     RenderStageProgressMax = 1;
+                    _renderStopwatch.Stop();
                 });
 
+        _renderStopwatch.Start();
         _renderThread.Start();
     }
 

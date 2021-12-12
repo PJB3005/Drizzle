@@ -7,7 +7,7 @@
         x:Class="Drizzle.Editor.Views.Render.RenderWindow"
         Title="{Binding LevelName, StringFormat={}Rendering level: {0}}"
         Icon="/Assets/avalonia-logo.ico"
-        Width="500" Height="300" Closed="TopLevel_OnClosed">
+        Width="500" Height="300" Closed="TopLevel_OnClosed" Opened="TopLevel_OnOpened">
     <Design.DataContext>
         <!-- ReSharper disable once Xaml.ConstructorWarning -->
         <render:RenderViewModel />
@@ -17,7 +17,7 @@
         <DockPanel DockPanel.Dock="Bottom" Margin="4" LastChildFill="False">
             <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center">
                 <TextBlock.Text>
-                    <MultiBinding StringFormat="{}Camera: {0}, Render stage: {1}">
+                    <MultiBinding StringFormat="{}Camera: {0}, stage: {1}">
                         <Binding Path="CameraIndex" />
                         <Binding Path="StageEnum" />
                     </MultiBinding>
@@ -27,8 +27,10 @@
             <Button DockPanel.Dock="Right" Content="Cast Viewer" Command="{Binding OpenCastViewer}" />
             <Button DockPanel.Dock="Right" Margin="8 0" Content="Step" Command="{Binding SingleStep}" />
 
-            <CheckBox DockPanel.Dock="Right" VerticalAlignment="Center" Margin="8 0" IsChecked="{Binding IsPaused}"
+            <CheckBox DockPanel.Dock="Right" VerticalAlignment="Center" Margin="4 0" IsChecked="{Binding IsPaused}"
                       Content="Paused" />
+            
+            <TextBlock DockPanel.Dock="Right" Name="ElapsedText" Margin="4 0" VerticalAlignment="Center" />
         </DockPanel>
 
         <ProgressBar DockPanel.Dock="Bottom" Margin="1" Maximum="{Binding RenderProgressMax}"
