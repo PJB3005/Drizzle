@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 
 namespace Drizzle.Lingo.Runtime;
 
@@ -35,10 +36,10 @@ public readonly struct LingoNumber : IEquatable<LingoNumber>, IComparable<LingoN
 
     public static LingoNumber Parse(ReadOnlySpan<char> text)
     {
-        if (int.TryParse(text, out var intValue))
+        if (int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var intValue))
             return new LingoNumber(intValue);
 
-        return new LingoNumber(double.Parse(text));
+        return new LingoNumber(double.Parse(text, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture));
     }
 
     public static LingoNumber Abs(LingoNumber dec)
