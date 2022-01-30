@@ -217,10 +217,11 @@ public sealed partial class LevelRenderer
 
     private void RenderColors()
     {
+        var script = _runtime.CreateScript<renderColors>();
         while (Movie.keepLooping == 1)
         {
             RenderStartFrame(RenderStage.RenderColors);
-            RenderColorsNewFrame();
+            script.newframe();
         }
     }
 
