@@ -217,11 +217,26 @@ public sealed partial class LevelRenderer
 
     private void RenderColors()
     {
-        var script = _runtime.CreateScript<renderColors>();
-        while (Movie.keepLooping == 1)
+        var oldRenderColors = Environment.GetEnvironmentVariable("DRIZZLE_OLD_RENDER_COLORS") is not (null or "0");
+
+        if (!oldRenderColors)
         {
-            RenderStartFrame(RenderStage.RenderColors);
-            script.newframe();
+            Log.Debug("Using new RenderColors");
+            while (Movie.keepLooping == 1)
+            {
+                RenderStartFrame(RenderStage.RenderColors);
+                RenderColorsNewFrame();
+            }
+        }
+        else
+        {
+            Log.Debug("Using old RenderColors");
+            var script = _runtime.CreateScript<renderColors>();
+            while (Movie.keepLooping == 1)
+            {
+                RenderStartFrame(RenderStage.RenderColors);
+                script.newframe();
+            }
         }
     }
 
