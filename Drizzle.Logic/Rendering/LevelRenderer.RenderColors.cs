@@ -211,14 +211,14 @@ public sealed partial class LevelRenderer
             if (!IsPixelInFinalImageRainbowed(pxl + (-1, 0)))
             {
                 var currCol = finalImage.getpixel(pxl.X - 1, pxl.Y);
-                currCol.GreenByte += 4;
+                MathHelper.SatAdd(ref currCol.GreenByte, 4);
                 finalImage.setpixel(pxl.X - 1, pxl.Y, currCol);
             }
 
             if (!IsPixelInFinalImageRainbowed(pxl + (0, -1)))
             {
                 var currCol = finalImage.getpixel(pxl.X, pxl.Y - 1);
-                currCol.GreenByte += 4;
+                MathHelper.SatAdd(ref currCol.GreenByte, 4);
                 finalImage.setpixel(pxl.X, pxl.Y - 1, currCol);
             }
 
