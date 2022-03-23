@@ -57,6 +57,6 @@ public partial class CastMember
 
     private void ImportFileImplBitmap(string path)
     {
-        image = LingoImage.LoadFromPath(path);
+        image = LingoImage.LoadFromPath(path).Trimmed();
     }
 }

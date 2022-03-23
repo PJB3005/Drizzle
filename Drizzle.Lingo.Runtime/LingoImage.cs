@@ -294,4 +294,41 @@ public sealed partial class LingoImage
         buf.AsSpan().Fill(255);
         return buf;
     }
+
+    /// <summary>
+    /// Trim this image by removing all white border around it possible.
+    /// </summary>
+    /// <returns>May return the current instance if no trimming is necessary.</returns>
+    public LingoImage Trimmed()
+    {
+        var minX = int.MaxValue;
+        var maxX = int.MinValue;
+        var minY = int.MaxValue;
+        var maxY = int.MinValue;
+        var any = false;
+
+        for (var y = 0; y < Height; y++)
+        for (var x = 0; x < Width; x++)
+        {
+            var px = getpixel(x, y);
+            if (px != LingoColor.White)
+            {
+                minX = Math.Min(minX, x);
+                minY = Math.Min(minY, y);
+                maxX = Math.Max(maxX, x);
+                maxY = Math.Max(maxY, y);
+                any = true;
+            }
+        }
+
+        if (!any)
+            return new LingoImage(1, 1, Depth);
+
+        if (minX == 0 && minY == 0 && maxX == Width - 1 && maxY == Height - 1)
+            return this;
+
+        var image = new LingoImage(maxX - minX, maxY - minY, Depth);
+        image.copypixels(this, new LingoRect(0, 0, image.Width, image.Height), new LingoRect(minX, minY, maxX, maxY));
+        return image;
+    }
 }
