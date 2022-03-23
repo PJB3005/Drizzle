@@ -337,6 +337,12 @@ public sealed unsafe partial class LingoImage
             var k1 = Cross2d(e, f) + Cross2d(h, g);
             var k0 = Cross2d(h, e);
 
+            // From the shadertoy comments (by the original author):
+            // Fixes coordinates so large coordinate spaces don't get massive distortions in some edge cases.
+            k2 /= k0;
+            k1 /= k0;
+            k0 = 1.0f;
+
             // if edges are parallel, this is a linear equation
             if (MathF.Abs(k2) < QuadInvBilinearLinearCutOff)
             {
@@ -422,7 +428,7 @@ public sealed unsafe partial class LingoImage
         var f = d - a;
         var g = a - b + c - d;
 
-        var k2 = Cross2d(g, f);
+        var k2 = Vector256.Create(Cross2d(g, f));
 
         var posMask = Vector256.Create(0, 1, 2, 3, 4, 5, 6, 7);
         var widthVec = Vector256.Create(boundR);
@@ -525,9 +531,14 @@ public sealed unsafe partial class LingoImage
         Avx.Subtract(Avx.Multiply(aX, bY), Avx.Multiply(aY, bX));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static (Vector256<float> s, Vector256<float> t)
-        QuadInvBilinearAvx2(Vector256<float> pX, Vector256<float> pY, Vector2 a, Vector2 e, Vector2 f, Vector2 g,
-            float k2s)
+    private static (Vector256<float> s, Vector256<float> t) QuadInvBilinearAvx2(
+        Vector256<float> pX,
+        Vector256<float> pY,
+        Vector2 a,
+        Vector2 e,
+        Vector2 f,
+        Vector2 g,
+        Vector256<float> k2)
     {
         // Please refer to the scalar version up above to have the slightest of a clue what is going on here.
         var aX = Vector256.Create(a.X);
@@ -548,10 +559,19 @@ public sealed unsafe partial class LingoImage
         var k1 = Avx.Add(Cross2dAvx2(eX, eY, fX, fY), Cross2dAvx2(hX, hY, gX, gY));
         var k0 = Cross2dAvx2(hX, hY, eX, eY);
 
-        // if edges are parallel, this is a linear equation
-        if (MathF.Abs(k2s) < QuadInvBilinearLinearCutOff)
+        k2 = Avx.Divide(k2, k0);
+        k1 = Avx.Divide(k1, k0);
+        k0 = Vector256.Create(1.0f);
+
+        var k2Abs = Avx.AndNot(Vector256.Create(-0.0f), k2);
+        var linearMask = Avx.CompareLessThan(k2Abs, Vector256.Create(QuadInvBilinearLinearCutOff));
+
+        Vector256<float> rX;
+        Vector256<float> rY;
+
         {
-            var rX = Avx.Divide(
+            // if edges are parallel, this is a linear equation
+            rX = Avx.Divide(
                 Avx.Add(
                     Avx.Multiply(hX, k1),
                     Avx.Multiply(fX, k0)
@@ -560,41 +580,48 @@ public sealed unsafe partial class LingoImage
                     Avx.Multiply(eX, k1),
                     Avx.Multiply(gX, k0))
             );
-            var rY = Avx.Divide(Avx.Subtract(Vector256<float>.Zero, k0), k1);
-            return (rX, rY);
+            rY = Avx.Divide(Avx.Subtract(Vector256<float>.Zero, k0), k1);
         }
 
-        // otherwise, it's a quadratic
-        var k2 = Vector256.Create(k2s);
-        var w = Avx.Subtract(
-            Avx.Multiply(k1, k1),
-            Avx.Multiply(Vector256.Create(4.0f), Avx.Multiply(k0, k2)));
+        Vector256<float> v;
+        Vector256<float> u;
 
-        var wMask = Avx.CompareLessThan(w, Vector256<float>.Zero);
+        {
+            // otherwise, it's a quadratic
+            var w = Avx.Subtract(
+                Avx.Multiply(k1, k1),
+                Avx.Multiply(Vector256.Create(4.0f), Avx.Multiply(k0, k2)));
 
-        w = Avx.Sqrt(w);
+            var wMask = Avx.CompareLessThan(w, Vector256<float>.Zero);
 
-        var ik2 = Avx.Divide(Vector256.Create(0.5f), k2);
-        var v = Avx.Multiply(Avx.Subtract(Avx.Subtract(Vector256<float>.Zero, k1), w), ik2);
-        var u = Avx.Divide(Avx.Subtract(hX, Avx.Multiply(fX, v)), Avx.Add(eX, Avx.Multiply(gX, v)));
+            w = Avx.Sqrt(w);
 
-        var vec1 = Vector256.Create(1f);
+            var ik2 = Avx.Divide(Vector256.Create(0.5f), k2);
+            v = Avx.Multiply(Avx.Subtract(Avx.Subtract(Vector256<float>.Zero, k1), w), ik2);
+            u = Avx.Divide(Avx.Subtract(hX, Avx.Multiply(fX, v)), Avx.Add(eX, Avx.Multiply(gX, v)));
 
-        var oobMask = Avx.Or(
-            Avx.Or(Avx.CompareLessThan(u, Vector256<float>.Zero), Avx.CompareGreaterThan(u, vec1)),
-            Avx.Or(Avx.CompareLessThan(v, Vector256<float>.Zero), Avx.CompareGreaterThan(v, vec1)));
+            var vec1 = Vector256.Create(1f);
 
-        v = Avx.BlendVariable(v, Avx.Multiply(Avx.Subtract(w, k1), ik2), oobMask);
-        u = Avx.BlendVariable(
-            u,
-            Avx.Divide(
-                Avx.Subtract(hX, Avx.Multiply(fX, v)),
-                Avx.Add(eX, Avx.Multiply(gX, v))),
-            oobMask);
+            var oobMask = Avx.Or(
+                Avx.Or(Avx.CompareLessThan(u, Vector256<float>.Zero), Avx.CompareGreaterThan(u, vec1)),
+                Avx.Or(Avx.CompareLessThan(v, Vector256<float>.Zero), Avx.CompareGreaterThan(v, vec1)));
 
-        var negativeOne = Vector256.Create(-1f);
-        u = Avx.BlendVariable(u, negativeOne, wMask);
-        v = Avx.BlendVariable(v, negativeOne, wMask);
+            v = Avx.BlendVariable(v, Avx.Multiply(Avx.Subtract(w, k1), ik2), oobMask);
+            u = Avx.BlendVariable(
+                u,
+                Avx.Divide(
+                    Avx.Subtract(hX, Avx.Multiply(fX, v)),
+                    Avx.Add(eX, Avx.Multiply(gX, v))),
+                oobMask);
+
+            var negativeOne = Vector256.Create(-1f);
+            u = Avx.BlendVariable(u, negativeOne, wMask);
+            v = Avx.BlendVariable(v, negativeOne, wMask);
+        }
+
+        // Pick whether to use linear or quadratic version.
+        u = Avx.BlendVariable(u, rX, linearMask);
+        v = Avx.BlendVariable(v, rY, linearMask);
 
         return (u, v);
     }
