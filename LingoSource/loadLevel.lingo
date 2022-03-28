@@ -174,7 +174,7 @@ on loadLevel me, lvlName, fullPath
   end if
   
   valEnv = value(l2.line[8])
-  if (valEnv = void)sor(ilk(valEnv) <> "proplist")sor(valEnv.findpos(#waterLevel) = void) then
+  if (valEnv = void)sor(valEnv.findpos(#waterLevel) = void) then
     resetgEnvEditorProps()
   else
     gEnvEditorProps = valEnv
