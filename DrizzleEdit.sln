@@ -33,6 +33,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Workflows", "Workflows", "{
 	ProjectSection(SolutionItems) = preProject
 		.github\workflows\render-all-levels.yml = .github\workflows\render-all-levels.yml
 		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
+		.github\workflows\publish-release.yml = .github\workflows\publish-release.yml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drizzle.Benchmarks", "Drizzle.Benchmarks\Drizzle.Benchmarks.csproj", "{C98A9464-5F58-4FFF-9DB3-C74B05D33FDF}"
