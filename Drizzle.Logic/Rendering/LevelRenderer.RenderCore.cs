@@ -3,14 +3,19 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Drizzle.Lingo.Runtime;
 using Drizzle.Ported;
 using Serilog;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
 
 namespace Drizzle.Logic.Rendering;
 
 public sealed partial class LevelRenderer
 {
+    private static readonly string PngSoftwareName = $"Drizzle {Assembly.GetExecutingAssembly().GetName().Version}";
+
     // This partial contains core rendering logic.
     private int _cameraIndex;
     private int _countCamerasDone;
@@ -61,7 +66,12 @@ public sealed partial class LevelRenderer
                 var file = File.OpenWrite(fileName);
                 var image = _runtime.GetCastMember("finalImage")!.image!;
                 OnScreenRenderCompleted?.Invoke(camIndex, image);
-                image.SaveAsPng(file);
+
+                // Save the image
+                var imgSharp = image.GetImgSharpImage();
+                imgSharp.Metadata.GetPngMetadata().TextData.Add(
+                    new PngTextData("Software", PngSoftwareName, null, null));
+                imgSharp.SaveAsPng(file);
 
                 _countCamerasDone += 1;
             }
