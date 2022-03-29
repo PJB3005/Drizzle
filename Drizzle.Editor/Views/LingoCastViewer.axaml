@@ -2,6 +2,7 @@
         xmlns:vm="clr-namespace:Drizzle.Editor.ViewModels"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:Drizzle.Editor.Views"
+        xmlns:paz="clr-namespace:Avalonia.Controls.PanAndZoom;assembly=Avalonia.Controls.PanAndZoom"
         x:Class="Drizzle.Editor.Views.LingoCastViewer"
         Icon="/Assets/avalonia-logo.ico"
         Title="Drizzle.Editor" Width="1024" Height="600" Closed="OnClosed" Opened="OpOpened">
@@ -62,9 +63,9 @@
                     <Button DockPanel.Dock="Right" Content="Open" Command="{Binding OpenImage}"
                             IsEnabled="{Binding SelectedCastMember, Converter={x:Static ObjectConverters.IsNotNull}}" />
                 </DockPanel>
-                <Panel Margin="4" Background="LightGray">
+                <paz:ZoomBorder Background="LightGray" Margin="4" ClipToBounds="True"  PanButton="Middle">
                     <Image Source="{Binding CurrentImage}" />
-                </Panel>
+                </paz:ZoomBorder>
             </DockPanel>
         </Grid>
     </DockPanel>
