@@ -315,8 +315,9 @@ public sealed partial class LingoImage
             {
                 minX = Math.Min(minX, x);
                 minY = Math.Min(minY, y);
-                maxX = Math.Max(maxX, x);
-                maxY = Math.Max(maxY, y);
+                // +1 because copy bounds are on the bottom-right of pixels.
+                maxX = Math.Max(maxX, x + 1);
+                maxY = Math.Max(maxY, y + 1);
                 any = true;
             }
         }
