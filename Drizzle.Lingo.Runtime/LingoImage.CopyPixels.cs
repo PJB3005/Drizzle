@@ -12,7 +12,7 @@ namespace Drizzle.Lingo.Runtime;
 
 public sealed unsafe partial class LingoImage
 {
-    private const float QuadInvBilinearLinearCutOff = 0.05f;
+    private const float QuadInvBilinearLinearCutOff = 0.0001f;
 
     // Not used by the editor (but there is a similar lingo API)
     // Mostly just for unit tests right now.
