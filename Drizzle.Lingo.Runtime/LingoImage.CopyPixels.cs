@@ -13,6 +13,7 @@ namespace Drizzle.Lingo.Runtime;
 public sealed unsafe partial class LingoImage
 {
     private const float QuadInvBilinearLinearCutOff = 0.0001f;
+    private const float QuadInvTriCheckCutOff = 0.001f;
 
     // Not used by the editor (but there is a similar lingo API)
     // Mostly just for unit tests right now.
@@ -337,11 +338,18 @@ public sealed unsafe partial class LingoImage
             var k1 = Cross2d(e, f) + Cross2d(h, g);
             var k0 = Cross2d(h, e);
 
-            // From the shadertoy comments (by the original author):
-            // Fixes coordinates so large coordinate spaces don't get massive distortions in some edge cases.
-            k2 /= k0;
-            k1 /= k0;
-            k0 = 1.0f;
+            if (Math.Abs(k0) > QuadInvTriCheckCutOff)
+            {
+                // From the shadertoy comments (by the original author):
+                // Fixes coordinates so large coordinate spaces don't get massive distortions in some edge cases.
+
+                // NOTE: when drawing a triangle (i.e. two corners on the same spot),
+                // k0 will be zero, and doing this will break everything.
+
+                k2 /= k0;
+                k1 /= k0;
+                k0 = 1.0f;
+            }
 
             // if edges are parallel, this is a linear equation
             if (MathF.Abs(k2) < QuadInvBilinearLinearCutOff)
@@ -559,9 +567,14 @@ public sealed unsafe partial class LingoImage
         var k1 = Avx.Add(Cross2dAvx2(eX, eY, fX, fY), Cross2dAvx2(hX, hY, gX, gY));
         var k0 = Cross2dAvx2(hX, hY, eX, eY);
 
-        k2 = Avx.Divide(k2, k0);
-        k1 = Avx.Divide(k1, k0);
-        k0 = Vector256.Create(1.0f);
+        var k0Abs = Avx.AndNot(Vector256.Create(-0.0f), k0);
+        var triCheck = Avx.CompareLessThan(
+            k0Abs,
+            Vector256.Create(QuadInvTriCheckCutOff));
+
+        k2 = Avx.BlendVariable(Avx.Divide(k2, k0), k2, triCheck);
+        k1 = Avx.BlendVariable(Avx.Divide(k1, k0), k1, triCheck);
+        k0 = Avx.BlendVariable(Vector256.Create(1.0f), k0, triCheck);
 
         var k2Abs = Avx.AndNot(Vector256.Create(-0.0f), k2);
         var linearMask = Avx.CompareLessThan(k2Abs, Vector256.Create(QuadInvBilinearLinearCutOff));

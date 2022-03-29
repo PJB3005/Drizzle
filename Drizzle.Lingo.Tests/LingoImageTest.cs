@@ -280,6 +280,91 @@ public sealed class ImageTest
             });
     }
 
+    [Test]
+    public void TestCopyPixelsTriangle()
+    {
+        var pxl = MakePxl();
+        var baseImg = new LingoImage(20, 20, 32);
+
+        baseImg.fill(new LingoColor(255, 0, 0));
+
+        baseImg.copypixels(
+            pxl,
+            new LingoList
+            {
+                new LingoPoint(0, 0),
+                new LingoPoint(0, 0),
+                new LingoPoint(20, 20),
+                new LingoPoint(0, 20),
+            },
+            new LingoRect(0, 0, 1, 1),
+            new LingoPropertyList
+            {
+                [new LingoSymbol("color")] = LingoColor.White
+            });
+
+        //baseImg.ShowImage();
+
+        baseImg.fill(new LingoColor(255, 0, 0));
+
+        baseImg.copypixels(
+            pxl,
+            new LingoList
+            {
+                new LingoPoint(20, 0),
+                new LingoPoint(20, 0),
+                new LingoPoint(0, 20),
+                new LingoPoint(20, 20),
+            },
+            new LingoRect(0, 0, 1, 1),
+            new LingoPropertyList
+            {
+                [new LingoSymbol("color")] = LingoColor.White
+            });
+
+        //baseImg.ShowImage();
+
+        baseImg.fill(new LingoColor(255, 0, 0));
+
+        baseImg.copypixels(
+            pxl,
+            new LingoList
+            {
+                new LingoPoint(0, 20),
+                new LingoPoint(0, 20),
+                new LingoPoint(20, 0),
+                new LingoPoint(0, 0),
+            },
+            new LingoRect(0, 0, 1, 1),
+            new LingoPropertyList
+            {
+                [new LingoSymbol("color")] = LingoColor.White
+            });
+
+        //baseImg.ShowImage();
+
+        baseImg.fill(new LingoColor(255, 0, 0));
+
+        baseImg.copypixels(
+            pxl,
+            new LingoList
+            {
+                new LingoPoint(20, 20),
+                new LingoPoint(20, 20),
+                new LingoPoint(0, 0),
+                new LingoPoint(20, 0),
+            },
+            new LingoRect(0, 0, 1, 1),
+            new LingoPropertyList
+            {
+                [new LingoSymbol("color")] = LingoColor.White
+            });
+
+        //baseImg.ShowImage();
+
+
+    }
+
     private static LingoImage ImageFromResource(string name)
     {
         var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name);
