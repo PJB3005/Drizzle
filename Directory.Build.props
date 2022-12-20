@@ -2,5 +2,7 @@
     <PropertyGroup>
         <Version>0.1.6.4</Version>
         <DefineConstants Condition="'$(FullRelease)' == 'true'">$(DefineConstants);FULL_RELEASE</DefineConstants>
+        <TargetFramework>net7.0</TargetFramework>
+        <LangVersion>11</LangVersion>
     </PropertyGroup>
 </Project>
