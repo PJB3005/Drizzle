@@ -30,7 +30,12 @@ public sealed partial class LevelRenderer : ILingoRuntimeManager
         _singleCamera = singleCamera;
         _runtime = runtime;
 
-        _cmdChannel = Channel.CreateUnbounded<RenderCmd>();
+        _cmdChannel = Channel.CreateUnbounded<RenderCmd>(new UnboundedChannelOptions
+        {
+            SingleReader = true,
+            SingleWriter = false,
+            AllowSynchronousContinuations = true
+        });
     }
 
     public void SetPaused(bool isPaused)
