@@ -58,27 +58,27 @@ public sealed partial class LingoGlobal
         return str[iVal - 1].ToString();
     }
 
-    public static dynamic charmember_helper(string d)
+    public static StringCharIndex charmember_helper(string d)
     {
         return new StringCharIndex(d);
     }
 
-    public static dynamic linemember_helper(string d)
+    public static StringLineIndex linemember_helper(string d)
     {
         return new StringLineIndex(d);
     }
 
-    public static dynamic lengthmember_helper(dynamic d)
+    public static LingoNumber lengthmember_helper(string d)
     {
-        if (d is string str)
-        {
-            return str.Length;
-        }
+        return d.Length;
+    }
 
+    public static LingoNumber lengthmember_helper(dynamic d)
+    {
         return d.length;
     }
 
-    private sealed class StringCharIndex : DynamicObject, ISliceable
+    public sealed class StringCharIndex : DynamicObject, ISliceable
     {
         public StringCharIndex(string s)
         {
@@ -109,7 +109,7 @@ public sealed partial class LingoGlobal
         }
     }
 
-    private sealed class StringLineIndex : DynamicObject, ISliceable
+    public sealed class StringLineIndex : DynamicObject, ISliceable
     {
         public StringLineIndex(string s)
         {

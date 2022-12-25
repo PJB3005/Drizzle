@@ -48,12 +48,12 @@ public sealed partial class LingoGlobal
         throw new NotSupportedException();
     }
 
-    public dynamic new_castlib(dynamic type, dynamic lib)
+    public dynamic new_castlib(object type, object lib)
     {
         throw new NotImplementedException();
     }
 
-    public dynamic new_script(dynamic type, LingoList list)
+    public dynamic new_script(string type, LingoList list)
     {
         return LingoRuntime.CreateScript(type, list);
     }
@@ -104,7 +104,7 @@ public sealed partial class LingoGlobal
         };
     }
 
-    public dynamic @new(dynamic a)
+    public dynamic @new(object a)
     {
         if (a is BaseXtra xtra)
             return xtra.Duplicate();
@@ -112,7 +112,7 @@ public sealed partial class LingoGlobal
         throw new NotImplementedException();
     }
 
-    public void basetdisplay(dynamic w, dynamic h, dynamic idk3, dynamic idk, dynamic idk2)
+    public void basetdisplay(object w, object h, object idk3, object idk, object idk2)
     {
         throw new NotImplementedException();
     }
@@ -129,7 +129,7 @@ public sealed partial class LingoGlobal
         return idx >= entries.Length ? "" : Path.GetFileName(entries[idx]);
     }
 
-    public dynamic script(dynamic a)
+    public dynamic script(string a)
     {
         return LingoRuntime.CreateScript(a, new LingoList());
     }
@@ -152,7 +152,7 @@ public sealed partial class LingoGlobal
     public LingoImage image(LingoNumber w, LingoNumber h, LingoNumber bitDepth) =>
         new LingoImage((int)w, (int)h, (int) bitDepth);
 
-    public string @string(dynamic value) => value.ToString();
+    public string @string(object value) => value.ToString() ?? "";
 
     public static LingoNumber op_add(LingoNumber a, LingoNumber b) => a + b;
     public static LingoNumber op_sub(LingoNumber a, LingoNumber b) => a - b;
@@ -394,13 +394,13 @@ public sealed partial class LingoGlobal
 
     public string the_platform => "win";
 
-    public LingoSprite sprite(dynamic a)
+    public LingoSprite sprite(object a)
     {
         // Log.Warning("sprite() not implemented");
         return new LingoSprite();
     }
 
-    public dynamic sound(dynamic a) => throw new NotImplementedException();
+    public dynamic sound(object a) => throw new NotImplementedException();
     public dynamic call(LingoSymbol a) => throw new NotImplementedException();
     public dynamic call(LingoSymbol a, dynamic a1) => throw new NotImplementedException();
     public dynamic call(LingoSymbol a, dynamic a1, dynamic a2) => throw new NotImplementedException();
