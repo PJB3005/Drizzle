@@ -885,6 +885,9 @@ internal static class Program
 
     private static string WriteConstant(AstNode.Constant node, HandlerContext ctx)
     {
+        if (node.Name.Equals("void", StringComparison.InvariantCultureIgnoreCase))
+            return "null";
+
         return $"LingoGlobal.{node.Name.ToUpper()}";
     }
 
