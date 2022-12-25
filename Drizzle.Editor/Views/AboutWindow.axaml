@@ -3,7 +3,7 @@
         x:Class="Drizzle.Editor.Views.AboutWindow"
         Icon="/Assets/avalonia-logo.ico"
         WindowStartupLocation="CenterOwner"
-        Width="330" Height="180"
+        Width="400" Height="210"
         Title="About">
 
     <Window.Styles>

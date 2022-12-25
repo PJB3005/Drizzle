@@ -22,6 +22,7 @@ public sealed partial class AboutWindow : Window
         AddLine("Version:", Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "");
         AddLine("Runtime:", RuntimeInformation.FrameworkDescription);
         AddLine("Platform:", RuntimeInformation.RuntimeIdentifier);
+        AddLine("OS:", RuntimeInformation.OSDescription);
         AddLine("CPU features:", Avx2.IsSupported ? "AVX2" : "None");
 
         for (var j = 0; j < i; j++)
