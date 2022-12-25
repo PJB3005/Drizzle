@@ -14,8 +14,8 @@ public sealed partial class LingoGlobal
     public void Init()
     {
         _system = new System(this);
-        _key = new Key(this);
-        _mouse = new Mouse(this);
+        _key = new Key();
+        _mouse = new Mouse();
         _movie = new Movie(this);
         _global = new Global(this);
         ScriptRuntime = new LingoScriptRuntime(this);
