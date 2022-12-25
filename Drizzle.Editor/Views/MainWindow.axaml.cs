@@ -43,36 +43,6 @@ public partial class MainWindow : ReactiveWindow<MainWindowViewModel>
         AvaloniaXamlLoader.Load(this);
     }
 
-    private void OnKeyDown(object? sender, KeyEventArgs e)
-    {
-        /*
-        if (e.Key == Key.Escape)
-        {
-            KeyboardDevice.Instance.SetFocusedElement(null, NavigationMethod.Unspecified, KeyModifiers.None);
-            return;
-        }
-
-        if (DataContext is not MainWindowViewModel vm)
-            return;
-
-        if (!KeyMap.Map.TryGetValue(e.Key, out var code))
-            return;
-
-        vm.MapEditorVM.Lingo.Runtime.KeysDown.Add(code);
-    */
-    }
-
-    private void OnKeyUp(object? sender, KeyEventArgs e)
-    {
-        /*if (DataContext is not MainWindowViewModel vm)
-            return;
-
-        if (!KeyMap.Map.TryGetValue(e.Key, out var code))
-            return;
-
-        vm.MapEditorVM.Lingo.Runtime.KeysDown.Remove(code);*/
-    }
-
     public async void OpenProject()
     {
         var dialog = new OpenFileDialog

@@ -8,7 +8,7 @@
         x:Class="Drizzle.Editor.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
         Title="{Binding Title}" Width="1024" Height="600"
-        KeyDown="OnKeyDown" KeyUp="OnKeyUp">
+        Name="ThisWindow">
     <Design.DataContext>
         <vm:MainWindowViewModel />
     </Design.DataContext>
@@ -16,7 +16,7 @@
     <Window.KeyBindings>
         <!-- File -->
         <KeyBinding Gesture="Ctrl+N" Command="{Binding NewProject}" />
-        <KeyBinding Gesture="Ctrl+O" Command="{Binding $parent[views:MainWindow].OpenProject}" />
+        <KeyBinding Gesture="Ctrl+O" Command="{Binding ElementName=ThisWindow, Path=OpenProject}" />
         <KeyBinding Gesture="Ctrl+S" Command="{Binding SaveProject}" />
         <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding SaveAsProject}" />
         <KeyBinding Gesture="Ctrl+W" Command="{Binding CloseProject}" />
@@ -110,8 +110,6 @@
             <TextBlock HorizontalAlignment="Right" VerticalAlignment="Bottom" Text="{Binding VersionString}"
                        Foreground="Gray" />
         </Panel>
-        <!--<views:LingoStatus DockPanel.Dock="Bottom" DataContext="{Binding MapEditorVM.Lingo}" />-->
-        <!--<ContentControl Margin="4" Content="{Binding MapEditorVM.Lingo.Frame}" />-->
     </DockPanel>
 
 </Window>
