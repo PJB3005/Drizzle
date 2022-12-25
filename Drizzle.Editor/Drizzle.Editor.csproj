@@ -8,16 +8,16 @@
         <AvaloniaResource Include="Assets\**" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Avalonia" Version="0.10.10" />
-        <PackageReference Include="Avalonia.Desktop" Version="0.10.10" />
-        <PackageReference Include="Avalonia.Diagnostics" Version="0.10.10" Condition="'$(Configuration)' == 'Debug'" />
-        <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.10" />
-        <PackageReference Include="Avalonia.Controls.PanAndZoom" Version="4.3.0" />
-        <PackageReference Include="DynamicData" Version="7.4.3" />
-        <PackageReference Include="ReactiveUI.Fody" Version="17.1.4" />
-        <PackageReference Include="Serilog" Version="2.10.0" />
-        <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
-        <PackageReference Include="XamlNameReferenceGenerator" Version="1.3.4" />
+        <PackageReference Include="Avalonia" Version="0.10.18" />
+        <PackageReference Include="Avalonia.Desktop" Version="0.10.18" />
+        <PackageReference Include="Avalonia.Diagnostics" Version="0.10.18" Condition="'$(Configuration)' == 'Debug'" />
+        <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.18" />
+        <PackageReference Include="Avalonia.Controls.PanAndZoom" Version="10.14.0" />
+        <PackageReference Include="DynamicData" Version="7.12.11" />
+        <PackageReference Include="ReactiveUI.Fody" Version="18.4.1" />
+        <PackageReference Include="Serilog" Version="2.12.0" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
+        <PackageReference Include="XamlNameReferenceGenerator" Version="1.5.1" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Drizzle.Lingo.Runtime\Drizzle.Lingo.Runtime.csproj" />
@@ -25,9 +25,6 @@
         <ProjectReference Include="..\Drizzle.Logic\Drizzle.Logic.csproj" />
     </ItemGroup>
     <ItemGroup>
-      <Compile Update="Views\LingoFrames\FrameRenderEffectsView.axaml.cs">
-        <DependentUpon>FrameRenderEffectsView.axaml</DependentUpon>
-      </Compile>
       <Compile Update="Views\EditorContentView.axaml.cs">
         <DependentUpon>EditorContentView.axaml</DependentUpon>
       </Compile>

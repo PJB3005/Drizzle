@@ -16,6 +16,7 @@ using Drizzle.Ported;
 using Meow;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
+using SixLabors.ImageSharp;
 
 CultureFix.FixCulture();
 
@@ -38,6 +39,8 @@ return parsedArgs.Verb switch
 
 int DoCmdRender(CommandLineArgs.VerbRender options)
 {
+    Configuration.Default.PreferContiguousImageBuffers = true;
+
     Console.WriteLine("Initializing Zygote runtime");
 
     var zygote = MakeZygoteRuntime();

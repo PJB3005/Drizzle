@@ -27,9 +27,9 @@ public static class ImageSharpExt
 
     public static Span<T> GetSinglePixelSpan<T>(this Image<T> img) where T : unmanaged, IPixel<T>
     {
-        if (!img.TryGetSinglePixelSpan(out var span))
+        if (!img.DangerousTryGetSinglePixelMemory(out var memory))
             throw new InvalidOperationException("Unable to get single pixel span!");
 
-        return span;
+        return memory.Span;
     }
 }

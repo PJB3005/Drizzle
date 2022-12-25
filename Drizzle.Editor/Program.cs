@@ -3,6 +3,7 @@ using Avalonia.ReactiveUI;
 using Drizzle.Lingo.Runtime.Utils;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
+using SixLabors.ImageSharp;
 
 namespace Drizzle.Editor;
 
@@ -14,6 +15,8 @@ class Program
     public static void Main(string[] args)
     {
         CultureFix.FixCulture();
+
+        Configuration.Default.PreferContiguousImageBuffers = true;
 
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
