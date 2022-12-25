@@ -39,4 +39,7 @@
         <DependentUpon>RenderStageErrorView.axaml</DependentUpon>
       </Compile>
     </ItemGroup>
+    <ItemGroup>
+      <UpToDateCheckInput Remove="Styles\Rendering.axaml" />
+    </ItemGroup>
 </Project>

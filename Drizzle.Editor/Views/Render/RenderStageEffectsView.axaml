@@ -10,18 +10,19 @@
             <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush}" />
         </Style>
     </UserControl.Styles>
-    
+
     <Design.DataContext>
         <!-- ReSharper disable once Xaml.ConstructorWarning -->
         <render:RenderStageEffectsViewModel />
     </Design.DataContext>
-    
-    <StackPanel Orientation="Vertical" HorizontalAlignment="Left" Width="250">
-        <TextBlock Text="Rendering effects" />
-        <ItemsControl Name="EffectsList" Items="{Binding Effects}" Width="150" HorizontalAlignment="Left">
-            <!-- Item template is set in code behind to work around styling issues -->
-            <!-- Rider currently does not support Avalonia's new Classes.Foo="{Binding}" syntax.-->
-        </ItemsControl>
-    </StackPanel>
 
+    <ContentControl HorizontalAlignment="Left" VerticalAlignment="Top" Classes="previewBackground">
+        <StackPanel Orientation="Vertical" Width="150" VerticalAlignment="Top">
+            <TextBlock Text="Rendering effects" />
+            <ItemsControl Name="EffectsList" Items="{Binding Effects}" Width="150" HorizontalAlignment="Left">
+                <!-- Item template is set in code behind to work around styling issues -->
+                <!-- Rider currently does not support Avalonia's new Classes.Foo="{Binding}" syntax.-->
+            </ItemsControl>
+        </StackPanel>
+    </ContentControl>
 </UserControl>

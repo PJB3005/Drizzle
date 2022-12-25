@@ -4,7 +4,11 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using Avalonia.Threading;
+using Drizzle.Editor.Helpers;
 using Drizzle.Editor.Views;
 using Drizzle.Lingo.Runtime;
 using Drizzle.Logic;
@@ -18,6 +22,13 @@ namespace Drizzle.Editor.ViewModels.Render;
 
 public sealed class RenderViewModel : ViewModelBase, ILingoRuntimeManager
 {
+    private const int RenderLayerWidth = 2000;
+    private const int RenderLayerHeight = 1200;
+    private const int PreviewWidth = 1440;
+    private const int PreviewHeight = 860;
+    private const int PreviewX = (RenderLayerWidth - PreviewWidth) / 2;
+    private const int PreviewY = (RenderLayerHeight - PreviewHeight) / 2;
+
     private LevelRenderer? _renderer;
     private Thread? _renderThread;
     private readonly Subject<RenderStatus> _statusObservable = new();
@@ -33,6 +44,23 @@ public sealed class RenderViewModel : ViewModelBase, ILingoRuntimeManager
     [Reactive] public bool RenderStageProgressAvailable { get; private set; }
     [Reactive] public int RenderStageProgressMax { get; private set; }
     [Reactive] public int RenderStageProgress { get; private set; }
+    public WriteableBitmap? RendererPreview { get; }
+    [Reactive] public bool PreviewEnabled { get; set; } = true;
+
+    private readonly LingoImage? _previewBuffer;
+
+    public RenderViewModel()
+    {
+        if (PreviewEnabled)
+        {
+            _previewBuffer = new LingoImage(PreviewWidth, PreviewHeight, 32);
+            RendererPreview = new WriteableBitmap(
+                new PixelSize(PreviewWidth, PreviewHeight),
+                new Vector(96, 96),
+                PixelFormat.Bgra8888,
+                AlphaFormat.Unpremul);
+        }
+    }
 
     public TimeSpan RenderTimeElapsed => _renderStopwatch.Elapsed;
 
@@ -127,8 +155,82 @@ public sealed class RenderViewModel : ViewModelBase, ILingoRuntimeManager
                     _renderStopwatch.Stop();
                 });
 
+        _renderer.PreviewSnapshot += RendererOnPreviewSnapshot;
+
         _renderStopwatch.Start();
         _renderThread.Start();
+
+        if (PreviewEnabled)
+            _renderer.RequestPreview();
+    }
+
+    private void RendererOnPreviewSnapshot(RenderPreview obj)
+    {
+        // ReSharper disable once AsyncVoidLambda
+        Dispatcher.UIThread.Post(async () =>
+        {
+            await Task.Run(() => { MergePreview(_previewBuffer!, obj); });
+
+            LingoImageAvaloniaHelper.CopyToBitmap(_previewBuffer!, RendererPreview!);
+
+            _renderer?.RequestPreview();
+        });
+    }
+
+    private static void MergePreview(LingoImage dst, RenderPreview preview)
+    {
+        switch (preview)
+        {
+            case RenderPreviewEffects effects:
+                dst.fill(LingoColor.White);
+                MergeFadingPreviewLayers(dst, effects.Layers);
+                CopyLayerToPreview(dst, effects.BlackOut1);
+                CopyLayerToPreview(dst, effects.BlackOut2);
+                break;
+            case RenderPreviewLights lights:
+                dst.fill(LingoColor.Black);
+                MergePreviewLayers(dst, lights.Layers);
+                break;
+            case RenderPreviewProps props:
+                dst.fill(LingoColor.White);
+                MergeFadingPreviewLayers(dst, props.Layers);
+                break;
+        }
+    }
+
+    private static void MergeFadingPreviewLayers(LingoImage dst, LingoImage[] layers)
+    {
+        for (var i = layers.Length - 1; i >= 0; i--)
+        {
+            var colorVal = (i + 1) / (float)layers.Length;
+            var color = new LingoColor(
+                (byte)(colorVal * 255),
+                (byte)(colorVal * 255),
+                (byte)(colorVal * 255));
+
+            CopyLayerToPreview(dst, layers[i], i, color);
+        }
+    }
+
+    private static void MergePreviewLayers(LingoImage dst, LingoImage[] layers)
+    {
+        for (var i = layers.Length - 1; i >= 0; i--)
+        {
+            CopyLayerToPreview(dst, layers[i], i);
+        }
+    }
+
+    private static void CopyLayerToPreview(LingoImage dst, LingoImage src, int offset = 0, LingoColor color = default)
+    {
+        dst.copypixels(
+            src,
+            new LingoRect(0 - offset, 0 - offset, PreviewWidth - offset, PreviewHeight - offset),
+            new LingoRect(PreviewX, PreviewY, PreviewX + PreviewWidth, PreviewY + PreviewHeight),
+            new LingoPropertyList
+            {
+                [new LingoSymbol("ink")] = (LingoNumber)36, // bg transparent
+                [new LingoSymbol("color")] = color
+            });
     }
 
     private void RenderThread()

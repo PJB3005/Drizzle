@@ -7,11 +7,24 @@
         x:Class="Drizzle.Editor.Views.Render.RenderWindow"
         Title="{Binding LevelName, StringFormat={}Rendering level: {0}}"
         Icon="/Assets/avalonia-logo.ico"
-        Width="500" Height="300" Closed="TopLevel_OnClosed" Opened="TopLevel_OnOpened">
+        Width="800" Height="600" Closed="TopLevel_OnClosed" Opened="TopLevel_OnOpened"
+        Classes.preview="{Binding PreviewEnabled}">
     <Design.DataContext>
         <!-- ReSharper disable once Xaml.ConstructorWarning -->
         <render:RenderViewModel />
     </Design.DataContext>
+    
+    <Window.Styles>
+        <Style Selector="ContentControl.previewBackground">
+            <Setter Property="Padding" Value="4" />
+        </Style>
+        <!-- When preview is enabled, things that are on top of it need a background to be legible. -->
+        <Style Selector=".preview ContentControl.previewBackground">
+            <Setter Property="Background">
+                <SolidColorBrush Opacity="0.5" Color="Black" />
+            </Setter>
+        </Style>
+    </Window.Styles>
 
     <DockPanel>
         <DockPanel DockPanel.Dock="Bottom" Margin="4" LastChildFill="False">
@@ -39,6 +52,9 @@
                      Maximum="{Binding RenderStageProgressMax}"
                      Value="{Binding RenderStageProgress}" />
 
-        <ContentControl Padding="2" Content="{Binding StageViewModel}" />
+        <Grid>
+            <Image IsVisible="{Binding PreviewEnabled}" Source="{Binding RendererPreview}" />
+            <ContentControl Padding="2" Content="{Binding StageViewModel}" />
+        </Grid>
     </DockPanel>
 </Window>

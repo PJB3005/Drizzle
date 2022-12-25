@@ -15,6 +15,8 @@ public sealed partial class LevelRenderer : ILingoRuntimeManager
 
     // NOTE: This is fired on the render thread, use fancy Rx ObserveOn if you use this!
     public event Action<RenderStatus>? StatusChanged;
+    public event Action<RenderPreview>? PreviewSnapshot;
+
     // That's cam, final image.
     public event Action<int, LingoImage>? OnScreenRenderCompleted;
     private readonly Channel<RenderCmd> _cmdChannel;
@@ -23,6 +25,7 @@ public sealed partial class LevelRenderer : ILingoRuntimeManager
     private readonly int? _singleCamera;
     private RenderStage _stage;
     private bool _isPaused;
+    private bool _previewRequested;
 
     public LevelRenderer(LingoRuntime runtime, RenderStage? pauseOnStage, int? singleCamera=null)
     {
@@ -41,6 +44,11 @@ public sealed partial class LevelRenderer : ILingoRuntimeManager
     public void SetPaused(bool isPaused)
     {
         _cmdChannel.Writer.TryWrite(new RenderCmdSetPaused(isPaused));
+    }
+
+    public void RequestPreview()
+    {
+        _cmdChannel.Writer.TryWrite(new RenderCmdReqPreview());
     }
 
     private void RenderStartFrame(RenderStageStatus stageStatus)
@@ -77,6 +85,9 @@ public sealed partial class LevelRenderer : ILingoRuntimeManager
                     case RenderCmdExec exec:
                         exec.Action();
                         break;
+                    case RenderCmdReqPreview:
+                        _previewRequested = true;
+                        break;
                 }
             }
         } while (_isPaused);
@@ -87,9 +98,21 @@ public sealed partial class LevelRenderer : ILingoRuntimeManager
         StatusChanged?.Invoke(new RenderStatus(_cameraIndex, _countCamerasDone, _isPaused, stageStatus));
     }
 
+    private void SendPreview(RenderPreview preview)
+    {
+        PreviewSnapshot?.Invoke(preview);
+
+        _previewRequested = false;
+    }
+
     private void RenderStartFrame(RenderStage stage)
     {
         RenderStartFrame(new RenderStageStatus(stage));
+    }
+
+    private bool ShouldSendPreview()
+    {
+        return _previewRequested;
     }
 
     public void CancelRender()

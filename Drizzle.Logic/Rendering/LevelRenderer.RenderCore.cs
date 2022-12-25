@@ -146,6 +146,17 @@ public sealed partial class LevelRenderer
             RenderStartFrame(new RenderStageStatusLayers(i));
             sw.Start();
 
+            if (ShouldSendPreview())
+            {
+                var images = new LingoImage[30];
+                for (var j = 0; j < 30; j++)
+                {
+                    images[j] = _runtime.GetCastMember($"layer{j}")!.image!.DuplicateShared();
+                }
+
+                SendPreview(new RenderPreviewProps(images));
+            }
+
             Movie.setuplayer(new LingoNumber(i));
         }
 
@@ -165,6 +176,17 @@ public sealed partial class LevelRenderer
         var script = _runtime.CreateScript<renderProps>();
         while (Movie.keepLooping == 1)
         {
+            if (ShouldSendPreview())
+            {
+                var images = new LingoImage[30];
+                for (var j = 0; j < 30; j++)
+                {
+                    images[j] = _runtime.GetCastMember($"layer{j}")!.image!.DuplicateShared();
+                }
+
+                SendPreview(new RenderPreviewProps(images));
+            }
+
             RenderStartFrame(RenderStage.RenderPropsPreEffects);
             script.newframe();
         }
@@ -178,6 +200,20 @@ public sealed partial class LevelRenderer
         var script = _runtime.CreateScript<renderEffects>();
         while (Movie.keepLooping == 1)
         {
+            if (ShouldSendPreview())
+            {
+                var images = new LingoImage[30];
+                for (var j = 0; j < 30; j++)
+                {
+                    images[j] = _runtime.GetCastMember($"layer{j}")!.image!.DuplicateShared();
+                }
+
+                SendPreview(new RenderPreviewEffects(
+                    images,
+                    _runtime.GetCastMember("blackOutImg1")!.image!,
+                    _runtime.GetCastMember("blackOutImg2")!.image!));
+            }
+
             var effectsList = (LingoList)Movie.gEEprops.effects;
             var effectNames = effectsList.List.Select(e => (string)((dynamic)e!).nm).ToArray();
             var totalCount = effectsList.List.Count;
@@ -197,6 +233,17 @@ public sealed partial class LevelRenderer
         var script = _runtime.CreateScript<renderProps>();
         while (Movie.keepLooping == 1)
         {
+            if (ShouldSendPreview())
+            {
+                var images = new LingoImage[30];
+                for (var j = 0; j < 30; j++)
+                {
+                    images[j] = _runtime.GetCastMember($"layer{j}")!.image!.DuplicateShared();
+                }
+
+                SendPreview(new RenderPreviewProps(images));
+            }
+
             RenderStartFrame(RenderStage.RenderPropsPostEffects);
             script.newframe();
         }
@@ -213,6 +260,17 @@ public sealed partial class LevelRenderer
         var script = _runtime.CreateScript<renderLight>();
         while (Movie.keepLooping == 1)
         {
+            if (ShouldSendPreview())
+            {
+                var images = new LingoImage[30];
+                for (var j = 0; j < 30; j++)
+                {
+                    images[j] = _runtime.GetCastMember($"layer{j}sh")!.image!.DuplicateShared();
+                }
+
+                SendPreview(new RenderPreviewLights(images));
+            }
+
             var curr = (int)Movie.c;
             RenderStartFrame(new RenderStageStatusLight(curr));
             script.newframe();

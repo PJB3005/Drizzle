@@ -9,5 +9,7 @@
         <render:RenderStageCompletedViewModel />
     </Design.DataContext>
 
-    <TextBlock Text="Render completed" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center" />
+    <ContentControl Padding="4" Classes="previewBackground" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <TextBlock Text="Render completed" FontSize="24" />
+    </ContentControl>
 </UserControl>

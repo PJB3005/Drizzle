@@ -10,5 +10,7 @@
         <render:RenderStageLayersViewModel />
     </Design.DataContext>
     
-    <TextBlock Text="{Binding CurrentLayer, StringFormat={}Rendering layer: {0}}"></TextBlock>
+    <ContentControl Classes="previewBackground" VerticalAlignment="Top" HorizontalAlignment="Left">
+        <TextBlock Text="{Binding CurrentLayer, StringFormat={}Rendering layer: {0}}" />
+    </ContentControl>
 </UserControl>

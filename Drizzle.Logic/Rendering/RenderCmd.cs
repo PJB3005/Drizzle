@@ -12,6 +12,11 @@ public record RenderCmdCancel : RenderCmd;
 
 public record RenderCmdExec(Action Action) : RenderCmd;
 
+/// <summary>
+/// The rendering thread may send a set of preview images for display in the UI.
+/// </summary>
+public record RenderCmdReqPreview : RenderCmd;
+
 [Serializable]
 public class RenderCancelledException : OperationCanceledException
 {

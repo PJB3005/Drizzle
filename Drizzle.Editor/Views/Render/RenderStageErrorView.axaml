@@ -10,6 +10,7 @@
         <render:RenderStageErrorViewModel />
     </Design.DataContext>
 
-    <TextBlock Text="{Binding ExceptionMessage}" TextWrapping="Wrap"
-               HorizontalAlignment="Center" VerticalAlignment="Center" />
+    <ContentControl Classes="previewBackground" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <TextBlock Text="{Binding ExceptionMessage}" TextWrapping="Wrap" />
+    </ContentControl>
 </UserControl>
