@@ -1,26 +1,31 @@
 
 --detta skript räknar ut distansen mellan två punkter
-on diag(point1, point2)
-  
-  RectHeight = ABS(point1.locV - point2.locV)
-  RectWidth = ABS(point1.locH - point2.locH)
-  
-  diagonal = sqrt((RectHeight * RectHeight) + (RectWidth * RectWidth))
-  
+on diag(point1: point, point2: point)
+  type return: number
+
+  RectHeight: number = ABS(point1.locV - point2.locV)
+  RectWidth:  number = ABS(point1.locH - point2.locH)
+
+  diagonal:   number = sqrt((RectHeight * RectHeight) + (RectWidth * RectWidth))
+
   return diagonal
 end
 
-on diagWI(point1, point2, dig)
-  RectHeight = ABS(point1.locV - point2.locV)
-  RectWidth = ABS(point1.locH - point2.locH)
-  return ((RectHeight * RectHeight) + (RectWidth * RectWidth) < dig*dig )
-end 
+on diagWI(point1: point, point2: point, dig: number)
+  type return: number
 
-on diagNoSqrt(point1, point2)
-  RectHeight = ABS(point1.locV - point2.locV)
-  RectWidth = ABS(point1.locH - point2.locH)
+  RectHeight: number = ABS(point1.locV - point2.locV)
+  RectWidth:  number = ABS(point1.locH - point2.locH)
+  return ((RectHeight * RectHeight) + (RectWidth * RectWidth) < dig*dig )
+end
+
+on diagNoSqrt(point1: point, point2: point)
+  type return: number
+
+  RectHeight: number = ABS(point1.locV - point2.locV)
+  RectWidth:  number = ABS(point1.locH - point2.locH)
   
-  diagonal = (RectHeight * RectHeight) + (RectWidth * RectWidth)
+  diagonal: number = (RectHeight * RectHeight) + (RectWidth * RectWidth)
   
   return diagonal
 end
@@ -89,7 +94,9 @@ on returnAbsolutePoint p1, p2
   return point(realX, realY)
 end
 
-on lerp(A, B, val)
+on lerp(A: number, B: number, val: number)
+  type return: number
+
   val = restrict(val, 0, 1)
   if(B < A)then
     sv = A
@@ -210,10 +217,12 @@ end
 
 
 
-on degToVec(deg)
+on degToVec(deg: number)
+  type return: point
+
   deg = deg + 90
   deg = -deg 
-  rad = ((deg/360.0).float)*PI*2
+  rad: number = ((deg/360.0).float)*PI*2
   
   return point(-cos(rad), sin(rad))
 end

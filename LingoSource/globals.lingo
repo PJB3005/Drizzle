@@ -1,80 +1,80 @@
 -- Used by some render stages to keep track of progress.
-globaltype c:                           LingoNumber
+type c:                           number
 
--- Appears to just be a loop variable that doesn't need to be globaltype.
-globaltype q:                           LingoNumber
+-- Appears to just be a loop variable that doesn't need to be type.
+type q:                           number
 
 -- Used by effects render stage to track which effect is being rendered.
-globaltype r:                           LingoNumber
+type r:                           number
 
 -- Used by effects render stage to track vertical pass position.
-globaltype vertRepeater:                LingoNumber
+type vertRepeater:                number
 
-globaltype gCurrentRenderCamera:        LingoNumber
-globaltype gRenderCameraTilePos:        LingoPoint
-globaltype gRenderCameraPixelPos:       LingoPoint
+type gCurrentRenderCamera:        number
+type gRenderCameraTilePos:        point
+type gRenderCameraPixelPos:       point
 
 -- Prop rendering stage: before or after effects?
-globaltype afterEffects:                LingoNumber
+type afterEffects:                number
 
-globaltype closestProp:                 LingoNumber
+type closestProp:                 number
 
 -- Used by prop rendering to store the current prop color or something.
-globaltype colr:                        LingoColor
+type colr:                        color
 
 -- Something in effect rendering.
-globaltype daddyCorruptionHoles:        LingoList
+type daddyCorruptionHoles:        list
 
 -- Something related to depth rendering
-globaltype dptsL:                       LingoList
-globaltype fogDptsL:                    LingoList
+type dptsL:                       list
+type fogDptsL:                    list
 
 -- Some effects
-globaltype effectIn3D:                  LingoNumber
+type effectIn3D:                  number
 
-globaltype effectSeed:                  LingoNumber
+type effectSeed:                  number
 
-globaltype gAnyDecals:                  LingoNumber
+type gAnyDecals:                  number
 
-globaltype gCurrentlyRenderingTrash:    LingoNumber
+type gCurrentlyRenderingTrash:    number
 
-globaltype gDecalColors:                LingoList
+type gDecalColors:                list
 
-globaltype gdLayer:                     string
+type gdLayer:                     string
 
-globaltype gEffects:                    LingoList
+type gEffects:                    list
 
 -- Are we rendering a soft prop?
-globaltype gESoftProp:                  LingoNumber
+type gESoftProp:                  number
 
-globaltype gLastImported:               string
+type gLastImported:               string
 
-globaltype glgtimgQuad:                 LingoList
+type glgtimgQuad:                 list
 
-globaltype gProps:                      LingoList
+type gProps:                      list
 
-globaltype gRenderTrashProps:           LingoList
+type gRenderTrashProps:           list
 
-globaltype gTiles:                      LingoList
+type gTiles:                      list
 
-globaltype gTinySignsDrawn:             LingoNumber
+type gTinySignsDrawn:             number
 
-globaltype gTrashPropOptions:           LingoList
+type gTrashPropOptions:           list
 
-globaltype gViewRender:                 LingoNumber
+type gViewRender:                 number
 
-globaltype keepLooping:                 LingoNumber
+type keepLooping:                 number
 
-globaltype pos:                         LingoPoint
+type pos:                         point
 
-globaltype propsToRender:               LingoList
+type propsToRender:               list
 
-globaltype slagHoles:                   LingoList
+type slagHoles:                   list
 
-globaltype solidMtrx:                   LingoList
+type solidMtrx:                   list
 
-globaltype tileSetIndex:                LingoList
+type tileSetIndex:                list
 
-globaltype tm:                          LingoNumber
+type tm:                          number
 
-globaltype wireBunchSav:                LingoList
+type wireBunchSav:                list

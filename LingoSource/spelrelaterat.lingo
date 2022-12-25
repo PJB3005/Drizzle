@@ -9,7 +9,9 @@ on giveMiddleOfTile(pos)
   return point((pos.locH*20)-10, (pos.locV*20)-10)-- - point(8,8)
 end 
 
-on restrict(val, low, high)
+on restrict(val: number, low: number, high: number)
+  type return: number
+
   if val<low then
     return low
   else if val > high then
@@ -42,7 +44,8 @@ end
 
 
 
-on solidAfaMv(pos, layer)
+on solidAfaMv(pos: point, layer: number)
+  type return: number
   global solidMtrx, gLOprops
   if pos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) then
     --put gMatrix[pos.locH][pos.locV]
@@ -91,7 +94,8 @@ on antiDepthPnt(pnt, dpt)
     return pnt
 end
 
-on seedForTile(tile, effectSeed)
+on seedForTile(tile: point, effectSeed: number)
+  type return: number
   global gLEprops
   return effectSeed + tile.locH + tile.locV * gLEprops.matrix.count
 end
@@ -315,7 +319,9 @@ end
 
 
 
-on flipQuadH(qd)
+on flipQuadH(qd: list)
+  type return: list
+
   return [qd[2], qd[1], qd[4], qd[3]]
 end
 

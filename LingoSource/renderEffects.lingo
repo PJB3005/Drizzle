@@ -68,10 +68,10 @@ on newFrame me
 end
 
 
-on effectOnTile me, q, c, q2, c2
+on effectOnTile me, q: number, c: number, q2: number, c2: number
   if gEEprops.effects[r].mtrx[q2][c2] > 0 then
     
-    savSeed = the randomSeed
+    savSeed: number = the randomSeed
     the randomSeed = seedForTile(point(q2, c2), effectSeed)
     
     case gEEprops.effects[r].nm of
@@ -344,26 +344,34 @@ end
 
 
 
-on applyStandardErosion me, q, c, eftc, tp
-  q2 = q + gRenderCameraTilePos.locH
-  c2 = c + gRenderCameraTilePos.locV
-  
-  fc = gEEprops.effects[r].affectOpenAreas + (1.0-gEEprops.effects[r].affectOpenAreas)* (     solidAfaMv(point(q2,c2), 3)   )
-  
-  
+on applyStandardErosion me, q: number, c: number, eftc: number, tp: string
+  q2: number = q + gRenderCameraTilePos.locH
+  c2: number = c + gRenderCameraTilePos.locV
+
+  effect             = gEEprops.effects[r]
+  affectOpen: number = effect.affectOpenAreas
+  fc:         number = affectOpen + (1.0 - affectOpen) * (     solidAfaMv(point(q2,c2), 3)   )
+
+
   repeat with d = 1 to 30 then
-    lr = 30-d
+    type d: number
+    lr: number = 30-d
     if (lr = 9)or(lr=19) then
-      sld = (solidMtrx[q2][c2][ 1+(d>9)+(d>19) ])
-      fc = gEEprops.effects[r].affectOpenAreas + (1.0-gEEprops.effects[r].affectOpenAreas)* ( solidAfaMv(point(q2,c2), 1+(d>9)+(d>19)) )
+      sld: number = (solidMtrx[q2][c2][ 1+(d>9)+(d>19) ])
+      fc = affectOpen + (1.0-affectOpen) * ( solidAfaMv(point(q2,c2), 1+(d>9)+(d>19)) )
     end if
-    deepEffect = 0
+    deepEffect: number = 0
     
     if (lr = 0)or(lr=10)or(lr=20)or(sld=0)then
       deepEffect = 1
     end if
     
-    repeat with cntr = 1 to gEEprops.effects[r].mtrx[q2][c2]*(0.2 + (0.8*deepEffect))*0.01*gEEprops.effects[r].repeats*fc then
+    iters: number = effect.mtrx[q2][c2]*(0.2 + (0.8*deepEffect))*0.01*effect.repeats*fc
+    repeat with cntr = 1 to iters then
+      type cntr: number
+
+      type cl:  object
+      type pnt: point
       if deepEffect then
         pnt = (point(q-1, c-1)*20)+point(random(20), random(20))
       else
@@ -394,7 +402,15 @@ on applyStandardErosion me, q, c, eftc, tp
           cl =  member("layer"&string(lr)).image.getPixel(pnt)
       end case
       
-      
+      type ofst:    number
+      type lgt:     number
+      type dccol:   color
+      type rct:     rect
+      type maskImg: image
+      type cpImg:   image
+      type mvdown:  number
+      type nwlr:    number
+
       if cl <> color(255, 255, 255) then
         case tp of
           "slime", "slimeX3":
@@ -469,6 +485,7 @@ on applyStandardErosion me, q, c, eftc, tp
             end if
             
             repeat with a = 1 to 6 then
+              type a: number
               pnt = pnt + point(-3+random(5), -3+random(5))
               ofst = random(2)-1
               member("layer"&string(nwLr)).image.copyPixels(member("rustDot").image, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), member("rustDot").image.rect, {#color:color(255, 255, 255), #ink:36})
@@ -485,7 +502,8 @@ on applyStandardErosion me, q, c, eftc, tp
               member("layer"&string(nwLr)).image.copyPixels(member("SuperErodeMask").image, rect(pnt, pnt)+rect(-4, -4, 4, 4), member("SuperErodeMask").image.rect, {#color:color(255, 255, 255), #ink:36})
             end repeat
           "melt":
-            cp = image(4,4,32)
+            type cp: image
+            cp  = image(4,4,32)
             rct = rect(pnt,pnt)+rect(-2,-2,2,2)
             cp.copyPixels(member("layer"&string(lr)).image, rect(0,0,4,4), rct)
             cp.setPixel(point(0,0), color(255,255,255))
@@ -497,12 +515,16 @@ on applyStandardErosion me, q, c, eftc, tp
             
           "roughen":
             if(cl = color(0, 255, 0))then
+              type var: number
               var = random(20)
               --member("layer"&string(lr)).image.copyPixels(member("roughenTexture").image, rect(pnt, pnt)+rect(-3, -3, 4, 4), rect((var-1)*7, 0, var*7, 7), {#ink:36})
               repeat with lch = 0 to 6 then
+                type lch: number
                 repeat with lcv = 0 to 6 then
+                  type lcv: number
                   if(member("layer"&string(lr)).image.getPixel(pnt.locH-3+lch, pnt.locV-3+lcv) = color(0, 255, 0))then
                     gtCl = member("roughenTexture").image.getPixel(lch+(var-1)*7, lcv)
+                    type gtCl: color
                     if gtCl <> color(255, 255, 255) then
                       member("layer"&string(lr)).image.setPixel(pnt.locH-3+lch, pnt.locV-3+lcv, gtCl)
                     end if
@@ -517,7 +539,7 @@ on applyStandardErosion me, q, c, eftc, tp
             rct = rect(pnt-point(maskImg.width,maskImg.height)/2.0, pnt+point(maskImg.width,maskImg.height)/2.0)
             cpImg.copyPixels(member("layer"&string(lr)).image, cpImg.rect, rct)
             cpImg.copyPixels(maskImg, cpImg.rect, maskImg.rect, {#ink:36, #color:color(255, 255, 255)})
-            mvDown = random(7)*(gEEprops.effects[r].mtrx[q2][c2]/100.0)
+            mvDown = random(7)*(effect.mtrx[q2][c2]/100.0)
             if  effectIn3D then
               nwLr = get3DLr(lr)
             else
@@ -537,7 +559,7 @@ on applyStandardErosion me, q, c, eftc, tp
             pnt = point(-2+random(3), -2+random(3))
             rct = rct + rect(pnt, pnt)
             -- cpImg.copyPixels(maskImg, cpImg.rect, maskImg.rect, {#ink:36, #color:color(255, 255, 255)})
-            mvDown = random(7)*(gEEprops.effects[r].mtrx[q2][c2]/100.0)
+            mvDown = random(7)*(effect.mtrx[q2][c2]/100.0)
             if effectIn3D then
               nwLr = get3DLr(lr)
             else
@@ -563,8 +585,10 @@ on applyStandardErosion me, q, c, eftc, tp
   
 end
 
-on get3DLr(lr)
-  nwLr = restrict(lr - 2 + random(3), 0, 29)
+on get3DLr(lr: number)
+  type return: number
+
+  nwLr: number = restrict(lr - 2 + random(3), 0, 29)
   if(lr = 6)and(nwLr=5)then
     nwLr = 6
   else if(lr = 5)and(nwLr=6)then
