@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 // ReSharper disable SuggestBaseTypeForParameter
@@ -19,6 +20,7 @@ public static class AstNode
 
     public sealed record Assignment(
         Base Assigned,
+        string? Type,
         Base Value
     ) : Base;
 
@@ -85,21 +87,21 @@ public static class AstNode
         Base[] Args
     ) : Base;
 
-    public sealed record GlobalType(
+    public sealed record TypeSpec(
         string Name,
         string Type
     ) : Base;
 
     public sealed record Handler(
         string Name,
-        string[] Parameters,
+        TypedVariable[] Parameters,
         StatementBlock Body
     ) : Base
     {
         public override void DebugPrint(StringBuilder sb, int indentation)
         {
             sb.Append(Indent(indentation));
-            sb.Append($"Handler '{Name}' (\n{string.Join('\n', Parameters)}\n) {{\n");
+            sb.Append($"Handler '{Name}' (\n{string.Join('\n', Parameters.Select(p => p.ToString()))}\n) {{\n");
 
             foreach (var node in Body.Statements)
             {
@@ -309,6 +311,17 @@ public static class AstNode
 
             sb.Append(Indent(indentation));
             sb.Append("}\n");
+        }
+    }
+
+    public sealed record TypedVariable(string Name, string? Type) : Base
+    {
+        public override string ToString()
+        {
+            if (Type == null)
+                return Name;
+
+            return $"{Name}: {Type}";
         }
     }
 

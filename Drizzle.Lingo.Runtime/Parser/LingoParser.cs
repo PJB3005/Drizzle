@@ -707,9 +707,15 @@ public static class LingoParser
 
     public static readonly Parser<char, AstNode.Assignment> Assignment =
         Map(
-            (var, expr) => new AstNode.Assignment(var, expr),
-            Tok(ExpressionNoEquals).Before(Tok('=')),
-            Expression
+            (var, type, expr) => new AstNode.Assignment(var, type.GetValueOrDefault(), expr),
+            // Assigned variable
+            Tok(ExpressionNoEquals),
+
+            // Type spec
+            Tok(':').Then(Identifier).Optional(),
+
+            // Assigned value
+            Tok('=').Then(Expression)
         );
 
     private static readonly Parser<char, AstNode.Base> Return =
@@ -723,6 +729,11 @@ public static class LingoParser
             .Then(Tok("repeat").Optional())
             .Select(r => r.HasValue ? (AstNode.Base)new AstNode.ExitRepeat() : new AstNode.Return(null));
 
+    private static readonly Parser<char, AstNode.TypeSpec> TypeSpec =
+        Try(BTok("type")).TraceBegin("global begin")
+            .Then(Identifier.Before(Tok(':')))
+            .Then(Identifier, (name, type) => new AstNode.TypeSpec(name, type));
+
     public static readonly Parser<char, AstNode.Base> Statement =
             OneOf(
                 Return.TraceBegin("Statement -> return"),
@@ -732,15 +743,23 @@ public static class LingoParser
                 If.TraceBegin("Statement -> if"),
                 PutInto.TraceBegin("Statement -> put into"),
                 Try(Assignment.Cast<AstNode.Base>()).TraceBegin("Statement -> assignment"),
-                Try(Global.Cast<AstNode.Base>()).TraceBegin("Statement -> global"),
+                Global.Cast<AstNode.Base>().TraceBegin("Statement -> global"),
+                TypeSpec.Cast<AstNode.Base>(),
                 Expression.TraceBegin("Statement -> expr"))
         /*.Trace(s => $"STATEMENT: {DebugPrint.PrintAstNode(s)}")*/;
 
-    private static readonly Parser<char, IEnumerable<string>> HandlerParameter =
-        Identifier
+    private static readonly Parser<char, AstNode.TypedVariable> TypedVariable =
+        Map(
+            (a, b) => new AstNode.TypedVariable(a, b.GetValueOrDefault()),
+            Identifier,
+            Tok(':').Then(Identifier).Optional()
+        );
+
+    private static readonly Parser<char, IEnumerable<AstNode.TypedVariable>> HandlerParameter =
+        TypedVariable
             .Separated(Tok(','));
 
-    private static readonly Parser<char, IEnumerable<string>> HandleParenthesesParameter =
+    private static readonly Parser<char, IEnumerable<AstNode.TypedVariable>> HandleParenthesesParameter =
         OneOf(
             Parenthesized(HandlerParameter),
             HandlerParameter);
@@ -761,15 +780,10 @@ public static class LingoParser
             // .Bind(h => Tok(h.Name).Optional().ThenReturn(h))
             .Labelled("handler definition");
 
-    private static readonly Parser<char, AstNode.GlobalType> GlobalType =
-        Tok("globaltype").TraceBegin("global begin")
-            .Then(Identifier.Before(Tok(':')))
-            .Then(Identifier, (name, type) => new AstNode.GlobalType(name, type));
-
     private static readonly Parser<char, AstNode.Base> TopKeyword =
         OneOf(
                 Global.Cast<AstNode.Base>(),
-                GlobalType.Cast<AstNode.Base>(),
+                TypeSpec.Cast<AstNode.Base>(),
                 PropertyDecl,
                 Handler.Cast<AstNode.Base>())
             .Labelled("top-level keyword");

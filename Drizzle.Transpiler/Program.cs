@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -87,6 +86,17 @@ internal static class Program
                 ("loadlevel", 1)
             }
         }
+    };
+
+    private static readonly Dictionary<string, string> TypeKeywords = new()
+    {
+        { "point", "LingoPoint" },
+        { "rect", "LingoRect" },
+        { "list", "LingoList" },
+        { "proplist", "LingoPropertyList" },
+        { "number", "LingoNumber" },
+        { "color", "LingoColor" },
+        { "image", "LingoImage" }
     };
 
     private const string OutputNamespace = "Drizzle.Ported";
@@ -219,7 +229,7 @@ internal static class Program
 
         foreach (var glob in ctx.AllGlobals)
         {
-            var type = ctx.GlobalTypes.GetValueOrDefault(glob) ?? "dynamic";
+            var type = MapType(glob, ctx.GlobalTypes);
             file.WriteLine($"[LingoGlobal] public {type} {glob};");
         }
 
@@ -278,7 +288,7 @@ internal static class Program
 
         ctx.AllGlobals.UnionWith(allGlobals);
 
-        foreach (var globalType in script.Nodes.OfType<AstNode.GlobalType>())
+        foreach (var globalType in script.Nodes.OfType<AstNode.TypeSpec>())
         {
             ctx.GlobalTypes.Add(globalType.Name, globalType.Type);
         }
@@ -300,17 +310,10 @@ internal static class Program
             // Have to write into a temporary buffer because we need to pre-declare all variables.
             var tempWriter = new StringWriter();
             var handlerContext = new HandlerContext(scriptContext, handler.Name, tempWriter);
-            handlerContext.Locals.UnionWith(handler.Parameters);
+            handlerContext.Locals.UnionWith(handler.Parameters.Select(k => k.Name));
             handlerContext.Locals.UnionWith(props);
 
-            var paramsList = handler.Parameters.ToList();
-            if (paramsList.Count > 0 && paramsList[0] == "me")
-                paramsList.RemoveAt(0);
-
-            var paramsText = string.Join(',', paramsList.Select(p => $"dynamic {p.ToLower()}"));
-            var handlerLower = handler.Name.ToLower();
-            writer.WriteLine($"public dynamic {WriteSanitizeIdentifier(handlerLower)}({paramsText}) {{");
-
+            // Writing statements discovers some property of the code we need to know, like type declarations.
             try
             {
                 WriteStatementBlock(handler.Body, handlerContext);
@@ -322,15 +325,31 @@ internal static class Program
                 continue;
             }
 
+            var types = handlerContext.Types;
+            foreach (var param in handler.Parameters)
+            {
+                if (param.Type is { } type)
+                    types.Add(param.Name, type);
+            }
+
+            var paramsList = handler.Parameters.ToList();
+            if (paramsList.Count > 0 && paramsList[0].Name == "me")
+                paramsList.RemoveAt(0);
+
+            var paramsText = string.Join(',', paramsList.Select(p => $"{MapType(p.Name, types)} {p.Name.ToLower()}"));
+            var handlerLower = handler.Name.ToLower();
+            var returnType = MapType("return", types);
+            writer.WriteLine($"public {returnType} {WriteSanitizeIdentifier(handlerLower)}({paramsText}) {{");
+
             foreach (var local in handlerContext.DeclaredLocals)
             {
-                writer.WriteLine($"dynamic {local.ToLower()} = null;");
+                writer.WriteLine($"{MapType(local, types)} {local.ToLower()} = default;");
             }
 
             writer.WriteLine(tempWriter.GetStringBuilder());
 
             if (handler.Body.Statements.Length == 0 || handler.Body.Statements[^1] is not AstNode.Return)
-                writer.WriteLine("return null;");
+                writer.WriteLine("return default;");
 
             // Handler end.
             writer.WriteLine("}");
@@ -350,7 +369,7 @@ internal static class Program
         var handlers = script.Nodes.OfType<AstNode.Handler>()
             .ToDictionary(
                 h => h.Name,
-                h => h.Parameters.Count(p => p != "me"),
+                h => h.Parameters.Count(p => p.Name != "me"),
                 StringComparer.InvariantCultureIgnoreCase);
 
         foreach (var (h, count) in quirks.OverloadParamCounts)
@@ -363,7 +382,7 @@ internal static class Program
 
             writer.WriteLine($"public dynamic {toLower}({overloadParams}) {{");
 
-            var nulls = string.Join(", ", Enumerable.Repeat("null", handlers[toLower] - count));
+            var nulls = string.Join(", ", Enumerable.Repeat("(dynamic) null", handlers[toLower] - count));
 
             overloadParams = string.Concat(parameters.Take(count).Select(p => $"{p}, "));
 
@@ -418,6 +437,10 @@ internal static class Program
             case AstNode.Property prop:
 
                 break;
+            case AstNode.TypeSpec spec:
+                ctx.Types.Add(spec.Name, spec.Type);
+                break;
+
             default:
                 if (node is AstNode.VariableName
                     or AstNode.MemberProp or AstNode.MemberIndex or AstNode.BinaryOperator or AstNode.UnaryOperator
@@ -599,6 +622,8 @@ internal static class Program
         else
         {
             // Will have to be translated as if-else chain.
+            // If you run into this again: "var: type = value" syntax is erroneously parsed as a switch case.
+            // So make sure you didn't do that lol.
             throw new NotImplementedException();
         }
     }
@@ -617,7 +642,7 @@ internal static class Program
         }
         else
         {
-            ctx.Writer.WriteLine($"return null;");
+            ctx.Writer.WriteLine($"return default;");
         }
     }
 
@@ -633,7 +658,20 @@ internal static class Program
                 // Make sure it's not a parameter though.
                 if (ctx.Locals.Add(name))
                     ctx.DeclaredLocals.Add(name);
+
+                if (node.Type is { } type)
+                {
+                    ctx.Types.Add(name, type);
+                }
             }
+            else if (node.Type != null)
+            {
+                Console.WriteLine($"Trying to assign-declare type on global: {node.Type}, {node.Assigned}");
+            }
+        }
+        else if (node.Type != null)
+        {
+            Console.WriteLine($"Unable to infer variable name of assignment type: {node.Type}, {node.Assigned}");
         }
 
         var lhs = WriteExpression(node.Assigned, ctx);
@@ -1069,6 +1107,12 @@ internal static class Program
         return CSharpKeyWords.Contains(identifier) ? $"@{identifier}" : identifier;
     }
 
+    private static string MapType(string variable, Dictionary<string, string> types)
+    {
+        var type = types.GetValueOrDefault(variable, "dynamic");
+        return TypeKeywords.GetValueOrDefault(type, type);
+    }
+
     private sealed class GlobalContext
     {
         public GlobalContext(HashSet<string> movieHandlers, string sourcesDest)
@@ -1115,6 +1159,7 @@ internal static class Program
         public HashSet<string> Globals { get; } = new(StringComparer.InvariantCultureIgnoreCase);
         public HashSet<string> Locals { get; } = new(StringComparer.InvariantCultureIgnoreCase);
         public HashSet<string> DeclaredLocals { get; } = new(StringComparer.InvariantCultureIgnoreCase);
+        public readonly Dictionary<string, string> Types = new(StringComparer.InvariantCultureIgnoreCase);
         public ScriptContext Parent { get; }
         public string Name { get; }
         public TextWriter Writer { get; }
