@@ -219,7 +219,8 @@ internal static class Program
 
         foreach (var glob in ctx.AllGlobals)
         {
-            file.WriteLine($"[LingoGlobal] public dynamic {glob};");
+            var type = ctx.GlobalTypes.GetValueOrDefault(glob) ?? "dynamic";
+            file.WriteLine($"[LingoGlobal] public {type} {glob};");
         }
 
         file.WriteLine("}\n");
@@ -276,6 +277,11 @@ internal static class Program
         var scriptContext = new ScriptContext(ctx, allGlobals, allHandlers, isMovieScript);
 
         ctx.AllGlobals.UnionWith(allGlobals);
+
+        foreach (var globalType in script.Nodes.OfType<AstNode.GlobalType>())
+        {
+            ctx.GlobalTypes.Add(globalType.Name, globalType.Type);
+        }
 
         var props = new HashSet<string>();
         foreach (var prop in script.Nodes.OfType<AstNode.Property>().SelectMany(p => p.Identifiers))
@@ -1069,6 +1075,7 @@ internal static class Program
         }
 
         public HashSet<string> AllGlobals { get; } = new(StringComparer.InvariantCultureIgnoreCase);
+        public Dictionary<string, string> GlobalTypes { get; } = new(StringComparer.InvariantCultureIgnoreCase);
         public HashSet<string> MovieHandlers { get; }
         public string SourcesDest { get; }
     }

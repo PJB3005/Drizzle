@@ -1,0 +1,80 @@
+-- Used by some render stages to keep track of progress.
+globaltype c:                           LingoNumber
+
+-- Appears to just be a loop variable that doesn't need to be globaltype.
+globaltype q:                           LingoNumber
+
+-- Used by effects render stage to track which effect is being rendered.
+globaltype r:                           LingoNumber
+
+-- Used by effects render stage to track vertical pass position.
+globaltype vertRepeater:                LingoNumber
+
+globaltype gCurrentRenderCamera:        LingoNumber
+globaltype gRenderCameraTilePos:        LingoPoint
+globaltype gRenderCameraPixelPos:       LingoPoint
+
+-- Prop rendering stage: before or after effects?
+globaltype afterEffects:                LingoNumber
+
+globaltype closestProp:                 LingoNumber
+
+-- Used by prop rendering to store the current prop color or something.
+globaltype colr:                        LingoColor
+
+-- Something in effect rendering.
+globaltype daddyCorruptionHoles:        LingoList
+
+-- Something related to depth rendering
+globaltype dptsL:                       LingoList
+globaltype fogDptsL:                    LingoList
+
+-- Some effects
+globaltype effectIn3D:                  LingoNumber
+
+globaltype effectSeed:                  LingoNumber
+
+globaltype gAnyDecals:                  LingoNumber
+
+globaltype gCurrentlyRenderingTrash:    LingoNumber
+
+globaltype gDecalColors:                LingoList
+
+globaltype gdLayer:                     string
+
+globaltype gEffects:                    LingoList
+
+-- Are we rendering a soft prop?
+globaltype gESoftProp:                  LingoNumber
+
+globaltype gLastImported:               string
+
+globaltype glgtimgQuad:                 LingoList
+
+globaltype gProps:                      LingoList
+
+globaltype gRenderTrashProps:           LingoList
+
+globaltype gTiles:                      LingoList
+
+globaltype gTinySignsDrawn:             LingoNumber
+
+globaltype gTrashPropOptions:           LingoList
+
+globaltype gViewRender:                 LingoNumber
+
+globaltype keepLooping:                 LingoNumber
+
+globaltype pos:                         LingoPoint
+
+globaltype propsToRender:               LingoList
+
+globaltype slagHoles:                   LingoList
+
+globaltype solidMtrx:                   LingoList
+
+globaltype tileSetIndex:                LingoList
+
+globaltype tm:                          LingoNumber
+
+globaltype wireBunchSav:                LingoList

@@ -85,6 +85,11 @@ public static class AstNode
         Base[] Args
     ) : Base;
 
+    public sealed record GlobalType(
+        string Name,
+        string Type
+    ) : Base;
+
     public sealed record Handler(
         string Name,
         string[] Parameters,

@@ -118,18 +118,6 @@ public static class LingoParser
             .Assert(val => !Keywords.Contains(val), v => $"Expected identifier, found keyword {v}")
             .Labelled("identifier");
 
-    private static readonly Parser<char, AstNode.Global> Global =
-        Tok("global")
-            .Then(Identifier.SeparatedAtLeastOnce(Tok(',')))
-            .Select(s => new AstNode.Global(s.ToArray()))
-            .Labelled("global keyword");
-
-    private static readonly Parser<char, AstNode.Base> PropertyDecl =
-        Try(Tok("property"))
-            .Then(Identifier.SeparatedAtLeastOnce(Tok(',')))
-            .Select(s => (AstNode.Base)new AstNode.Property(s.ToArray()))
-            .Labelled("property declarations");
-
     private static readonly Parser<char, Unit> EmptyLine =
         SkipNnlWhiteSpace
             .Then(Newline)
@@ -146,6 +134,18 @@ public static class LingoParser
 
     private static readonly Parser<char, Unit> WordBound =
         Lookahead(Not(OneOf(LetterOrDigit, Char('_'))));
+
+    private static readonly Parser<char, AstNode.Global> Global =
+        Try(BTok("global"))
+            .Then(Identifier.SeparatedAtLeastOnce(Tok(',')))
+            .Select(s => new AstNode.Global(s.ToArray()))
+            .Labelled("global keyword");
+
+    private static readonly Parser<char, AstNode.Base> PropertyDecl =
+        Try(Tok("property"))
+            .Then(Identifier.SeparatedAtLeastOnce(Tok(',')))
+            .Select(s => (AstNode.Base)new AstNode.Property(s.ToArray()))
+            .Labelled("property declarations");
 
     private static readonly Parser<char, AstNode.Base> Number =
         Tok(
@@ -761,9 +761,15 @@ public static class LingoParser
             // .Bind(h => Tok(h.Name).Optional().ThenReturn(h))
             .Labelled("handler definition");
 
+    private static readonly Parser<char, AstNode.GlobalType> GlobalType =
+        Tok("globaltype").TraceBegin("global begin")
+            .Then(Identifier.Before(Tok(':')))
+            .Then(Identifier, (name, type) => new AstNode.GlobalType(name, type));
+
     private static readonly Parser<char, AstNode.Base> TopKeyword =
         OneOf(
                 Global.Cast<AstNode.Base>(),
+                GlobalType.Cast<AstNode.Base>(),
                 PropertyDecl,
                 Handler.Cast<AstNode.Base>())
             .Labelled("top-level keyword");
