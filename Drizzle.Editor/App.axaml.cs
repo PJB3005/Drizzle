@@ -8,7 +8,6 @@ using Drizzle.Editor.ViewModels;
 using Drizzle.Editor.Views;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
-using SS14.Launcher;
 using LogEventLevel = Serilog.Events.LogEventLevel;
 
 namespace Drizzle.Editor;

@@ -2,7 +2,7 @@
 using Serilog;
 using Serilog.Core.Enrichers;
 
-namespace SS14.Launcher;
+namespace Drizzle.Editor;
 
 internal sealed class AvaloniaSeriLogger : ILogSink
 {
@@ -13,8 +13,16 @@ internal sealed class AvaloniaSeriLogger : ILogSink
         _logger = logger;
     }
 
-    private ILogger Context(string area, object source)
+    private ILogger Context(string area, object? source)
     {
+        if (source == null)
+        {
+            return _logger.ForContext(new[]
+            {
+                new PropertyEnricher("Area", area),
+            });
+        }
+
         return _logger.ForContext(new[]
         {
             new PropertyEnricher("Area", area),
@@ -28,7 +36,7 @@ internal sealed class AvaloniaSeriLogger : ILogSink
         return _logger.IsEnabled((Serilog.Events.LogEventLevel) level);
     }
 
-    public void Log(LogEventLevel level, string area, object source, string messageTemplate)
+    public void Log(LogEventLevel level, string area, object? source, string messageTemplate)
     {
         Context(area, source).Write((Serilog.Events.LogEventLevel) level, messageTemplate);
     }
@@ -36,7 +44,7 @@ internal sealed class AvaloniaSeriLogger : ILogSink
     public void Log<T0>(
         LogEventLevel level,
         string area,
-        object source,
+        object? source,
         string messageTemplate,
         T0 propertyValue0)
     {
@@ -46,7 +54,7 @@ internal sealed class AvaloniaSeriLogger : ILogSink
     public void Log<T0, T1>(
         LogEventLevel level,
         string area,
-        object source,
+        object? source,
         string messageTemplate,
         T0 propertyValue0,
         T1 propertyValue1)
@@ -57,7 +65,7 @@ internal sealed class AvaloniaSeriLogger : ILogSink
     public void Log<T0, T1, T2>(
         LogEventLevel level,
         string area,
-        object source,
+        object? source,
         string messageTemplate,
         T0 propertyValue0,
         T1 propertyValue1,
@@ -70,9 +78,9 @@ internal sealed class AvaloniaSeriLogger : ILogSink
     public void Log(
         LogEventLevel level,
         string area,
-        object source,
+        object? source,
         string messageTemplate,
-        params object[] propertyValues)
+        params object?[] propertyValues)
     {
         Context(area, source).Write((Serilog.Events.LogEventLevel) level, messageTemplate, propertyValues);
     }
