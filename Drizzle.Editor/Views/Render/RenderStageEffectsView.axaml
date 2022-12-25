@@ -20,8 +20,13 @@
         <StackPanel Orientation="Vertical" Width="150" VerticalAlignment="Top">
             <TextBlock Text="Rendering effects" />
             <ItemsControl Name="EffectsList" Items="{Binding Effects}" Width="150" HorizontalAlignment="Left">
-                <!-- Item template is set in code behind to work around styling issues -->
-                <!-- Rider currently does not support Avalonia's new Classes.Foo="{Binding}" syntax.-->
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="render:RenderSingleEffectViewModel">
+                        <StackPanel Orientation="Horizontal" Classes.Current="{Binding Current}">
+                            <TextBlock Text="{Binding Name}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
             </ItemsControl>
         </StackPanel>
     </ContentControl>
