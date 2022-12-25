@@ -9,9 +9,4 @@ public sealed partial class LingoStatus : UserControl
     {
         InitializeComponent();
     }
-
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
 }

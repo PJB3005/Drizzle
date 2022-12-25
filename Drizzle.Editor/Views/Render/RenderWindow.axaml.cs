@@ -15,13 +15,8 @@ public partial class RenderWindow : Window
     {
         InitializeComponent();
 #if DEBUG
-            this.AttachDevTools();
+        this.AttachDevTools();
 #endif
-    }
-
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
     }
 
     private void TopLevel_OnClosed(object? sender, EventArgs e)

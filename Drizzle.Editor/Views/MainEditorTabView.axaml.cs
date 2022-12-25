@@ -11,9 +11,4 @@ public sealed partial class MainEditorTabView : UserControl
     {
         InitializeComponent();
     }
-
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
 }

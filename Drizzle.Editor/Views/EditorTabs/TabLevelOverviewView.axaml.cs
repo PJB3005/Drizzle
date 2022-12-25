@@ -9,9 +9,4 @@ public partial class TabLevelOverviewView : UserControl
     {
         InitializeComponent();
     }
-
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
 }

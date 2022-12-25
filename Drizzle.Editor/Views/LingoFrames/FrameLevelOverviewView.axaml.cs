@@ -9,9 +9,4 @@ public sealed partial class FrameLevelOverviewView : UserControl
     {
         InitializeComponent();
     }
-
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
 }

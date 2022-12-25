@@ -38,11 +38,6 @@ public partial class MainWindow : ReactiveWindow<MainWindowViewModel>
         });
     }
 
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
-
     public async void OpenProject()
     {
         var dialog = new OpenFileDialog

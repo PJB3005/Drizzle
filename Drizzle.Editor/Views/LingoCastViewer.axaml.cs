@@ -16,11 +16,6 @@ public sealed partial class LingoCastViewer : Window
 #endif
     }
 
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
-
     private void OnClosed(object? sender, EventArgs e)
     {
         (DataContext as LingoCastViewerViewModel)?.Closed();

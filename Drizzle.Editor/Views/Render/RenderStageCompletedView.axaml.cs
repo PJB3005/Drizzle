@@ -9,9 +9,4 @@ public partial class RenderStageCompletedView : UserControl
     {
         InitializeComponent();
     }
-
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
 }
