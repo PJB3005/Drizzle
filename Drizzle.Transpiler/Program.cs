@@ -684,6 +684,7 @@ internal static class Program
     {
         return node switch
         {
+            AstNode.MemberProp { Property: "image", Expression: AstNode.GlobalCall { Name: "member", Arguments: [ AstNode.String { Value: "pxl" } ] } } => "LingoImage.Pxl",
             AstNode.BinaryOperator binaryOperator => WriteBinaryOperator(binaryOperator, ctx, param),
             AstNode.Constant constant => WriteConstant(constant, ctx),
             AstNode.Number number => WriteNumber(number, ctx),

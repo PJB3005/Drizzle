@@ -11,6 +11,8 @@ namespace Drizzle.Lingo.Runtime;
 
 public sealed partial class LingoImage
 {
+    public static readonly LingoImage Pxl = MakePxl();
+
     public int Depth { get; }
     public byte[] ImageBuffer { get; private set; }
     public bool ImageBufferShared { get; set; }
@@ -331,5 +333,12 @@ public sealed partial class LingoImage
         var image = new LingoImage(maxX - minX, maxY - minY, Depth);
         image.copypixels(this, new LingoRect(0, 0, image.Width, image.Height), new LingoRect(minX, minY, maxX, maxY));
         return image;
+    }
+
+    private static LingoImage MakePxl()
+    {
+        var img = new LingoImage(1, 1, 32) { IsPxl = true };
+        img.setpixel(0, 0, LingoColor.White);
+        return img;
     }
 }
