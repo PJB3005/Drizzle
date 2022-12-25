@@ -51,6 +51,16 @@ public partial class LingoRuntime
         return found;
     }
 
+    public CastMember? GetCastMember(string name)
+    {
+        var found = GetCastMemberAnyCast(name);
+
+        if (found == null)
+            Log.Warning("Failed to find member with name {MissingMemberName}", found);
+
+        return found;
+    }
+
     private CastMember? GetCastMemberAnyCast(object nameOrNum)
     {
         if (nameOrNum is string name)

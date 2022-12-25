@@ -1,11 +1,17 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Numerics;
 
 namespace Drizzle.Lingo.Runtime;
 
 [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
-public readonly struct LingoNumber : IEquatable<LingoNumber>, IComparable<LingoNumber>
+public readonly struct LingoNumber : IEquatable<LingoNumber>, IComparable<LingoNumber>,
+    IAdditionOperators<LingoNumber, LingoNumber, LingoNumber>,
+    ISubtractionOperators<LingoNumber, LingoNumber, LingoNumber>,
+    IMultiplyOperators<LingoNumber, LingoNumber, LingoNumber>,
+    IDivisionOperators<LingoNumber, LingoNumber, LingoNumber>,
+    IModulusOperators<LingoNumber, LingoNumber, LingoNumber>
 {
     private readonly double _decimalValue;
     private readonly int _intValue;

@@ -3,7 +3,15 @@ using System.Numerics;
 
 namespace Drizzle.Lingo.Runtime;
 
-public struct LingoPoint : IEquatable<LingoPoint>, ILingoVector
+public struct LingoPoint : IEquatable<LingoPoint>, ILingoVector,
+    IAdditionOperators<LingoPoint, LingoPoint, LingoPoint>,
+    ISubtractionOperators<LingoPoint, LingoPoint, LingoPoint>,
+    IMultiplyOperators<LingoPoint, LingoPoint, LingoPoint>,
+    IDivisionOperators<LingoPoint, LingoPoint, LingoPoint>,
+    IAdditionOperators<LingoPoint, LingoNumber, LingoPoint>,
+    ISubtractionOperators<LingoPoint, LingoNumber, LingoPoint>,
+    IMultiplyOperators<LingoPoint, LingoNumber, LingoPoint>,
+    IDivisionOperators<LingoPoint, LingoNumber, LingoPoint>
 {
     // Yes, of course
     // Despite what the documentation clearly states

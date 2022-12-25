@@ -38,7 +38,9 @@ public sealed partial class LingoGlobal
         container.StartsWith(value, StringComparison.InvariantCultureIgnoreCase) ? 1 : 0;
 
     public static string concat(object left, object right) => $"{left}{right}";
+    public static string concat(string left, string right) => $"{left}{right}";
     public static string concat_space(object left, object right) => $"{left} {right}";
+    public static string concat_space(string left, string right) => $"{left} {right}";
 
     public dynamic slice_helper(dynamic obj, LingoNumber start, LingoNumber end)
     {
@@ -86,7 +88,7 @@ public sealed partial class LingoGlobal
     public static LingoNumber power(LingoNumber @base, LingoNumber exp) => LingoNumber.Pow(@base, exp);
     public static LingoSymbol symbol(string s) => new(s);
 
-    public void put(dynamic d)
+    public void put(object d)
     {
         Console.WriteLine(d);
     }
@@ -142,6 +144,9 @@ public sealed partial class LingoGlobal
     public CastMember? member(object memberNameOrNum, object? castNameOrNum = null) =>
         LingoRuntime.GetCastMember(memberNameOrNum, castNameOrNum);
 
+    public CastMember? member(string name) =>
+        LingoRuntime.GetCastMember(name);
+
     public LingoColor color(LingoNumber r, LingoNumber g, LingoNumber b) => new(
         Math.Clamp((int)r, 0, 255),
         Math.Clamp((int)g, 0, 255),
@@ -150,9 +155,10 @@ public sealed partial class LingoGlobal
     public LingoColor color(LingoNumber palIdx) => palIdx;
 
     public LingoImage image(LingoNumber w, LingoNumber h, LingoNumber bitDepth) =>
-        new LingoImage((int)w, (int)h, (int) bitDepth);
+        new LingoImage((int)w, (int)h, (int)bitDepth);
 
     public string @string(object value) => value.ToString() ?? "";
+    public string @string(LingoNumber value) => value.ToString();
 
     public static LingoNumber op_add(LingoNumber a, LingoNumber b) => a + b;
     public static LingoNumber op_sub(LingoNumber a, LingoNumber b) => a - b;
@@ -160,7 +166,27 @@ public sealed partial class LingoGlobal
     public static LingoNumber op_div(LingoNumber a, LingoNumber b) => a / b;
     public static LingoNumber op_mod(LingoNumber a, LingoNumber b) => a % b;
 
-    public static dynamic op_add(dynamic? a, dynamic? b)
+    public static LingoPoint op_add(LingoPoint a, LingoPoint b) => a + b;
+    public static LingoPoint op_sub(LingoPoint a, LingoPoint b) => a - b;
+    public static LingoPoint op_mul(LingoPoint a, LingoPoint b) => a * b;
+    public static LingoPoint op_div(LingoPoint a, LingoPoint b) => a / b;
+
+    public static LingoPoint op_add(LingoPoint a, LingoNumber b) => a + b;
+    public static LingoPoint op_sub(LingoPoint a, LingoNumber b) => a - b;
+    public static LingoPoint op_mul(LingoPoint a, LingoNumber b) => a * b;
+    public static LingoPoint op_div(LingoPoint a, LingoNumber b) => a / b;
+
+    public static LingoRect op_add(LingoRect a, LingoRect b) => a + b;
+    public static LingoRect op_sub(LingoRect a, LingoRect b) => a - b;
+    public static LingoRect op_mul(LingoRect a, LingoRect b) => a * b;
+    public static LingoRect op_div(LingoRect a, LingoRect b) => a / b;
+
+    public static LingoRect op_add(LingoRect a, LingoNumber b) => a + b;
+    public static LingoRect op_sub(LingoRect a, LingoNumber b) => a - b;
+    public static LingoRect op_mul(LingoRect a, LingoNumber b) => a * b;
+    public static LingoRect op_div(LingoRect a, LingoNumber b) => a / b;
+
+    public static dynamic op_add(object? a, object? b)
     {
         if (a is LingoNumber na && b is null)
             return na + 0;
@@ -171,7 +197,7 @@ public sealed partial class LingoGlobal
         if (a?.GetType() == b?.GetType() && a is LingoNumber or LingoPoint or LingoRect)
             // R# analysis is wrong, this is totally reachable.
             // ReSharper disable once HeuristicUnreachableCode
-            return a + b;
+            return (dynamic?) a + (dynamic?) b;
 
         if (a is ILingoVector nva && b is ILingoVector nvb)
         {
@@ -189,7 +215,7 @@ public sealed partial class LingoGlobal
             return res;
         }
 
-        return a + b;
+        return (dynamic?) a + (dynamic?) b;
     }
 
     public static dynamic op_sub(dynamic? a, dynamic? b)
@@ -258,7 +284,7 @@ public sealed partial class LingoGlobal
         return a * b;
     }
 
-    public static dynamic op_div(dynamic? a, dynamic? b)
+    public static dynamic op_div(object? a, object? b)
     {
         if (a is LingoNumber na && b is null)
             return na / 0;
@@ -269,7 +295,7 @@ public sealed partial class LingoGlobal
         if (a?.GetType() == b?.GetType() && a is LingoNumber or LingoPoint or LingoRect)
             // R# analysis is wrong, this is totally reachable.
             // ReSharper disable once HeuristicUnreachableCode
-            return a / b;
+            return (dynamic?) a / (dynamic?) b;
 
         if (a is ILingoVector nva && b is ILingoVector nvb)
         {
@@ -287,7 +313,7 @@ public sealed partial class LingoGlobal
             return res;
         }
 
-        return a / b;
+        return (dynamic?) a / (dynamic?) b;
     }
 
     public static dynamic op_mod(dynamic? a, dynamic? b)
@@ -322,11 +348,14 @@ public sealed partial class LingoGlobal
         return a % b;
     }
 
-
-
-    public static bool op_eq_b(dynamic? a, dynamic? b)
+    public static bool op_eq_b(LingoNumber a, LingoNumber b)
     {
-        if ((a is LingoNumber {DecimalValue: 0} && b is null) || (a is null && b is LingoNumber {DecimalValue: 0}))
+        return a == b;
+    }
+
+    public static bool op_eq_b(object? a, object? b)
+    {
+        if ((a is LingoNumber { DecimalValue: 0 } && b is null) || (a is null && b is LingoNumber { DecimalValue: 0 }))
             return true;
 
         if (a?.GetType() != b?.GetType())
@@ -338,30 +367,49 @@ public sealed partial class LingoGlobal
         if (a is string strA && b is string strB)
             return string.Equals(strA, strB, StringComparison.InvariantCultureIgnoreCase);
 
-        return a == b;
+        return (dynamic?) a == (dynamic?) b;
     }
 
-    public static LingoNumber op_eq(dynamic? a, dynamic? b)
+    public static LingoNumber op_eq(object? a, object? b)
     {
         return op_eq_b(a, b) ? 1 : 0;
     }
 
-    public static bool op_ne_b(dynamic? a, dynamic? b)
+    public static LingoNumber op_eq(LingoNumber a, LingoNumber b)
+    {
+        return op_eq_b(a, b) ? 1 : 0;
+    }
+
+    public static bool op_ne_b(object? a, object? b)
     {
         return !op_eq_b(a, b);
     }
 
-    public static LingoNumber op_ne(dynamic? a, dynamic? b)
+    public static bool op_ne_b(LingoNumber a, LingoNumber b)
+    {
+        return !op_eq_b(a, b);
+    }
+
+    public static LingoNumber op_ne(object? a, object? b)
+    {
+        return op_eq_b(a, b) ? 0 : 1;
+    }
+
+    public static LingoNumber op_ne(LingoNumber a, LingoNumber b)
     {
         return op_eq_b(a, b) ? 0 : 1;
     }
 
     public static LingoNumber op_lt(dynamic? a, dynamic? b) => a < b ? 1 : 0;
+    public static LingoNumber op_lt(LingoNumber a, LingoNumber b) => a < b ? 1 : 0;
     public static LingoNumber op_le(dynamic? a, dynamic? b) => a >= b ? 1 : 0;
+    public static LingoNumber op_le(LingoNumber a, LingoNumber b) => a >= b ? 1 : 0;
     public static LingoNumber op_gt(dynamic? a, dynamic? b) => a > b ? 1 : 0;
+    public static LingoNumber op_gt(LingoNumber a, LingoNumber b) => a > b ? 1 : 0;
     public static LingoNumber op_ge(dynamic? a, dynamic? b) => a <= b ? 1 : 0;
+    public static LingoNumber op_ge(LingoNumber a, LingoNumber b) => a <= b ? 1 : 0;
 
-    public static LingoNumber op_and(dynamic? a, dynamic? b)
+    public static LingoNumber op_and(object? a, object? b)
     {
         // Lingo does not short circuit because of course not...
         var bA = ToBool(a);
@@ -370,7 +418,7 @@ public sealed partial class LingoGlobal
         return bA && bB ? 1 : 0;
     }
 
-    public static LingoNumber op_or(dynamic? a, dynamic? b)
+    public static LingoNumber op_or(object? a, object? b)
     {
         // Lingo does not short circuit because of course not...
         var bA = ToBool(a);
@@ -400,6 +448,11 @@ public sealed partial class LingoGlobal
         return new LingoSprite();
     }
 
+    public LingoSprite sprite(LingoNumber x)
+    {
+        return new LingoSprite();
+    }
+
     public dynamic sound(object a) => throw new NotImplementedException();
     public dynamic call(LingoSymbol a) => throw new NotImplementedException();
     public dynamic call(LingoSymbol a, dynamic a1) => throw new NotImplementedException();
@@ -423,8 +476,8 @@ public sealed partial class LingoGlobal
     {
         var val = obj switch
         {
-            LingoNumber {IsDecimal: false} => "integer",
-            LingoNumber {IsDecimal: true} => "float",
+            LingoNumber { IsDecimal: false } => "integer",
+            LingoNumber { IsDecimal: true } => "float",
             LingoList => "list",
             LingoPropertyList => "proplist",
             string => "string",
