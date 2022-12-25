@@ -2,6 +2,7 @@
 using System.Reflection;
 using Drizzle.Lingo.Runtime;
 using NUnit.Framework;
+using SixLabors.ImageSharp;
 
 namespace Drizzle.Lingo.Tests;
 
@@ -10,6 +11,12 @@ namespace Drizzle.Lingo.Tests;
 [TestOf(typeof(LingoImage))]
 public sealed class ImageTest
 {
+    [OneTimeSetUp]
+    public void Setup()
+    {
+        Configuration.Default.PreferContiguousImageBuffers = true;
+    }
+
     [Test]
     public void TestCopyPixelsMove()
     {
