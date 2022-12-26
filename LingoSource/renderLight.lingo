@@ -30,8 +30,9 @@ on newFrame me
   
   inv = image(marginRect.right, marginRect.bottom, 1)
   svPos = pos
+  activeSilhouette: image = makeSilhoutteFromImg(member("activeLightImage").image, 1)
   repeat with q = 1 to gLightEProps.flatness then
-    inv.copypixels(makeSilhoutteFromImg(member("activeLightImage").image, 1), marginRect+rect(pos,pos), marginRect, {#ink:36, #color:color(255,0,0)})
+    inv.copypixels(activeSilhouette, marginRect+rect(pos,pos), marginRect, {#ink:36, #color:color(255,0,0)})
     
     pos = pos + degToVec(gLightEProps.lightAngle)
   end repeat
@@ -42,13 +43,15 @@ on newFrame me
   --member("layer"&c&"sh").image.copypixels(member("layer"&c).image, fullRect+rect(marginPixels,marginPixels,marginPixels,marginPixels), fullRect, {#ink:36, #color:color(0,255,0)})
   
   repeat with dir in [point(0,0),point(-1, 0), point(0,-1), point(1,0), point(0,1)]then
-    member("layer"&c&"sh").image.copypixels(inv, marginRect+rect(dir,dir), marginRect, {#ink:36, #color:color(255,0,0)})
+    member("layer"&c&"sh").image.copypixels(inv, marginRect+rect(dir,dir), marginRect, {#ink:36})
   end repeat
   
   member("layer"&c&"sh").image.copypixels(makeSilhoutteFromImg( member("layer"&c).image, 1), fullRect+rect(marginPixels,marginPixels,marginPixels,marginPixels), fullRect, {#ink:36, #color:color(255,255,255)})
   
+  layerSilhouette: image = makeSilhoutteFromImg( member("layer"&c).image, 0)
+
   repeat with q = 1 to gLightEProps.flatness then
-    member("activeLightImage").image.copypixels(makeSilhoutteFromImg( member("layer"&c).image, 0), fullRect-rect(svPos,svPos)+rect(marginPixels,marginPixels,marginPixels,marginPixels), fullRect, {#ink:36, #color:color(255,255,255)})
+    member("activeLightImage").image.copypixels(layerSilhouette, fullRect-rect(svPos,svPos)+rect(marginPixels,marginPixels,marginPixels,marginPixels), fullRect, {#ink:36, #color:color(255,255,255)})
     svPos = svPos + degToVec(gLightEProps.lightAngle)
   end repeat
   

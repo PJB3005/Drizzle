@@ -43,7 +43,7 @@ on exitFrame me
   
   repeat with l = 0 to 29 then
     me.quadifyMember("layer"&string(l), (l-5)*1.5)
-    member("layer"&l&"sh").image = image((cols*20) + marginPixels*2, (rows*20) + marginPixels*2, 8)
+    member("layer"&l&"sh").image = image((cols*20) + marginPixels*2, (rows*20) + marginPixels*2, 1)
     
     me.quadifyMember("gradientA"&string(l), (l-5)*1.5)
     me.quadifyMember("gradientB"&string(l), (l-5)*1.5)
@@ -106,7 +106,7 @@ end
 
 
 
-on quadifyMember me, mem, fac
+on quadifyMember me, mem: string, fac: number
   --  seed =  the randomSeed
   --  the randomSeed = gLOprops.tileSeed
   --  qDirs = []

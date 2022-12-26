@@ -212,7 +212,7 @@ public sealed class RenderViewModel : ViewModelBase, ILingoRuntimeManager
     {
         for (var i = layers.Length - 1; i >= 0; i--)
         {
-            CopyLayerToPreview(dst, layers[i], i);
+            CopyLayerToPreview(dst, layers[i], i, LingoColor.White);
         }
     }
 
