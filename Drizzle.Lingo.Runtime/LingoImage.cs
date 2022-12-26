@@ -9,6 +9,7 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace Drizzle.Lingo.Runtime;
 
+[DebuggerDisplay("Image {Width}x{Height} depth {Depth}")]
 public sealed partial class LingoImage
 {
     public static readonly LingoImage Pxl = MakePxl();

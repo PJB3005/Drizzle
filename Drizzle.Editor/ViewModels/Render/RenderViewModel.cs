@@ -22,12 +22,8 @@ namespace Drizzle.Editor.ViewModels.Render;
 
 public sealed class RenderViewModel : ViewModelBase, ILingoRuntimeManager
 {
-    private const int RenderLayerWidth = 2000;
-    private const int RenderLayerHeight = 1200;
     private const int PreviewWidth = 1440;
     private const int PreviewHeight = 860;
-    private const int PreviewX = (RenderLayerWidth - PreviewWidth) / 2;
-    private const int PreviewY = (RenderLayerHeight - PreviewHeight) / 2;
 
     private LevelRenderer? _renderer;
     private Thread? _renderThread;
@@ -222,10 +218,13 @@ public sealed class RenderViewModel : ViewModelBase, ILingoRuntimeManager
 
     private static void CopyLayerToPreview(LingoImage dst, LingoImage src, int offset = 0, LingoColor color = default)
     {
+        var srcX = (src.Width - dst.Width) / 2;
+        var srcY = (src.Height - dst.Height) / 2;
+
         dst.copypixels(
             src,
             new LingoRect(0 - offset, 0 - offset, PreviewWidth - offset, PreviewHeight - offset),
-            new LingoRect(PreviewX, PreviewY, PreviewX + PreviewWidth, PreviewY + PreviewHeight),
+            new LingoRect(srcX, srcY, srcX + PreviewWidth, srcY + PreviewHeight),
             new LingoPropertyList
             {
                 [new LingoSymbol("ink")] = (LingoNumber)36, // bg transparent
