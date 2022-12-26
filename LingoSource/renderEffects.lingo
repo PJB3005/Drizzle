@@ -158,6 +158,7 @@ end
 on initEffect me
   effectSeed = 0
   repeat with a = 1 to gEEprops.effects[r].Options.count then
+    type a: number
     if(gEEprops.effects[r].Options[a][1] = "Seed")then
       effectSeed = gEEprops.effects[r].Options[a][3]
       exit repeat
@@ -166,6 +167,7 @@ on initEffect me
   
   effectIn3D = false
   repeat with op in gEEprops.effects[r].options then
+    type op: list
     case op[1] of 
       "Color":
         colr = [color(255, 0, 255), color(0, 255, 255), color(0, 255, 0)][ ["Color1", "Color2", "Dead"].getPos(op[3])]
@@ -181,52 +183,65 @@ on initEffect me
     "blackGoo":
       cols = 100
       rows = 60
+      type cols: number
+      type rows: number
+
+      blackOut1 = member("blackOutImg1")
+      blackOut2 = member("blackOutImg2")
+      type blackOut1: member
+      type blackOut2: member
       
-      member("blackOutImg1").image = image(cols*20, rows*20, 32)
-      member("blackOutImg1").image.copyPixels(member("pxl").image, rect(0,0,cols*20, rows*20), rect(0,0,1,1), {#color:255})
-      member("blackOutImg2").image = image(cols*20, rows*20, 32)
-      member("blackOutImg2").image.copyPixels(member("pxl").image, rect(0,0,cols*20, rows*20), rect(0,0,1,1), {#color:255})
+      blackOut1.image = image(cols*20, rows*20, 32)
+      blackOut1.image.copyPixels(member("pxl").image, rect(0,0,cols*20, rows*20), rect(0,0,1,1), {#color:255})
+      blackOut2.image = image(cols*20, rows*20, 32)
+      blackOut2.image.copyPixels(member("pxl").image, rect(0,0,cols*20, rows*20), rect(0,0,1,1), {#color:255})
       sprite(57).visibility = 1
       sprite(58).visibility = 1
       
       global gRenderCameraTilePos, gRenderCameraPixelPos
       
       repeat with q = 1 to 100 then
+        type q: number
         repeat with c = 1 to 60 then
-          q2 = q + gRenderCameraTilePos.locH
-          c2 = c + gRenderCameraTilePos.locV
+          type c: number
+          q2: number = q + gRenderCameraTilePos.locH
+          c2: number = c + gRenderCameraTilePos.locV
           if(q2 < 1)or(q2 > gLOprops.size.locH)or(c2 < 1)or(c2 > gLOprops.size.locV)then
-            member("blackOutImg1").image.copyPixels(member("pxl").image, rect((q-1)*20, (c-1)*20, q*20, c*20), rect(0,0,1,1), {#color:color(255, 255, 255)})
-            member("blackOutImg2").image.copyPixels(member("pxl").image, rect((q-1)*20, (c-1)*20, q*20, c*20), rect(0,0,1,1), {#color:color(255, 255, 255)})
+            blackOut1.image.copyPixels(member("pxl").image, rect((q-1)*20, (c-1)*20, q*20, c*20), rect(0,0,1,1), {#color:color(255, 255, 255)})
+            blackOut2.image.copyPixels(member("pxl").image, rect((q-1)*20, (c-1)*20, q*20, c*20), rect(0,0,1,1), {#color:color(255, 255, 255)})
           end if
         end repeat
       end repeat
       
-      
-      rct = member("blob").image.rect
+      blob = member("blob")
+      type blob: member
+      rct = blob.image.rect
+      type rct: rect
       repeat with q2 = 1 to cols then
         repeat with c2 = 1 to rows then
           if(q2+gRenderCameraTilePos.locH > 0)and(q2+gRenderCameraTilePos.locH <= gLOprops.size.locH)and(c2+gRenderCameraTilePos.locV > 0)and(c2+gRenderCameraTilePos.locV <= gLOprops.size.locV)then
-            tile = point(q2,c2)+gRenderCameraTilePos
+            tile: point = point(q2,c2)+gRenderCameraTilePos
             
             if (gEEprops.effects[r].mtrx[tile.locH][tile.locV] = 0) then
-              sPnt = giveMiddleOfTile(point(q2,c2))+point(-10,-10)--+gRenderCameraPixelPos--gRenderCameraTilePos-gRenderCameraPixelPos
+              sPnt: point = giveMiddleOfTile(point(q2,c2))+point(-10,-10)--+gRenderCameraPixelPos--gRenderCameraTilePos-gRenderCameraPixelPos
               
               repeat with d = 1 to 10 then
+                type d: number
                 repeat with e = 1 to 10 then
-                  ps = point(sPnt.locH + d*2, sPnt.locV + e*2)
+                  type e: number
+                  ps: point = point(sPnt.locH + d*2, sPnt.locV + e*2)
                   -- if member("layer0").image.getPixel(ps) = color(255, 255, 255) then
-                  member("blackOutImg1").image.copyPixels(member("blob").image, rect(ps.locH-6-random(random(11)),ps.locV-6-random(random(11)),ps.locH+6+random(random(11)),ps.locV+6+random(random(11))), rct, {#color:0, #ink:36})
-                  member("blackOutImg2").image.copyPixels(member("blob").image, rect(ps.locH-7-random(random(14)),ps.locV-7-random(random(14)),ps.locH+7+random(random(14)),ps.locV+7+random(random(14))), rct, {#color:0, #ink:36})
+                  blackOut1.image.copyPixels(blob.image, rect(ps.locH-6-random(random(11)),ps.locV-6-random(random(11)),ps.locH+6+random(random(11)),ps.locV+6+random(random(11))), rct, {#color:0, #ink:36})
+                  blackOut2.image.copyPixels(blob.image, rect(ps.locH-7-random(random(14)),ps.locV-7-random(random(14)),ps.locH+7+random(random(14)),ps.locV+7+random(random(14))), rct, {#color:0, #ink:36})
                   -- end if 
                 end repeat
               end repeat
             else if ((gLEProps.matrix[tile.locH][tile.locV][1][2].getPos(5) > 0)or(gLEProps.matrix[tile.locH][tile.locV][1][2].getPos(4) > 0))and(gLEProps.matrix[tile.locH][tile.locV][2][1]=1) then
               ps = giveMiddleOfTile(point(q2,c2))--+gRenderCameraPixelPos--gRenderCameraTilePos-gRenderCameraPixelPos
-              member("blackOutImg1").image.copyPixels(member("blob").image, rect(ps.locH-4-random(random(9)),ps.locV-4-random(random(9)),ps.locH+4+random(random(9)),ps.locV+4+random(random(9))), rct, {#color:0, #ink:36})
-              member("blackOutImg2").image.copyPixels(member("blob").image, rect(ps.locH-7-random(random(9)),ps.locV-7-random(random(9)),ps.locH+7+random(random(9)),ps.locV+7+random(random(9))), rct, {#color:0, #ink:36})
-              member("blackOutImg1").image.copyPixels(member("blob").image, rect(ps.locH-4-random(random(9)),ps.locV-4-random(random(9)),ps.locH+4+random(random(9)),ps.locV+4+random(random(9))), rct, {#color:0, #ink:36})
-              member("blackOutImg2").image.copyPixels(member("blob").image, rect(ps.locH-7-random(random(9)),ps.locV-7-random(random(9)),ps.locH+7+random(random(9)),ps.locV+7+random(random(9))), rct, {#color:0, #ink:36})
+              blackOut1.image.copyPixels(blob.image, rect(ps.locH-4-random(random(9)),ps.locV-4-random(random(9)),ps.locH+4+random(random(9)),ps.locV+4+random(random(9))), rct, {#color:0, #ink:36})
+              blackOut2.image.copyPixels(blob.image, rect(ps.locH-7-random(random(9)),ps.locV-7-random(random(9)),ps.locH+7+random(random(9)),ps.locV+7+random(random(9))), rct, {#color:0, #ink:36})
+              blackOut1.image.copyPixels(blob.image, rect(ps.locH-4-random(random(9)),ps.locV-4-random(random(9)),ps.locH+4+random(random(9)),ps.locV+4+random(random(9))), rct, {#color:0, #ink:36})
+              blackOut2.image.copyPixels(blob.image, rect(ps.locH-7-random(random(9)),ps.locV-7-random(random(9)),ps.locH+7+random(random(9)),ps.locV+7+random(random(9))), rct, {#color:0, #ink:36})
             end if
           end if
         end repeat
