@@ -15,7 +15,7 @@ public sealed class ImgXtra : BaseXtra
         var img = (LingoImage)props["image"]!;
         var fileName = (string)props["filename"]!;
 
-        using var file = File.OpenWrite(fileName);
+        using var file = File.Create(fileName);
         img.SaveAsPng(file);
 
         return 1;

@@ -14,7 +14,7 @@ public static class ImageSharpExt
     {
         var tmp = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.png");
         {
-            using var file = File.OpenWrite(tmp);
+            using var file = File.Create(tmp);
             img.SaveAsPng(file);
         }
 
