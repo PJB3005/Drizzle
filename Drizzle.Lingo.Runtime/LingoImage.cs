@@ -339,7 +339,7 @@ public sealed partial class LingoImage
     private static LingoImage MakePxl()
     {
         var img = new LingoImage(1, 1, 32) { IsPxl = true };
-        img.setpixel(0, 0, LingoColor.White);
+        img.setpixel(0, 0, LingoColor.Black);
         return img;
     }
 }
