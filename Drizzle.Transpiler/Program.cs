@@ -106,9 +106,11 @@ internal static class Program
         CultureFix.FixCulture();
 
         var drizzleRoot = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        if (drizzleRoot == null) {
+        if (drizzleRoot == null)
+        {
             throw new Exception("Build environment is not sane. What did you do???");
         }
+
         drizzleRoot = Path.Combine(drizzleRoot, "..", "..", "..", "..");
         var sourcesRoot = Path.Combine(drizzleRoot, "LingoSource");
         var sourcesDest = Path.Combine(drizzleRoot, "Drizzle.Ported", "Translated");
@@ -585,6 +587,7 @@ internal static class Program
                 // I'm gonna assume Joar never felt like using int.MaxValue anywhere.
                 ctx.Writer.Write("?? int.MaxValue");
             }
+
             ctx.Writer.WriteLine(") {");
 
             foreach (var (exprs, block) in node.Cases)
@@ -684,7 +687,17 @@ internal static class Program
     {
         return node switch
         {
-            AstNode.MemberProp { Property: "image", Expression: AstNode.GlobalCall { Name: "member", Arguments: [ AstNode.String { Value: "pxl" } ] } } => "LingoImage.Pxl",
+            // Turn pxl member access into a static lookup.
+            AstNode.MemberProp
+            {
+                Property: "image",
+                Expression: AstNode.GlobalCall { Name: "member", Arguments: [AstNode.String { Value: "pxl" }] }
+            } => "LingoImage.Pxl",
+            // Special case concat binary operators for chaining.
+            AstNode.BinaryOperator
+            {
+                Type: AstNode.BinaryOperatorType.Concat or AstNode.BinaryOperatorType.ConcatSpace
+            } concatOperator => WriteConcatOperator(concatOperator, ctx),
             AstNode.BinaryOperator binaryOperator => WriteBinaryOperator(binaryOperator, ctx, param),
             AstNode.Constant constant => WriteConstant(constant, ctx),
             AstNode.Number number => WriteNumber(number, ctx),
@@ -707,6 +720,31 @@ internal static class Program
             AstNode.VariableName variableName => WriteVariableName(variableName, ctx),
             _ => throw new NotSupportedException($"{node.GetType()} is not a supported expression type")
         };
+    }
+
+    private static string WriteConcatOperator(AstNode.BinaryOperator node, HandlerContext ctx)
+    {
+        // Flatten recursive chain of concat operators to a straight list.
+        var expressions = new List<AstNode.Base> { node.Right };
+        var lhs = node.Left;
+        while (lhs is AstNode.BinaryOperator binOp && binOp.Type == node.Type)
+        {
+            expressions.Add(binOp.Right);
+            lhs = binOp.Left;
+        }
+
+        expressions.Add(lhs);
+
+        expressions.Reverse();
+
+        var func = node.Type switch
+        {
+            AstNode.BinaryOperatorType.ConcatSpace => "concat_space",
+            AstNode.BinaryOperatorType.Concat => "concat",
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        return WriteGlobalCall(func, ctx, expressions.ToArray());
     }
 
     private static string WriteThingOf(AstNode.ThingOf thingOf, HandlerContext ctx)
@@ -955,8 +993,6 @@ internal static class Program
         {
             AstNode.BinaryOperatorType.Contains => "contains",
             AstNode.BinaryOperatorType.Starts => "starts",
-            AstNode.BinaryOperatorType.Concat => "concat",
-            AstNode.BinaryOperatorType.ConcatSpace => "concat_space",
             AstNode.BinaryOperatorType.LessThan => "op_lt",
             AstNode.BinaryOperatorType.LessThanOrEqual => "op_le",
             AstNode.BinaryOperatorType.NotEqual => "op_ne",
@@ -972,32 +1008,10 @@ internal static class Program
             AstNode.BinaryOperatorType.Multiply => "op_mul",
             AstNode.BinaryOperatorType.Divide => "op_div",
             AstNode.BinaryOperatorType.Mod => "op_mod",
-            _ => null
-        };
-
-        if (helperOps != null)
-            return WriteGlobalCall(helperOps, ctx, node.Left, node.Right);
-
-        throw new ArgumentOutOfRangeException();
-        /*var sb = new StringBuilder();
-
-        var op = node.Type switch
-        {
-            AstNode.BinaryOperatorType.Add => "+",
-            AstNode.BinaryOperatorType.Subtract => "-",
-            AstNode.BinaryOperatorType.Multiply => "*",
-            AstNode.BinaryOperatorType.Divide => "/",
-            AstNode.BinaryOperatorType.Mod => "%",
             _ => throw new ArgumentOutOfRangeException()
         };
 
-        sb.Append('(');
-        sb.Append(WriteExpression(node.Left, ctx));
-        sb.Append(op);
-        sb.Append(WriteExpression(node.Right, ctx));
-        sb.Append(')');
-
-        return sb.ToString();*/
+        return WriteGlobalCall(helperOps, ctx, node.Left, node.Right);
     }
 
     private static string WriteComparisonBoolOp(

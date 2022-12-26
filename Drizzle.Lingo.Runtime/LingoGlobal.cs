@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
+using System.Text;
 using Drizzle.Lingo.Runtime.Cast;
 using Drizzle.Lingo.Runtime.Xtra;
 
@@ -37,10 +39,35 @@ public sealed partial class LingoGlobal
     public static LingoNumber starts(string container, string value) =>
         container.StartsWith(value, StringComparison.InvariantCultureIgnoreCase) ? 1 : 0;
 
-    public static string concat(object left, object right) => $"{left}{right}";
-    public static string concat(string left, string right) => $"{left}{right}";
-    public static string concat_space(object left, object right) => $"{left} {right}";
-    public static string concat_space(string left, string right) => $"{left} {right}";
+    public static string concat(object a, object b) => $"{a}{b}";
+    public static string concat(string a, string b) => $"{a}{b}";
+    public static string concat(object a, object b, object c) => $"{a}{b}{c}";
+    public static string concat(string a, string b, string c) => $"{a}{b}{c}";
+    public static string concat(params object[] items) => string.Concat(items);
+    public static string concat(params string[] items) => string.Concat(items);
+    public static string concat_space(object a, object b) => $"{a} {b}";
+    public static string concat_space(string a, string b) => $"{a} {b}";
+    public static string concat_space(object a, object b, object c) => $"{a} {b} {c}";
+    public static string concat_space(string a, string b, string c) => $"{a} {b} {c}";
+
+    public static string concat_space(params object[] a)
+    {
+        var sb = new StringBuilder();
+
+        var first = true;
+        foreach (var item in a)
+        {
+            if (!first)
+            {
+                sb.Append(' ');
+            }
+
+            first = false;
+            sb.Append(item);
+        }
+
+        return sb.ToString();
+    }
 
     public dynamic slice_helper(dynamic obj, LingoNumber start, LingoNumber end)
     {
@@ -197,7 +224,7 @@ public sealed partial class LingoGlobal
         if (a?.GetType() == b?.GetType() && a is LingoNumber or LingoPoint or LingoRect)
             // R# analysis is wrong, this is totally reachable.
             // ReSharper disable once HeuristicUnreachableCode
-            return (dynamic?) a + (dynamic?) b;
+            return (dynamic?)a + (dynamic?)b;
 
         if (a is ILingoVector nva && b is ILingoVector nvb)
         {
@@ -215,7 +242,7 @@ public sealed partial class LingoGlobal
             return res;
         }
 
-        return (dynamic?) a + (dynamic?) b;
+        return (dynamic?)a + (dynamic?)b;
     }
 
     public static dynamic op_sub(dynamic? a, dynamic? b)
@@ -295,7 +322,7 @@ public sealed partial class LingoGlobal
         if (a?.GetType() == b?.GetType() && a is LingoNumber or LingoPoint or LingoRect)
             // R# analysis is wrong, this is totally reachable.
             // ReSharper disable once HeuristicUnreachableCode
-            return (dynamic?) a / (dynamic?) b;
+            return (dynamic?)a / (dynamic?)b;
 
         if (a is ILingoVector nva && b is ILingoVector nvb)
         {
@@ -313,7 +340,7 @@ public sealed partial class LingoGlobal
             return res;
         }
 
-        return (dynamic?) a / (dynamic?) b;
+        return (dynamic?)a / (dynamic?)b;
     }
 
     public static dynamic op_mod(dynamic? a, dynamic? b)
@@ -367,7 +394,7 @@ public sealed partial class LingoGlobal
         if (a is string strA && b is string strB)
             return string.Equals(strA, strB, StringComparison.InvariantCultureIgnoreCase);
 
-        return (dynamic?) a == (dynamic?) b;
+        return (dynamic?)a == (dynamic?)b;
     }
 
     public static LingoNumber op_eq(object? a, object? b)
