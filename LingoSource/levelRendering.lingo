@@ -407,7 +407,8 @@ on checkIfATileIsSolidAndSameMaterial(tl, lr, mat)
   return rtrn
 end
 
-on drawATileMaterial(q, c, l, mat, frntImg)
+on drawATileMaterial(q: number, c: number, l: number, mat: string, frntImg: image)
+  type dp: number
   if l = 1 then
     dp = 0
   else if l = 2 then
@@ -417,11 +418,16 @@ on drawATileMaterial(q, c, l, mat, frntImg)
   end if
   rct = rect((q-1)*20, (c-1)*20, q*20, c*20)
   
-  myTileSet = tileSetIndex.getPos(mat)
+  myTileSet: number = tileSetIndex.getPos(mat)
   
   case gLEProps.matrix[q][c][l][1] of
     1:
       repeat with f = 1 to 4 then
+        type f: number
+        type profL: list
+        type gtAtV: number
+        type gtAtH: number
+        type pstRect: rect
         case f of
           1:
             profL = [point(-1, 0), point(0, -1)]
@@ -440,8 +446,9 @@ on drawATileMaterial(q, c, l, mat, frntImg)
             gtAtV = 8
             pstRect = rct + rect(0,10,-10,0)
         end case
-        ID = ""
+        ID: string = ""
         repeat with dr in profL then
+          type dr: point
           ID = ID & string( isMyTileSetOpenToThisTile(mat, point(q,c)+dr, l))
         end repeat
         if ID = "11" then
@@ -465,7 +472,7 @@ on drawATileMaterial(q, c, l, mat, frntImg)
             gtAtV = gtAtV - 2
           end if
         end if
-        gtRect = rect((gtAtH-1)*10, (gtAtV-1)*10, gtAtH*10, gtAtV*10)+rect(-5,-5, 5, 5)
+        gtRect: rect = rect((gtAtH-1)*10, (gtAtV-1)*10, gtAtH*10, gtAtV*10)+rect(-5,-5, 5, 5)
         pstRect = pstRect - rect(gRenderCameraTilePos, gRenderCameraTilePos)*20
         
         --  member("layer"&string(dp)).image.copyPixels(member("tileSet"&string(myTileSet)).image, pstRect+rect(-5,-5, 5, 5), gtRect, {#ink:36})
@@ -474,17 +481,22 @@ on drawATileMaterial(q, c, l, mat, frntImg)
         
         
         repeat with d = dp+1 to dp+9 then
+          type d: number
           member("layer"&string(d)).image.copyPixels(member("tileSet"&string(myTileSet)).image, pstRect+rect(-5,-5, 5, 5), gtRect+rect(120, 0, 120, 0), {#ink:36})
         end repeat
       end repeat
       
     2,3,4,5:
-      slp = gLEProps.matrix[q][c][l][1]
-      askDirs = [0, [point(-1, 0), point(0, 1)], [point(1, 0), point(0, 1)], [point(-1, 0), point(0, -1)], [point(1, 0), point(0, -1)]]
+      slp       = gLEProps.matrix[q][c][l][1]
+      askDirs   = [0, [point(-1, 0), point(0, 1)], [point(1, 0), point(0, 1)], [point(-1, 0), point(0, -1)], [point(1, 0), point(0, -1)]]
       myAskDirs = askDirs[slp]
+      type slp:       number
+      type askDirs:   list
+      type myAskDirs: list
       pstRect = rect((q-1)*20, (c-1)*20, q*20, c*20) - rect(gRenderCameraTilePos, gRenderCameraTilePos)*20
       
       repeat with ad = 1 to myAskDirs.count then
+        type ad: number
         gtRect = rect(10, 90, 30, 110) + rect(60*(ad=2), 30*(slp-2), 60*(ad=2), 30*(slp-2))
         if isMyTileSetOpenToThisTile(mat, point(q,c)+myAskDirs[ad], l) then
           gtRect = gtRect + rect(30, 0, 30, 0)
@@ -515,8 +527,8 @@ on drawATileMaterial(q, c, l, mat, frntImg)
   end case
   
   if ["Concrete","RainStone", "Bricks", "Tiny Signs"].getPos(mat)>0 then
-    matInt = ["Concrete","RainStone", "Bricks", "Tiny Signs"].getPos(mat)
-    modder = [45, 6, 1, 10][matInt]
+    matInt: number = ["Concrete","RainStone", "Bricks", "Tiny Signs"].getPos(mat)
+    modder: number = [45, 6, 1, 10][matInt]
     
     gtRect = rect((q mod modder)*20, (c mod modder)*20, ((q mod modder)+1)*20, ((c mod modder)+1)*20)
     if mat = "Bricks" then
@@ -559,23 +571,24 @@ on drawATileMaterial(q, c, l, mat, frntImg)
 end
 
 
-on isMyTileSetOpenToThisTile(mat, tl, l)
+on isMyTileSetOpenToThisTile(mat: string, tl: point, l: number)
+  type return: number
   global gLOprops
-  rtrn = 0
   if tl.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1))then
     if [1,2,3,4,5].getPos(gLEProps.matrix[tl.locH][tl.locV][l][1]) > 0 then
       if (gTEprops.tlMatrix[tl.locH][tl.locV][l].tp = "material")and(gTEprops.tlMatrix[tl.locH][tl.locV][l].data = mat) then
-        rtrn = 1
+        return 1
       else if (gTEprops.tlMatrix[tl.locH][tl.locV][l].tp = "default")and(gTEprops.defaultMaterial=mat) then
-        rtrn = 1
+        return 1
       end if
     end if
   else
     if gTEprops.defaultMaterial=mat then
-      rtrn = 1
+      return 1
     end if
   end if
-  return rtrn
+
+  return 0
 end
 
 
