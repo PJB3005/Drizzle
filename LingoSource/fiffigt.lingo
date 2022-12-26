@@ -35,7 +35,8 @@ on vertFlipRect(rct)
 end
 
 --tar fram en förflyttning mellan två punkter, bergänsad till theMovement
-on moveToPoint(pointA, pointB, theMovement)
+on moveToPoint(pointA: point, pointB: point, theMovement: number)
+  type return: point
   --  --tar fram en riktning
   --      pLocH = pointA.locH
   --      pLocV = pointA.locV
@@ -188,21 +189,26 @@ end
 
 
 
-on lookAtPoint(pos, lookAtpoint)
+on lookAtPoint(pos: point, lookAtpoint: point)
+  type return: number
   --sätter rotation
   --  lookAtpoint = pPointsL.getAt(sprDataL[#lookPoint])[#pos]
   --  pos = pPointsL.getAt(sprDataL[#locPoint])[#pos]
   
   
-  y_diff = lookAtpoint.locV.float - pos.locV.float
-  x_diff = pos.locH.float - lookAtpoint.locH.float
+  y_diff: number = lookAtpoint.locV.float - pos.locV.float
+  x_diff: number = pos.locH.float - lookAtpoint.locH.float
   
+  type rotationAngleRad: number
+
   if x_diff <> 0 then
     rotationAngleRad = atan(y_diff / x_diff)
   else
     rotationAngleRad = 1.5 * PI
   end if
   
+  type fuckedupanglefix_parameter: number
+
   if lookAtpoint.locH > pos.locH then
     fuckedupanglefix_parameter = 0  -- 2 * PI
   else 
@@ -236,25 +242,28 @@ end
 
 
 
-on giveDirFor90degrToLine(pnt1, pnt2)
+on giveDirFor90degrToLine(pnt1: point, pnt2: point)
+  type return: point
+  
+  X1: number = pnt1.locH
+  Y1: number = pnt1.locV
+  
+  X2: number = pnt2.locH
+  Y2: number = pnt2.locV
   
   
-  X1 = pnt1.locH
-  Y1 = pnt1.locV
+  Ydiff: number = Y1-Y2
+  Xdiff: number = X1-X2
   
-  X2 = pnt2.locH
-  Y2 = pnt2.locV
-  
-  
-  Ydiff = Y1-Y2
-  Xdiff = X1-X2
-  
+  type dir: number
+
   if Xdiff<>0 then
     dir = Ydiff/Xdiff
   else
     dir = 1
   end if
   
+  type newDir: number
   
   if dir<>0 then
     newDir = -1.0/dir
@@ -262,10 +271,10 @@ on giveDirFor90degrToLine(pnt1, pnt2)
     newDir = 1
   end if
   
-  newPnt = point(1, newDir)
+  newPnt: point = point(1, newDir)
   
   
-  fac = 1
+  fac: number = 1
   
   if X2 < X1 then 
     if Y2 < Y1 then

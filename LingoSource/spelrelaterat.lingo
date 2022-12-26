@@ -32,7 +32,9 @@ on restrictWithFlip(val, low, high)
 end
 
 --/ Get the tile type of the tile on the specified position & layer.
-on afaMvLvlEdit(pos, layer)
+on afaMvLvlEdit(pos: point, layer: number)
+  type return: number
+
   global gLEProps, gLOprops
   if pos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) then
     --put gMatrix[pos.locH][pos.locV]
@@ -301,18 +303,20 @@ end
 
 
 
-on rotateToQuad(rct, deg)
-  dir = degToVec(deg.float)
+on rotateToQuad(rct: rect, deg: number)
+  type return: list
+
+  dir: point = degToVec(deg.float)
   
-  midPnt = point((rct.left+rct.right)*0.5, (rct.top+rct.bottom)*0.5)
-  topPnt = midPnt + (dir*rct.height*0.5)
-  bottomPnt = midPnt - (dir*rct.height*0.5)
+  midPnt   : point = point((rct.left+rct.right)*0.5, (rct.top+rct.bottom)*0.5)
+  topPnt   : point = midPnt + (dir*rct.height*0.5)
+  bottomPnt: point = midPnt - (dir*rct.height*0.5)
   
-  crossDir = giveDirFor90degrToLine(-dir, dir)
-  pnt1 = topPnt + (crossDir*rct.width*0.5)
-  pnt2 = topPnt - (crossDir*rct.width*0.5)
-  pnt3 = bottomPnt - (crossDir*rct.width*0.5)
-  pnt4 = bottomPnt + (crossDir*rct.width*0.5)
+  crossDir: point = giveDirFor90degrToLine(-dir, dir)
+  pnt1: point = topPnt + (crossDir*rct.width*0.5)
+  pnt2: point = topPnt - (crossDir*rct.width*0.5)
+  pnt3: point = bottomPnt - (crossDir*rct.width*0.5)
+  pnt4: point = bottomPnt + (crossDir*rct.width*0.5)
   
   return [pnt1, pnt2, pnt3, pnt4]
 end

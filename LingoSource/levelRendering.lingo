@@ -579,10 +579,10 @@ on isMyTileSetOpenToThisTile(mat, tl, l)
 end
 
 
-on drawATileTile(q, c, l, tl, frntImg, dt)
+on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
   
   
-  sav2 = member("previewImprt")
+  sav2: member = member("previewImprt")
   if gLastImported <> tl.nm then
     member("previewImprt").importFileInto("Graphics" & the dirSeparator &tl.nm&".png")
     --"
@@ -599,18 +599,30 @@ on drawATileTile(q, c, l, tl, frntImg, dt)
   
   
   
-  mdPnt = point(((tl.sz.locH*0.5)+0.4999).integer,((tl.sz.locV*0.5)+0.4999).integer)
-  strt = point(q,c)-mdPnt+point(1,1)
+  mdPnt: point = point(((tl.sz.locH*0.5)+0.4999).integer,((tl.sz.locV*0.5)+0.4999).integer)
+  strt: point = point(q,c)-mdPnt+point(1,1)
   
+  type rct:     rect
+  type gtRect:  rect
+  type dp:      number
+  type getrect: rect
+  type getrct:  rect
+  type rnd:     number
+  type d:       number
+
+
   case tl.tp of
     "box":
       
       nmOfTiles = tl.sz.locH*tl.sz.locV
-      
+      type nmOfTiles: number
       
       n = 1
+      type n: number
       repeat with g = strt.locH to strt.locH + tl.sz.locH-1 then
+        type g: number
         repeat with h = strt.locV to strt.locV + tl.sz.locV-1 then
+          type h: number
           rct = rect((g-1)*20, (h-1)*20, (g*20), (h*20)) 
           getrct = rect(20, (n-1)*20, 40, n*20)
           member("vertImg").image.copyPixels(sav2.image, rct, getrct, {#ink:36})
@@ -643,6 +655,7 @@ on drawATileTile(q, c, l, tl, frntImg, dt)
         rnd = 1
         
         repeat with dir in [point(-1, 0), point(0, -1), point(1, 0), point(0, 1)] then
+          type dir: point
           if [0,6].getPos(afaMvLvlEdit(point(q,c)+dir+gRenderCameraTilePos, 1))<>0 then
             exit repeat
           else
@@ -666,7 +679,9 @@ on drawATileTile(q, c, l, tl, frntImg, dt)
       
       d = -1
       repeat with ps = 1 to tl.repeatL.count then
-        repeat with ps2 = 1 to tl.repeatL[ps] then
+        type ps: number
+        repeat with ps2n = 1 to tl.repeatL[ps] then
+          type ps2n: number
           d = d + 1  
           if d+dp > 29 then
             exit repeat
@@ -692,11 +707,17 @@ on drawATileTile(q, c, l, tl, frntImg, dt)
       -- rnd = 1
       
       seed = the randomSeed
+      type seed: number
       global gLOprops
       
+      type gtRect1: rect
+      type gtRect2: rect
+      type rct1: rect
+      type rct2: rect
+
       if tl.tp = "voxelStructRandomDisplaceVertical" then
         the randomSeed = gLOprops.tileSeed + q
-        dsplcPoint = random(gtRect.height)
+        dsplcPoint: number = random(gtRect.height)
         gtRect1 = rect(gtRect.left, gtRect.top, gtRect.right, gtRect.top+dsplcPoint)
         gtRect2 = rect(gtRect.left, gtRect.top+dsplcPoint, gtRect.right, gtRect.bottom)
         rct1 = rect(rct.left, rct.bottom-dsplcPoint, rct.right, rct.bottom)
@@ -717,7 +738,7 @@ on drawATileTile(q, c, l, tl, frntImg, dt)
       
       d = -1
       repeat with ps = 1 to tl.repeatL.count then
-        repeat with ps2 = 1 to tl.repeatL[ps] then
+        repeat with ps2n = 1 to tl.repeatL[ps] then
           d = d + 1  
           if d+dp > 29 then
             exit repeat
@@ -751,14 +772,18 @@ on drawATileTile(q, c, l, tl, frntImg, dt)
       end repeat
       
   end case
-  
+
   repeat with tag in tl.tags then
+    type tag: string
+
+    type img: image
+    type r:   list
     case tag of
       "Chain Holder":
         if (dt.count > 2)then
           if (dt[3] <> "NONE") then
-            ps1 = giveMiddleOfTile(point(q,c))+point(10.1,10.1)
-            ps2 = giveMiddleOfTile(dt[3]-gRenderCameraTilePos)+point(10.1,10.1)
+            ps1: point = giveMiddleOfTile(point(q,c))+point(10.1,10.1)
+            ps2: point = giveMiddleOfTile(dt[3]-gRenderCameraTilePos)+point(10.1,10.1)
             
             if l = 1 then
               dp = 2
@@ -770,13 +795,13 @@ on drawATileTile(q, c, l, tl, frntImg, dt)
             
             global gLOProps
             
-            steps = ((diag(ps1, ps2)/12.0)+0.4999).integer
-            dr = moveToPoint(ps1, ps2, 1.0)
-            ornt = random(2)-1
-            degDir = lookatpoint(ps1, ps2)
-            stp = random(100)*0.01
+            steps:  number = ((diag(ps1, ps2)/12.0)+0.4999).integer
+            dr:     point = moveToPoint(ps1, ps2, 1.0)
+            ornt:   number = random(2)-1
+            degDir: number = lookatpoint(ps1, ps2)
+            stp:    number = random(100)*0.01
             repeat with q = 1 to steps then
-              pos = ps1+(dr*12*(q-stp))
+              pos: point = ps1+(dr*12*(q-stp))
               if ornt then
                 --   pos = (pnt+lastPnt)*0.5
                 rct = rect(pos,pos)+rect(-6,-10,6,10)
@@ -811,6 +836,7 @@ on drawATileTile(q, c, l, tl, frntImg, dt)
         member("layer"&string(dp)).image.copyPixels(member("fanBlade").image, rotateToQuad(rct, random(360)), member("fanBlade").image.rect, {#ink:36, #color:color(0,255,0)})
         
       "Big Wheel":
+        type dpsl: list
         if l = 1 then
           dpsL = [0, 7]
         else if l = 2 then
@@ -821,6 +847,7 @@ on drawATileTile(q, c, l, tl, frntImg, dt)
         rct = rect(-90,-90,90,90)+rect(giveMiddleOfTile(point(q,c))+point(10,10), giveMiddleOfTile(point(q,c))+point(10,10))
         -- dp = 1
         repeat with dp1 in dpsL then
+          type dp1: number
           rnd = random(360)
           repeat with dp in [dp1, dp1+1, dp1+2] then
             member("layer"&string(dp)).image.copyPixels(member("Big Wheel Graf").image, rotateToQuad(rct, rnd+0.001), member("Big Wheel Graf").image.rect, {#ink:36, #color:color(0,255,0)})
@@ -838,6 +865,7 @@ on drawATileTile(q, c, l, tl, frntImg, dt)
         end if
         -- put tl
         pnt = giveMiddleOfTile(point(q,c+(tl.sz.locV/2)))-- + point(-0.5*tl.sz.locH+random(tl.sz.locH), 0)
+        type pnt: point
         rct = rect(-50,-50,50,50)+rect(pnt, pnt)
         -- dp = 1
         --  member("layer"&string(dp-2)).image.copyPixels(member("fanBlade").image, rotateToQuad(rct, random(360)), member("fanBlade").image.rect, {#ink:36, #color:color(0,255,0)})
@@ -891,9 +919,11 @@ on drawATileTile(q, c, l, tl, frntImg, dt)
         
         mdPoint = giveMiddleOfTile(point(q,c))+point(10,0)
         lst = [[point(-4,-4), color(0,0,255)],[point(-3,-3), color(0,0,255)],[point(3,3), color(255,0,0)],[point(4,4), color(255,0,0)],[point(-2,-2), color(0,255,0)], [point(-1,-1), color(0,255,0)], [point(0,0), color(0,255,0)], [point(1,1), color(0,255,0)], [point(2,2), color(0,255,0)], [point(0,0), color(255,0,255)]]
+        type mdPoint: point
+        type lst: list
         
         if tag = "Big Western Sign Tilted" then
-          tlt = -45.1+random(90)
+          tlt: number = -45.1+random(90)
           repeat with r in lst then
             frntImg.copyPixels(img, rotateToQuad(rect(mdPoint, mdPoint) + rect(-18,-24,18,24) +rect(r[1],r[1]), tlt), rect(0,0,36,48), {#ink:36, #color:r[2]})
           end repeat
@@ -974,7 +1004,9 @@ on drawATileTile(q, c, l, tl, frntImg, dt)
         
       "Temple Floor":
         tileCat = 0
+        type tileCat: number
         repeat with a = 1 to gTiles.count then
+          type a: number
           if(gTiles[a].nm = "Temple Stone")then
             tileCat = a
             exit repeat
@@ -982,10 +1014,11 @@ on drawATileTile(q, c, l, tl, frntImg, dt)
         end repeat
         
         actualTlPs = point(q,c) + gRenderCameraTilePos
-        
+        type actualtlps: point
         
         
         nextIsFloor = 0
+        type nextisfloor: number
         if(actualTlPs.locH+8 <= gTEProps.tlMatrix.count)then
           if(gTEProps.tlMatrix[actualTlPs.locH+8][actualTlPs.locV][l].tp = "tileHead")then
             if(gTEProps.tlMatrix[actualTlPs.locH+8][actualTlPs.locV][l].data[2] = "Temple Floor")then
@@ -993,7 +1026,9 @@ on drawATileTile(q, c, l, tl, frntImg, dt)
             end if
           end if
         end if
+        
         prevIsFloor = 0
+        type previsfloor: number
         if(actualTlPs.locH-8 > 0)then
           if(gTEProps.tlMatrix[actualTlPs.locH-8][actualTlPs.locV][l].tp = "tileHead")then
             if(gTEProps.tlMatrix[actualTlPs.locH-8][actualTlPs.locV][l].data[2] = "Temple Floor")then
@@ -1046,9 +1081,10 @@ on drawATileTile(q, c, l, tl, frntImg, dt)
         
         repeat with a = 0 to 6 then
           repeat with b = 0 to 13 then
+            type b: number
             rct = rect((a*16)-6, (b*8)-1, ((a+1)*16)-6, ((b+1)*8)-1) --+ rect(0,0,-1,-1)
             if(random(7)=1)then
-              blnd = random(random(100))
+              blnd: number = random(random(100))
               member("largeSignGrad2").image.copyPixels(member("pxl").image, rct+rect(0,0,1,1), rect(0,0,1,1), {#color:color(255, 255, 255), #blend:blnd/2})
               member("largeSignGrad2").image.copyPixels(member("pxl").image, rct+rect(1,1,0,0), rect(0,0,1,1), {#color:color(255, 255, 255), #blend:blnd/2})
             else if(random(7)=1)then
@@ -1301,6 +1337,8 @@ on drawLargeTrashTypeTile(mat, tl, layer, frntImg)
   
   --  pos = 
   
+  type pos: point
+
   if(distanceToAir < 3)then
     global gTrashPropOptions, gProps
     

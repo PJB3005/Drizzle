@@ -422,18 +422,19 @@ on applyStandardErosion me, q: number, c: number, eftc: number, tp: string
               else
                 nwLr = restrict(lr -1 + random(2), 0, 29)
               end if
-              member("layer"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst,0,1+ofst,lgt), member("pxl").image.rect, {#color:cl})
+              nwLrImg: member = member("layer"&string(nwLr))
+              nwLrImg.image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst,0,1+ofst,lgt), member("pxl").image.rect, {#color:cl})
               if(gAnyDecals)then
                 dcCol = member("layer"&string(nwLr)&"dc").image.getPixel(pnt)
                 member("layer"&string(nwLr)&"dc").image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst,0,1+ofst,lgt), member("pxl").image.rect, {#color:dcCol})
               end if
               if random(2)=1 then
-                member("layer"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst+1,1,1+ofst+1,lgt-1), member("pxl").image.rect, {#color:cl})
+                nwLrImg.image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst+1,1,1+ofst+1,lgt-1), member("pxl").image.rect, {#color:cl})
                 if(gAnyDecals)then
                   member("layer"&string(nwLr)&"dc").image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst+1,1,1+ofst+1,lgt-1), member("pxl").image.rect, {#color:dcCol})
                 end if
               else
-                member("layer"&string(nwLr)).image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst-1,1,1+ofst-1,lgt-1), member("pxl").image.rect, {#color:cl})
+                nwLrImg.image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst-1,1,1+ofst-1,lgt-1), member("pxl").image.rect, {#color:cl})
                 if(gAnyDecals)then
                   member("layer"&string(nwLr)&"dc").image.copyPixels(member("pxl").image, rect(pnt, pnt)+rect(0+ofst-1,1,1+ofst-1,lgt-1), member("pxl").image.rect, {#color:dcCol})
                 end if
@@ -462,7 +463,9 @@ on applyStandardErosion me, q: number, c: number, eftc: number, tp: string
             else
               nwLr = lr
             end if
-            member("layer"&string(nwLr)).image.copyPixels(member("rustDot").image, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), member("rustDot").image.rect, {#color:cl, #ink:36})
+            rustDot = member("rustDot")
+            type rustDot: member
+            member("layer"&string(nwLr)).image.copyPixels(rustDot.image, rect(pnt, pnt)+rect(-2+ofst,-2,2+ofst,2), rustDot.image.rect, {#color:cl, #ink:36})
             
           "barnacles":
             if  effectIn3D then
