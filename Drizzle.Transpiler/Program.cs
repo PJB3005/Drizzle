@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using Drizzle.Lingo.Runtime;
 using Drizzle.Lingo.Runtime.Parser;
@@ -96,7 +97,8 @@ internal static class Program
         { "proplist", "LingoPropertyList" },
         { "number", "LingoNumber" },
         { "color", "LingoColor" },
-        { "image", "LingoImage" }
+        { "image", "LingoImage" },
+        { "member", "CastMember" }
     };
 
     private const string OutputNamespace = "Drizzle.Ported";
@@ -256,6 +258,7 @@ internal static class Program
     {
         writer.WriteLine("using System;");
         writer.WriteLine("using Drizzle.Lingo.Runtime;");
+        writer.WriteLine("using Drizzle.Lingo.Runtime.Cast;");
         writer.WriteLine($"namespace {OutputNamespace};");
     }
 
@@ -440,7 +443,7 @@ internal static class Program
 
                 break;
             case AstNode.TypeSpec spec:
-                ctx.Types.Add(spec.Name, spec.Type);
+                MergeTypeSpec(ctx, spec.Name, spec.Type);
                 break;
 
             default:
@@ -456,6 +459,23 @@ internal static class Program
                 ctx.Writer.Write(exprValue);
                 ctx.Writer.WriteLine(';');
                 break;
+        }
+    }
+
+    private static void MergeTypeSpec(HandlerContext ctx, string name, string? type)
+    {
+        if (type == null)
+            return;
+
+        ref var curType = ref CollectionsMarshal.GetValueRefOrAddDefault(ctx.Types, name, out _);
+        if (curType == null)
+        {
+            curType = type;
+        }
+        else if (curType != type)
+        {
+            Console.WriteLine(
+                $"Warning: tried to set local variable '{name}' to conflicting types in handler {ctx.Name}");
         }
     }
 
@@ -662,10 +682,7 @@ internal static class Program
                 if (ctx.Locals.Add(name))
                     ctx.DeclaredLocals.Add(name);
 
-                if (node.Type is { } type)
-                {
-                    ctx.Types.Add(name, type);
-                }
+                MergeTypeSpec(ctx, name, node.Type);
             }
             else if (node.Type != null)
             {
