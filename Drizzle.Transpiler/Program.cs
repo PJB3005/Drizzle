@@ -41,50 +41,12 @@ internal static class Program
         {
             BlackListHandlers = { "giveHitSurf" }
         },
-        ["levelRendering"] = new ScriptQuirks
-        {
-            OverloadParamCounts =
-            {
-                ("drawATileTile", 4),
-                ("drawATileTile", 5),
-            }
-        },
-        ["spelrelaterat"] = new ScriptQuirks
-        {
-            OverloadParamCounts =
-            {
-                ("copyPixelsToEffectColor", 6),
-                ("seedForTile", 1),
-            }
-        },
-        ["lvl"] = new ScriptQuirks
-        {
-            OverloadParamCounts =
-            {
-                ("lvleditdraw", 2),
-                ("drawshortcutsimg", 2)
-            }
-        },
         ["PNG_encode"] = new ScriptQuirks
         {
             BlackListHandlers =
             {
                 "png_encode", "writeChunk", "writeBytes", "writeInt", "gzcompress", "writeCRC", "lingo_crc32",
                 "bitShift8", "xtraPresent"
-            }
-        },
-        ["TEdraw"] = new ScriptQuirks
-        {
-            OverloadParamCounts =
-            {
-                ("tedraw", 2)
-            }
-        },
-        ["loadLevel"] = new ScriptQuirks
-        {
-            OverloadParamCounts =
-            {
-                ("loadlevel", 1)
             }
         }
     };
@@ -341,7 +303,7 @@ internal static class Program
             if (paramsList.Count > 0 && paramsList[0].Name == "me")
                 paramsList.RemoveAt(0);
 
-            var paramsText = string.Join(',', paramsList.Select(p => $"{MapType(p.Name, types)} {p.Name.ToLower()}"));
+            var paramsText = string.Join(", ", paramsList.Select(p => $"{MapType(p.Name, types)} {p.Name.ToLower()} = default"));
             var handlerLower = handler.Name.ToLower();
             var returnType = MapType("return", types);
             writer.WriteLine($"public {returnType} {WriteSanitizeIdentifier(handlerLower)}({paramsText}) {{");
@@ -357,42 +319,6 @@ internal static class Program
                 writer.WriteLine("return default;");
 
             // Handler end.
-            writer.WriteLine("}");
-        }
-
-        GenerateParamCountOverloads(writer, quirks, script);
-    }
-
-    private static void GenerateParamCountOverloads(
-        TextWriter writer,
-        ScriptQuirks? quirks,
-        AstNode.Script script)
-    {
-        if (quirks == null)
-            return;
-
-        var handlers = script.Nodes.OfType<AstNode.Handler>()
-            .ToDictionary(
-                h => h.Name,
-                h => h.Parameters.Count(p => p.Name != "me"),
-                StringComparer.InvariantCultureIgnoreCase);
-
-        foreach (var (h, count) in quirks.OverloadParamCounts)
-        {
-            var toLower = h.ToLower();
-            var parameters = Enumerable.Range(1, count).Select(i => $"p{i}").ToArray();
-
-            var overloadParams = string.Join(", ",
-                parameters.Take(count).Select(p => $"dynamic {p}"));
-
-            writer.WriteLine($"public dynamic {toLower}({overloadParams}) {{");
-
-            var nulls = string.Join(", ", Enumerable.Repeat("(dynamic) null", handlers[toLower] - count));
-
-            overloadParams = string.Concat(parameters.Take(count).Select(p => $"{p}, "));
-
-            writer.WriteLine($"return {toLower}({overloadParams}{nulls});");
-
             writer.WriteLine("}");
         }
     }
@@ -1200,7 +1126,6 @@ internal static class Program
     private sealed class ScriptQuirks
     {
         public readonly HashSet<string> BlackListHandlers = new(StringComparer.InvariantCultureIgnoreCase);
-        public readonly List<(string, int count)> OverloadParamCounts = new();
     }
 
     private sealed class ExpressionParams
