@@ -102,9 +102,9 @@ on exitFrame me
   if _key.keyPressed("A") and _movie.window.sizeState <> #minimized then
     
     
-    repeat with q in projects then
-      if ( massRenderSelectL.getPos(pth &q) = 0)and(chars(q, 1, 1) <> "#")then
-        massRenderSelectL.add(pth & q)
+    repeat with project in projects then
+      if ( massRenderSelectL.getPos(pth &project) = 0)and(chars(project, 1, 1) <> "#")then
+        massRenderSelectL.add(pth & project)
       end if
     end repeat
   else if _key.keyPressed("C") and _movie.window.sizeState <> #minimized then

@@ -644,22 +644,22 @@ on renderRopeSegment(num, prop, data, dp, pos, dir, perp, lastPos, lastDir, last
         useLastPerp = giveDirFor90degrToLine(-useLastDir, useLastDir)
         
         repeat with i = 1 to 19 then
-          a = wireBunchSav[i+1]
+          aPoint = wireBunchSav[i+1]
           indx = random(possiblePositions.count)
-          b = possiblePositions[indx]
+          bPoint = possiblePositions[indx]
           possiblePositions.deleteAt(indx)
           
-          aPos = useLastPos + useLastPerp*a.locH*18
+          aPos = useLastPos + useLastPerp*aPoint.locH*18
           
-          aDp = (dp + 2.5 + a.locV*2.5).integer + 1
+          aDp = (dp + 2.5 + aPoint.locV*2.5).integer + 1
           
-          bPos = pos + perp*b.locH*18
-          bDp = (dp + 2.5 + b.locV*2.5).integer + 1
+          bPos = pos + perp*bPoint.locH*18
+          bDp = (dp + 2.5 + bPoint.locV*2.5).integer + 1
           
           aHandle = aPos + useLastDir * lerp(Diag(aPos, bPos)/2.0, (40+random(40)).float, 0.5)
           bHandle = bPos - dir * lerp(Diag(aPos, bPos)/2.0, (40+random(40)).float, 0.5)
           
-          c2 = LerpVector(a, b, 0.5)
+          c2 = LerpVector(aPoint, bPoint, 0.5)
           cPos = lastPos + lastPerp*c2.locH*18
           aHandle = lerpVector(aHandle, cPos, 0.5)
           bHandle = lerpVector(bHandle, cPos, 0.5)

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace Drizzle.Lingo.Runtime.Cast;
@@ -31,6 +32,16 @@ public sealed partial class CastMember
         Number = number;
         Cast = cast;
     }
+
+    public LingoSymbol type => Type switch
+    {
+        CastMemberType.Empty => default,
+        CastMemberType.Bitmap => new LingoSymbol("bitmap"),
+        CastMemberType.Script => new LingoSymbol("script"),
+        CastMemberType.Text => new LingoSymbol("text"),
+        CastMemberType.Shape => new LingoSymbol("shape"),
+        _ => throw new ArgumentOutOfRangeException()
+    };
 
     public void erase()
     {

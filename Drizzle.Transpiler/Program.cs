@@ -462,7 +462,7 @@ internal static class Program
         var loopTmp = $"tmp_{name}";
         ctx.Writer.WriteLine($"foreach (dynamic {loopTmp} in {expr}) {{");
 
-        MakeLoopTmp(ctx, name, loopTmp);
+        MakeLoopTmp(ctx, name, loopTmp, number: false);
         WriteStatementBlock(node.Block, ctx);
 
         ctx.Writer.WriteLine("}");
@@ -477,7 +477,7 @@ internal static class Program
 
         ctx.Writer.WriteLine($"for (int {loopTmp} = (int) ({start}); {loopTmp} <= {end}; {loopTmp}++) {{");
 
-        MakeLoopTmp(ctx, name, $"(LingoNumber){loopTmp}");
+        MakeLoopTmp(ctx, name, $"(LingoNumber){loopTmp}", number: true);
         WriteStatementBlock(node.Block, ctx);
 
         ctx.Writer.WriteLine($"{loopTmp} = (int){WriteVariableNameCore(name, ctx)};");
@@ -486,10 +486,14 @@ internal static class Program
         // ctx.LoopTempIdx--;
     }
 
-    private static void MakeLoopTmp(HandlerContext ctx, string name, string loopTmp)
+    private static void MakeLoopTmp(HandlerContext ctx, string name, string loopTmp, bool number)
     {
         if (!IsGlobal(name, ctx, out _) && ctx.Locals.Add(name))
+        {
             ctx.DeclaredLocals.Add(name);
+            if (number)
+                MergeTypeSpec(ctx, name, "number");
+        }
 
         ctx.Writer.WriteLine($"{WriteVariableNameCore(name, ctx)} = {loopTmp};");
     }
