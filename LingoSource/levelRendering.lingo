@@ -1831,19 +1831,19 @@ end
 
 
 
-on renderTileMaterial(layer, material, frntImg)
+on renderTileMaterial(layer: number, material: string, frntImg: image)
   --  if(tilesToRender.count = 0)then
   --    return frntImg
   --  end if
   
   
-  tlsOrdered = []
+  tlsOrdered: list = []
   
   
   repeat with q = 1 to gLOprops.size.loch then
     repeat with c = 1 to gLOprops.size.locv then
       if (gLEProps.matrix[q][c][layer][1] <> 0) then
-        addMe = 0
+        addMe: number = 0
         if(gTEprops.tlMatrix[q][c][layer].tp = "material")then
           if(gTEprops.tlMatrix[q][c][layer].data = material)then
             addMe = 1
@@ -1868,7 +1868,7 @@ on renderTileMaterial(layer, material, frntImg)
   end repeat
   
   tlsOrdered.sort()
-  tls = []
+  tls: list = []
   repeat with q = 1 to tlsOrdered.count then
     tls.add(tlsOrdered[q][2])
   end repeat
@@ -1890,9 +1890,11 @@ on renderTileMaterial(layer, material, frntImg)
       
       delL = []
       repeat with tl in tls then
+        type tl: point
         if delL.getPos(tl)=0 then
-          hts = 0
+          hts: number = 0
           repeat with dir in [point(1,0), point(0,1), point(1,1)] then
+            type dir: point
             hts = hts + (tls.getPos(tl+dir)>0)*(delL.getPos(tl+dir)=0)
           end repeat
           if hts = 3 then
@@ -1907,11 +1909,13 @@ on renderTileMaterial(layer, material, frntImg)
         end if
       end repeat
       
-      repeat with c in delL then
-        tls.deleteOne(c)
+      repeat with del in delL then
+        type del: point
+        tls.deleteOne(del)
       end repeat
       
-      savSeed = the randomSeed 
+      savSeed = the randomSeed
+      type savSeed: number
       repeat while tls.count > 0 then
         the randomSeed  = gLOprops.tileSeed + tls.count
         tl = tls[random(tls.count)]
@@ -1966,20 +1970,23 @@ on renderTileMaterial(layer, material, frntImg)
       the randomSeed = gLOprops.tileSeed + layer
       
       randomMachines = []
+      type randommachines: list
       repeat with w = 1 to 8 then
-        lst = []
-        repeat with h = 1 to 8 then
-          lst.add([])
-        end repeat
+        --/ 8 elements.
+        lst: list = [[],[],[],[],[],[],[],[]]
         randomMachines.add(lst)
       end repeat
       
       grabTiles = ["Machinery", "Machinery2", "Small machine"]
       forbidden = ["Feather Box - W", "Feather Box - E", "Piston Arm", "Vertical Conveyor Belt A"]
+      type grabTiles: list
+      type forbidden: list
       repeat with a = 1 to grabTiles.count then
+        type a: number
         repeat with q = 1 to gTiles.count then
           if(gTiles[q].nm = grabTiles[a])then
             repeat with t = 1 to gTiles[q].tls.count then
+              type t: number
               if(gTiles[q].tls[t].sz.locH <= 8)and(gTiles[q].tls[t].sz.locV <= 8)and(gTiles[q].tls[t].specs2 = 0)and(forbidden.getPos(gTiles[q].tls[t].nm) = 0)then
                 randomMachines[gTiles[q].tls[t].sz.locH][gTiles[q].tls[t].sz.locV].add(point(q,t))
               end if
@@ -1990,6 +1997,7 @@ on renderTileMaterial(layer, material, frntImg)
       
       delL = [:]
       tlsBlock = [:]
+      type tlsBlock: proplist
       repeat with tl in tls then
         tlsBlock[tl] = 1
       end repeat
@@ -1997,7 +2005,7 @@ on renderTileMaterial(layer, material, frntImg)
         the randomSeed = seedForTile(tl, gLOprops.tileSeed + layer)
         if delL.findPos(tl)=void then
           
-          randomOrderList = []
+          randomOrderList: list = []
           repeat with w = 1 to randomMachines.count then
             repeat with h = 1 to randomMachines[w].count then
               repeat with t = 1 to randomMachines[w][h].count then
@@ -2011,11 +2019,11 @@ on renderTileMaterial(layer, material, frntImg)
           repeat with q = 1 to randomOrderList.count then 
             testTile = gTiles[randomOrderList[q][2].locH].tls[randomOrderList[q][2].locV]
             
-            legalToPlace = true
+            legalToPlace: number = true
             repeat with a = 0 to testTile.sz.locH-1 then
               repeat with b = 0 to testTile.sz.locV-1 then
-                testPoint = tl + point(a,b)
-                spec = testTile.specs[(b+1) + (a*testTile.sz.locV)]
+                testPoint: point = tl + point(a,b)
+                spec: number = testTile.specs[(b+1) + (a*testTile.sz.locV)]
                 
                 if(tlsBlock.findPos(testPoint)=void)then
                   legalToPlace = false
@@ -2039,7 +2047,7 @@ on renderTileMaterial(layer, material, frntImg)
             end repeat
             
             if(legalToPlace)then
-              rootPos = tl + point(((testTile.sz.locH.float/2.0) + 0.4999).integer-1, ((testTile.sz.locV.float/2.0) + 0.4999).integer-1)
+              rootPos: point = tl + point(((testTile.sz.locH.float/2.0) + 0.4999).integer-1, ((testTile.sz.locV.float/2.0) + 0.4999).integer-1)
               if(rootPos.inside(rect(gRenderCameraTilePos, gRenderCameraTilePos+point(100, 60))))then
                 frntImg = drawATileTile(rootPos.loch,rootPos.locV,layer,testTile, frntImg)
               end if
