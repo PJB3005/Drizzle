@@ -1947,8 +1947,8 @@ on renderTileMaterial(layer: number, material: string, frntImg: image)
         end if
       end repeat
       
-      repeat with c in delL then
-        tls.deleteOne(c)
+      repeat with toDel in delL then
+        tls.deleteOne(toDel)
       end repeat
       
       repeat while tls.count > 0 then
