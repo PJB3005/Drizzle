@@ -825,7 +825,6 @@ on initRenderSoftProp(prop, qd: list, propData, dp)
   type pasterect: rect
   type offsetPnt: point
   type getrect: rect
-  type clr: number
   lft = qd[1].locH
   tp = qd[1].locV
   rght = qd[1].locH

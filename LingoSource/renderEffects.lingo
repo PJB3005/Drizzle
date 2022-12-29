@@ -1218,7 +1218,7 @@ on ApplyThornGrower me, q: number, c: number, eftc
   type dir: number
   type lastpnt: point
   type movedir: point
-  type tst: number
+  type tst: point
   type tstpnt: point
   type rct: rect
   type qd: list
@@ -1342,10 +1342,9 @@ on ApplyGarbageSpiral me, q: number, c: number, eftc
   type dir: point
   type lastpnt: point
   type movedir: point
-  type tst: number
+  type tst: point
   type tstpnt: point
   type rct: rect
-  type qd: list
   type var: number
   type tlpos: point
   type rctpoint: point   
@@ -2625,7 +2624,6 @@ on applyFungiFlower me, q: number, c: number
   type flp: number
   type closestedge: number
   type pnt: point
-  type rct: rect
   type gtrect: rect
   type l: list
   type l2: list
@@ -2710,7 +2708,6 @@ on applyLHFlower me, q: number, c: number
   type rnd: number
   type flp: number
   type pnt: point
-  type rct: rect
   type gtrect: rect
   type l: list
   type l2: list
@@ -2765,7 +2762,6 @@ on applyBigPlant me, q: number, c: number
   type rnd: number
   type flp: number
   type pnt: point
-  type rct: rect
   type gtrect: rect
   type l: list
   type l2: list

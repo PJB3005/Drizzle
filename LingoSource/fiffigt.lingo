@@ -30,7 +30,9 @@ on diagNoSqrt(point1: point, point2: point)
   return diagonal
 end
 
-on vertFlipRect(rct)
+on vertFlipRect(rct: rect)
+  type return: list
+
   return [point(rct.right, rct.top),point(rct.left, rct.top),point(rct.left, rct.bottom),point(rct.right, rct.bottom)]
 end
 
