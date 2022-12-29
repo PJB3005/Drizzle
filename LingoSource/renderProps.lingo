@@ -676,7 +676,7 @@ on renderRopeSegment(num, prop, data, dp, pos, dir, perp, lastPos, lastDir, last
           
           
           
-          wireBunchSav[i+1] = b
+          wireBunchSav[i+1] = bPos
         end repeat
         wireBunchSav[1][1] = pos
         wireBunchSav[1][2] = dir
