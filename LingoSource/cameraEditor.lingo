@@ -11,7 +11,7 @@ on exitFrame me
   end if
   if(fac > 16) then fac = 16
   
-  rct = rect(1024/2, 768/2, 1024/2, 768/2) + rect(-gLOprops.size.locH*0.5*fac, -gLOprops.size.locV*0.5*fac, gLOprops.size.locH*0.5*fac, gLOprops.size.locV*0.5*fac)
+  rct: rect = rect(1024/2, 768/2, 1024/2, 768/2) + rect(-gLOprops.size.locH*0.5*fac, -gLOprops.size.locV*0.5*fac, gLOprops.size.locH*0.5*fac, gLOprops.size.locV*0.5*fac)
   
   sprite(90).rect = rct + rect(gLOprops.extraTiles[1]*fac, gLOprops.extraTiles[2]*fac, -gLOprops.extraTiles[3]*fac, -gLOprops.extraTiles[4]*fac)
   
@@ -28,12 +28,12 @@ on exitFrame me
   end if
   
   if(gCameraProps.selectedCamera > 0) then
-    mouseOverCamera = gCameraProps.selectedCamera
+    mouseOverCamera: number = gCameraProps.selectedCamera
   else
     mouseOverCamera = 0
-    smallstDist = 10000
+    smallstDist: number = 10000
     repeat with q = 1 to gCameraProps.cameras.count then
-      pos = point(1024/2, 768/2) + point(-gLOprops.size.locH*0.5*fac, -gLOprops.size.locV*0.5*fac) + ((gCameraProps.cameras[q]/20)*fac) + point(35, 20)*fac
+      pos: point = point(1024/2, 768/2) + point(-gLOprops.size.locH*0.5*fac, -gLOprops.size.locV*0.5*fac) + ((gCameraProps.cameras[q]/20)*fac) + point(35, 20)*fac
       if (diag(pos,_mouse.mouseLoc) < smallstDist) then
         mouseOverCamera = q
         smallstDist = diag(pos,_mouse.mouseLoc)
@@ -44,7 +44,7 @@ on exitFrame me
   if(mouseOverCamera > 0)then
     pos = point(1024/2, 768/2) + point(-gLOprops.size.locH*0.5*fac, -gLOprops.size.locV*0.5*fac) + (gCameraProps.cameras[mouseOverCamera]/20)*fac
     smallstDist = 10000
-    closestCorner = 0
+    closestCorner: number = 0
     repeat with q = 1 to 4 then
       if(diag(_mouse.mouseLoc, pos + [point(0,0), point(70,0)*fac, point(70, 40)*fac, point(0, 40)*fac][q]) < smallstDist) then
         smallstDist = diag(_mouse.mouseLoc, pos + [point(0,0), point(70,0)*fac, point(70, 40)*fac, point(0, 40)*fac][q])
@@ -53,9 +53,9 @@ on exitFrame me
     end repeat
     
     if(closestCorner > 0) then
-      cornerPos = pos + [point(0,0), point(70,0)*fac, point(70, 40)*fac, point(0, 40)*fac][closestCorner]
+      cornerPos: point = pos + [point(0,0), point(70,0)*fac, point(70, 40)*fac, point(0, 40)*fac][closestCorner]
       
-      linePos = pos+point(35, 20)*fac
+      linePos: point = pos+point(35, 20)*fac
       
       if(SHOWQUADS > 0) then SHOWQUADS = SHOWQUADS - 1
       
@@ -123,11 +123,11 @@ end
 
 on drawAll me
   repeat with q = 1 to gCameraProps.cameras.count then
-    pos = point(1024/2, 768/2) + point(-gLOprops.size.locH*0.5*fac, -gLOprops.size.locV*0.5*fac) + (gCameraProps.cameras[q]/20)*fac
+    pos: point = point(1024/2, 768/2) + point(-gLOprops.size.locH*0.5*fac, -gLOprops.size.locV*0.5*fac) + (gCameraProps.cameras[q]/20)*fac
     sprite(23+q).rect =  rect(pos, pos)+rect(0, 0, 70, 40)*fac
     sprite(44+q).rect =  rect(pos, pos)+(rect(0, 0, 70, 40)+rect(9.3, 0.8, -9.3, -0.8))*fac
     
-    QD = [pos, pos+point(70,0)*fac, pos+point(70, 40)*fac, pos+point(0, 40)*fac]
+    QD: list = [pos, pos+point(70,0)*fac, pos+point(70, 40)*fac, pos+point(0, 40)*fac]
     repeat with c = 1 to 4 then
       QD[c] = QD[c] + DegToVec(gCameraProps.quads[q][c][1])*4*fac*gCameraProps.quads[q][c][2]
     end repeat
@@ -143,8 +143,9 @@ on drawAll me
 end
 
 
-on checkKey(key)
-  rtrn = 0
+on checkKey(key: string)
+  type return: number
+  rtrn: number = 0
   gCameraProps.keys[symbol(key)] = _key.keyPressed(key) and _movie.window.sizeState <> #minimized
   if (gCameraProps.keys[symbol(key)])and(gCameraProps.lastKeys[symbol(key)]=0) then
     rtrn = 1

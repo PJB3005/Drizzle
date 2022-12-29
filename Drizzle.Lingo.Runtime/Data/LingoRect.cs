@@ -97,6 +97,14 @@ public struct LingoRect : IEquatable<LingoRect>, ILingoVector
     public static LingoRect operator %(LingoRect a, LingoNumber b) => a % new LingoRect(b);
     public static LingoRect operator %(LingoNumber a, LingoRect b) => new LingoRect(a) % b;
 
+    public LingoRect intersect(LingoRect other)
+    {
+        LingoNumber nLeft = left < other.left ? other.left : left;
+        LingoNumber nRight = right > other.right ? other.right : right;
+        LingoNumber nUp = top < other.top ? other.top : top;
+        LingoNumber nDown = bottom > other.bottom ? other.bottom : bottom;
+        return new LingoRect(nLeft, nUp, nRight, nDown);
+    }
     public bool Equals(LingoRect other)
     {
         return left == other.left && top == other.top && right == other.right && bottom == other.bottom;

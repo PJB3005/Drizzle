@@ -4,6 +4,20 @@ global gCameraProps, gCurrentRenderCamera, gRenderCameraPixelPos, gRenderCameraT
 global gGradientImages, gAnyDecals, gDecalColors
 
 on exitFrame me
+  type cols: number
+  type rows: number
+  type extrarect: rect
+  type extrapoint: point
+  type lightmargin: number
+  type dp: number
+  type pstrct: rect
+  type inv: image
+  type smpl: image
+  type smpl2: image
+  type smplps: number
+  type l: string
+  type lr: number
+  type getrect: rect
   cols = 100
   rows = 60
   

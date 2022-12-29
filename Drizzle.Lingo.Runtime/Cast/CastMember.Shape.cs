@@ -2,9 +2,9 @@ namespace Drizzle.Lingo.Runtime.Cast;
 
 public sealed partial class CastMember
 {
-    public int _lineDirection;
+    public LingoNumber _lineDirection;
 
-    public int linedirection
+    public LingoNumber linedirection
     {
         get
         {

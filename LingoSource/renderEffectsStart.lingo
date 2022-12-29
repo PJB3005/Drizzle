@@ -1,7 +1,8 @@
 global vertRepeater, r, gLEprops, gEEprops, gTEprops, gTiles, keepLooping, gLOprops
 
 on exitFrame me
-  
+  type tm: number
+  type val: number
 
   
   tm = _system.milliseconds

@@ -20,16 +20,16 @@ end
 
 on newFrame me
   -- member("layer"&c&"sh").image = image(gLOprops.size.loch*20, gLOprops.size.locv*20, 8)
-  cols = 100
-  rows = 60
+  cols: number = 100
+  rows: number = 60
   
-  marginPixels = 150
+  marginPixels: number = 150
   
-  marginRect = rect(0,0,(cols*20)+marginPixels*2,(rows*20)+marginPixels*2)
-  fullRect = rect(0,0,(cols*20),(rows*20))
+  marginRect: rect = rect(0,0,(cols*20)+marginPixels*2,(rows*20)+marginPixels*2)
+  fullRect:rect  = rect(0,0,(cols*20),(rows*20))
   
-  inv = image(marginRect.right, marginRect.bottom, 1)
-  svPos = pos
+  inv: image = image(marginRect.right, marginRect.bottom, 1)
+  svPos: point = pos
   activeSilhouette: image = makeSilhoutteFromImg(member("activeLightImage").image, 1)
   repeat with q = 1 to gLightEProps.flatness then
     inv.copypixels(activeSilhouette, marginRect+rect(pos,pos), marginRect, {#ink:36, #color:color(255,0,0)})
@@ -43,6 +43,7 @@ on newFrame me
   --member("layer"&c&"sh").image.copypixels(member("layer"&c).image, fullRect+rect(marginPixels,marginPixels,marginPixels,marginPixels), fullRect, {#ink:36, #color:color(0,255,0)})
   
   repeat with dir in [point(0,0),point(-1, 0), point(0,-1), point(1,0), point(0,1)]then
+    type dir: point
     member("layer"&c&"sh").image.copypixels(inv, marginRect+rect(dir,dir), marginRect, {#ink:36})
   end repeat
   
@@ -65,8 +66,8 @@ end
 on newFrame2 me
    --
   --lightImage
-  inv = image(1040+200, 800+200, 1)--)makeSilhoutteFromImg(member("layer"&c&"sh").image, 1)
-  svPos = pos
+  inv: image = image(1040+200, 800+200, 1)--)makeSilhoutteFromImg(member("layer"&c&"sh").image, 1)
+  svPos: point = pos
   repeat with q = 1 to gLightEProps.flatness then
     
     inv.copypixels(makeSilhoutteFromImg(member("activeLightImage").image, 1), rect(0,0,1040+200,800+200)+rect(pos,pos), rect(0,0,1040+200,800+200), {#ink:36, #color:color(255,0,0)})
@@ -81,6 +82,7 @@ on newFrame2 me
   inv.copypixels(member("pxl").image, rect(0,0,1040,pos.locV), rect(0,0,1,1), {#color:color(255,255,255)})
   
   repeat with dir in [point(0,0),point(-1, 0), point(0,-1), point(1,0), point(0,1)]then
+    type dir: point
     member("layer"&c&"sh").image.copypixels(inv, rect(0,0,1040,800)+rect(dir,dir)+rect(-100,-100,100,100)+rect(0,8,0,8), rect(0,0,1040+200,800+200), {#ink:36, #color:color(255,0,0)})
   end repeat
   
@@ -99,8 +101,8 @@ on newFrame2 me
     member("shadowImage").image  = image(52*20, 40*20, 32)
     
     repeat with q = 1 to 30 then
-      dp = 30-q-5
-      pstRct = rect(depthPnt(point(0,0),dp),depthPnt(point(1040,800),dp))
+      dp: number = 30-q-5
+      pstRct: rect = rect(depthPnt(point(0,0),dp),depthPnt(point(1040,800),dp))
       member("shadowImage").image.copyPixels(member("layer"&string(30-q)).image, pstRct, rect(0,0,1040,800), {#ink:36, #color:color(255,255,255)})
       member("shadowImage").image.copyPixels(member("layer"&string(30-q)&"sh").image, pstRct, rect(0,0,1040,800), {#ink:36})
     end repeat

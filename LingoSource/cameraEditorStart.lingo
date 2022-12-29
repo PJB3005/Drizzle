@@ -5,8 +5,8 @@ on exitFrame me
   
   
   
-  cols = gLOprops.size.loch
-  rows = gLOprops.size.locv
+  cols: number = gLOprops.size.loch
+  rows: number = gLOprops.size.locv
   
   --  member("TEimg1").image = image(cols*16, rows*16, 16)
   --  member("TEimg2").image = image(cols*16, rows*16, 16)

@@ -18,7 +18,7 @@ on exitFrame me
 end
 
 on newFrame me
-  
+  type qd: list
   if(softProp <> void)then
     if (gESoftProp < 1)then
       renderSoftProp()
@@ -33,7 +33,7 @@ on newFrame me
         gCurrentlyRenderingTrash = false
         if(propsToRender.count > 0)then
           c = 1
-          propData = propsToRender[c]
+          propData: list = propsToRender[c]
         else
           keepLooping = false
           exit
@@ -59,9 +59,9 @@ on newFrame me
         qd = qd * (20.0/16.0)
       end if
       
-      mdPoint = (qd[1] + qd[2] + qd[3] + qd[4])/4.0
+      mdPoint: point = (qd[1] + qd[2] + qd[3] + qd[4])/4.0
       
-      savSeed = the randomSeed
+      savSeed: number = the randomSeed
       global gLOprops
       the randomSeed = seedForTile(giveGridPos(mdPoint), propData[5].settings.seed)
       -- put "prop Seed " && propsToRender[c][2] && the randomSeed
@@ -83,7 +83,8 @@ on newFrame me
   end if
 end
 
-on ShouldThisPropRender(prop, qd, settings)
+on ShouldThisPropRender(prop, qd: list, settings)
+  type return: number
   
   if(settings.renderTime <> afterEffects)then
     return false
@@ -94,9 +95,9 @@ on ShouldThisPropRender(prop, qd, settings)
     qd = qd - [gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20]
   end if
   
-  mdPoint = (qd[1] + qd[2] + qd[3] + qd[4])/4.0
+  mdPoint: point = (qd[1] + qd[2] + qd[3] + qd[4])/4.0
   
-  dig = 0
+  dig: number = 0
   repeat with q =  1 to 4 then
     if(DiagWI(mdPoint, qd[q], dig) = false) then
       dig = Diag(mdPoint, qd[q])
@@ -119,14 +120,14 @@ on ShouldThisPropRender(prop, qd, settings)
 end
 
 on updateText me
-  txt = ""
+  txt: string = ""
   put "<Rendering props>                                                            Press TAB to abort" after txt
   
   put RETURN after txt
   
-  viewProp = c
+  viewProp: number = c
   if(softProp <> void)then
-    viewProp = c - 1
+    viewProp: number = c - 1
   end if
   
   if(gCurrentlyRenderingTrash = true)then
@@ -134,7 +135,7 @@ on updateText me
     put RETURN after txt
   else
     repeat with prp = 1 to propsToRender.count then
-      propAddress = propsToRender[prp][3]
+      propAddress: point = propsToRender[prp][3]
       if (ShouldThisPropRender(gProps[propAddress.loch].prps[propAddress.locV], propsToRender[prp][4], propsToRender[prp][5].settings))then
         if prp = viewProp then
           put string(prp)&". ->"&propsToRender[prp][2] after txt
@@ -149,7 +150,9 @@ on updateText me
   member("effectsL").text = txt
 end
 
-on renderProp(prop, dp, qd, mdPoint, data)
+on renderProp(prop, dp: number, qd: list, mdPoint: point, data)
+  type sav2: member
+  type tileasprop: number
   sav2 = member("previewImprt")
   if gLastImported <> prop.nm then
     tileAsProp = 0
@@ -189,7 +192,15 @@ on renderProp(prop, dp, qd, mdPoint, data)
   DoPropTags(prop, dp, qd)
 end
 
-on renderVoxelProp(prop, dp, qd, mdPoint, propData)
+on renderVoxelProp(prop, dp: number, qd: list, mdPoint: point, propData)
+  type var: number
+  type ps: number
+  type sav2: member
+  type colored: number
+  type gtrect: rect
+  type dumpimg: image
+  type inverseimg: image
+  type a: list
   var = 1
   if(prop.tp = "variedStandard")then
     var = propData.settings.variation
@@ -253,7 +264,16 @@ on renderVoxelProp(prop, dp, qd, mdPoint, propData)
 end
 
 
-on renderDecal(prop, dp, qd, mdPoint, data)
+on renderDecal(prop, dp: number, qd: list, mdPoint: point, data)
+  type rnd: number
+  type ps: number
+  type sav2: member
+  type depthzero: number
+  type dirq: list
+  type actualDepth: number
+  type averagesz: number
+  type getrect: rect
+  type clr: color
   rnd = 1
   ps = 1
   sav2 = member("previewImprt")
@@ -302,6 +322,10 @@ on renderDecal(prop, dp, qd, mdPoint, data)
 end
 
 on directionsQuad()
+  type return: list
+  type qdirs: list
+  type frst: point
+  type l1: list
   --  seed =  the randomSeed
   --  the randomSeed = gLOprops.tileSeed
   qDirs = []
@@ -324,7 +348,13 @@ end
 
 
 
-on renderRope(prop, data, dp)
+on renderRope(prop, data, dp: number)
+  type lastpos: point
+  type lastdir: point
+  type lastperp: point
+  type pos: point
+  type dir: point
+  type perp: point
   lastPos = data.points[1]
   lastDir = MoveToPoint(data.points[1], data.points[2], 1.0)
   lastPerp = CorrectPerp(lastDir)
@@ -351,7 +381,8 @@ on renderRope(prop, data, dp)
   
 end
 
-on CorrectPerp(dir)
+on CorrectPerp(dir: point)
+  type return: point
   --  if(dir = point(0, -1))then
   --    return point(1, 0)
   --  else if (dir = point(1, 0))then
@@ -365,7 +396,36 @@ on CorrectPerp(dir)
   -- end if
 end
 
-on renderRopeSegment(num, prop, data, dp, pos, dir, perp, lastPos, lastDir, lastPerp)
+on renderRopeSegment(num: number, prop, data, dp: number, pos: point, dir: point, perp: point, lastPos: point, lastDir: point, lastPerp: point)
+  type wdth: number
+  type pastqd: list
+  type jointsize: number
+  type col: color
+  type myperp: point
+  type dr: point
+  type dst: number
+  type pnta: point
+  type pntb: point
+  type aprp: point
+  type bprp: point
+  type pstdp: number
+  type mdpnt: point
+  type possiblepositions: list
+  type uselastpos: point
+  type uselastdir: point
+  type uselastperp: point
+  type apoint: point
+  type indx: number
+  type bpoint: point
+  type apos: point
+  type adp: number
+  type bpos: point
+  type bdp: number
+  type ahandle: point
+  type bHandle: point
+  type c2: point
+  type cpos: point
+  type mnclamp: number
   case prop.nm of
     "wire", "Zero-G Wire":
       wdth = data.settings.thickness/2.0
@@ -710,7 +770,17 @@ end
 
 global wireBunchSav
 
-on DrawBezierWire(startDir, A, aHandle, B, bHandle, aDp, bDp)
+on DrawBezierWire(startDir: point, A: point, aHandle: point, B: point, bHandle: point, aDp: number, bDp: number)
+  type repeats: number
+  type lastdir: point
+  type lastpos: point
+  type lastperp: point
+  type pos: point
+  type dir: point
+  type perp: point
+  type wdth: number
+  type pastqd: list
+  type mydp: number
   
   repeats = (Diag(A, B) / 5.0).integer
   lastDir = startDir
@@ -746,8 +816,16 @@ end
 
 
 
-on initRenderSoftProp(prop, qd, propData, dp)
-  
+on initRenderSoftProp(prop, qd: list, propData, dp)
+  type lft: number
+  type tp: number
+  type rght: number
+  type bttm: number
+  type p: point
+  type pasterect: rect
+  type offsetPnt: point
+  type getrect: rect
+  type clr: number
   lft = qd[1].locH
   tp = qd[1].locV
   rght = qd[1].locH
@@ -806,7 +884,20 @@ on initRenderSoftProp(prop, qd, propData, dp)
 end
 
 on renderSoftProp()
-  
+  type clr: color
+  type dpth: number
+  type renderfrom: number
+  type renderto: number
+  type painted: number
+  type dp: number
+  type colornumstruct: list
+  type dir: point
+  type palcol: color
+  type ang: number
+  type pnt: point
+  type dpthremove: number
+  type clrzclr: color
+  type val: number
   repeat with q2 = 0 to softProp.pasteRect.width-1 then
     clr = member("softPropRender").image.getPixel(q2, softProp.c)
     if(clr <> color(255, 255, 255)) and ((clr.green > 0) or (softProp.prop.tp = "antimatter")) then
@@ -822,10 +913,10 @@ on renderSoftProp()
           if member("layer"&dp).image.getPixel(q2+softProp.pasteRect.left, softProp.c+softProp.pasteRect.top) <> color(255, 255, 255) then
             member("layer"&dp).image.setPixel(q2+softProp.pasteRect.left, softProp.c+softProp.pasteRect.top, color(255, 255, 255))
             if(painted = false) then
-              repeat with clr in [[color(255, 0, 0), -1], [color(0, 0, 255), 1]] then
+              repeat with colornumstruct in [[color(255, 0, 0), -1], [color(0, 0, 255), 1]] then
                 repeat with dir in [point(1,0), point(1,-1), point(0,1), point(2,0), point(2,-2), point(0,2)]then
-                  if member("layer"&dp).image.getPixel(q2+softProp.pasteRect.left+dir.locH*clr[2], softProp.c+softProp.pasteRect.top+dir.locV*clr[2]) <> color(255, 255, 255) then
-                    member("layer"&dp).image.setPixel(q2+softProp.pasteRect.left+dir.locH*clr[2], softProp.c+softProp.pasteRect.top+dir.locV*clr[2], clr[1])
+                  if member("layer"&dp).image.getPixel(q2+softProp.pasteRect.left+dir.locH*colornumstruct[2], softProp.c+softProp.pasteRect.top+dir.locV*colornumstruct[2]) <> color(255, 255, 255) then
+                    member("layer"&dp).image.setPixel(q2+softProp.pasteRect.left+dir.locH*colornumstruct[2], softProp.c+softProp.pasteRect.top+dir.locV*colornumstruct[2], colornumstruct[1])
                   end if
                 end repeat
               end repeat
@@ -919,7 +1010,9 @@ on renderSoftProp()
   end if
 end
 
-on softPropDepth(pxl)
+on softPropDepth(pxl: point)
+  type return: number
+  type clr: color
   clr = member("softPropRender").image.getPixel(pxl.locH, pxl.locV)
   if(clr = color(255, 255, 255)) or (clr = 0) then
     return 0.0
@@ -929,7 +1022,16 @@ on softPropDepth(pxl)
 end
 
 on renderESoftProp()
-  
+  type clr: color
+  type dpth: number
+  type palcol: color
+  type ang: number
+  type pnt: point
+  type dpthRemove: number  
+  type renderfrom: number
+  type renderto: number
+  type clrzClr: color
+  type val: number
   repeat with q2 = 0 to softProp.pasteRect.width-1 then
     clr = member("softPropRender").image.getPixel(q2, softProp.c)
     if(clr <> color(255, 255, 255)) then
@@ -1019,7 +1121,9 @@ on renderESoftProp()
   end if
 end
 
-on EsoftPropDepth(pxl)
+on EsoftPropDepth(pxl: point)
+  type return: number
+  type clr: color
   clr = member("softPropRender").image.getPixel(pxl.locH, pxl.locV)
   if(clr = color(255, 255, 255)) or (clr = 0) then
     return 0.0
@@ -1036,13 +1140,36 @@ end
 
 
 
-on renderLongProp(qd, prop, data, dp)
-  A = (qd[1]+qd[4])/2.0
-  B = (qd[2]+qd[3])/2.0
+on renderLongProp(qd: list, prop, data, dp: number)
+  --apparently data is unused here
+  type perp: point
+  type totalsegments: number
+  type buffer: number
+  type qd2: list
+  type d: number
+  type pnt: point
+  type steps: number
+  type ornt: number
+  type degDir: number
+  type stp: number
+  type pos: point
+  type rct: rect
+  type gtRect: rect
+  type thirdDist: number
+  type ps: point
+  type dr: point
+  type rodWidth: number
+  type perpOffset: number
+  type sz: number
+  type wdth: number
+  type a2: point
   
-  dir = MoveToPoint(A, B, 1.0)
+  A: point = (qd[1]+qd[4])/2.0
+  B: point = (qd[2]+qd[3])/2.0
+  
+  dir: point = MoveToPoint(A, B, 1.0)
   perp = CorrectPerp(dir)
-  dist = Diag(A, B)
+  dist: number = Diag(A, B)
   
   
   
@@ -1223,7 +1350,6 @@ on DoPropTags(prop, dp, qd)
         mdPnt = (qd[1] + qd[2] + qd[3] + qd[4])/4.0
         
         repeat with r in [[point(-1,-1), color(0,0,255)], [point(-0,-1), color(0,0,255)], [point(-1,-0), color(0,0,255)], [point(-2,-2), color(0,0,255)], [point(1,1), color(255,0,0)],[point(0,1), color(255,0,0)],[point(1,0), color(255,0,0)],[point(2,2), color(255,0,0)],[point(0,0), color(0,255,0)]] then
-          
           member("layer" & string(restrict(dp, 0, 29))).image.copyPixels(img, rect(-60,-60,60,60)+rect(mdPnt,mdPnt)+rect(r[1],r[1]), rect(0,0,120,120), {#ink:36, #color:r[2]})
           
         end repeat
@@ -1233,6 +1359,11 @@ on DoPropTags(prop, dp, qd)
         
         copyPixelsToEffectColor("A", dp, rect(mdPnt+point(-60,-60),mdPnt+point(60,60)), "circleSignGrad", rect(0, 1, 120, 121), 0.5, 1)
     end case
+  type img: image
+  type rnd: number
+  type mdpnt: point
+  type r: list
+  type qd: list
   end repeat
 end
 
