@@ -204,6 +204,7 @@ on rainbowifypixel me, pxl: point
 end if
 
 on IsPixelInFinalImageRainbowed(pxl: point)
+type return: number
 if(pxl.loch < 1)or(pxl.locv < 1)then
 return 0
 else if(member("finalImage").image.getPixel(pxl.locH-1, pxl.locV-1) = color(255, 255, 255))then
@@ -216,6 +217,7 @@ end if
 end
 
 on doesGreenValueMeanRainbow(grn: number)
+  type return: number
   if (grn > 3)and(grn < 8)then
     return 1
   else  if (grn > 11)and(grn < 16)then

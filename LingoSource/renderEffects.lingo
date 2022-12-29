@@ -19,6 +19,8 @@ end
 
 
 on newFrame me
+  type q2: number
+  type c2: number
   
   vertRepeater = vertRepeater + 1
   
@@ -156,6 +158,10 @@ end
 
 
 on initEffect me
+  type l: list
+  type l2: list
+  type val: number
+  type txt: string
   effectSeed = 0
   repeat with a = 1 to gEEprops.effects[r].Options.count then
     type a: number
@@ -308,6 +314,7 @@ on initEffect me
 end
 
 on exitEffect me
+  type qd: list
   case gEEprops.effects[r].nm of
     "blackGoo":
       
@@ -360,6 +367,7 @@ end
 
 
 on applyStandardErosion me, q: number, c: number, eftc: number, tp: string
+  
   q2: number = q + gRenderCameraTilePos.locH
   c2: number = c + gRenderCameraTilePos.locV
 
@@ -615,7 +623,17 @@ on get3DLr(lr: number)
   return nwLr
 end 
 
-on applyDarkSlime me, q, c, unused_nm
+on applyDarkSlime me, q: number, c: number, unused_nm
+  type q2: number
+  type c2: number
+  type cls: list
+  type fc: number
+  type lr: number
+  type deepeffect: number
+  type pnt: point
+  type lgt: number
+  type clr: color
+  type sld: number
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
   
@@ -675,7 +693,10 @@ on applyDarkSlime me, q, c, unused_nm
 end 
 
 
-on giveAnEffectPos me, q, c, d, sld
+on giveAnEffectPos me, q: number, c: number, d: number, sld: number
+  type return: point
+  type pnt: point
+  type l: number
   pnt = point(0,0)
   l = 1+(d>9)+(d>19)
   if (d = 0)or(d=9)or(d=19)or(sld)then--solidMtrx[q][c][l]=0) then
@@ -693,7 +714,26 @@ end
 
 
 
-on applyStandardPlant me, q, c, eftc, tp
+on applyStandardPlant me, q: number, c: number, eftc, tp: string
+  type q2: number
+  type c2: number
+  type amount: number
+  type lsl: list
+  type layer: number
+  type pnt: point
+  type lr: number
+  type freesides: number
+  --type rct: rect
+  type rnd: number
+  type flp: number
+  type gtrect: rect
+  type sz: number
+  type leandir: number
+  type checkforsolid: point
+  type rotat: number
+  type tppnt: point
+  type rubbl: number
+  type gtrectsource: number
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
   
@@ -952,8 +992,8 @@ on applyStandardPlant me, q, c, eftc, tp
             pnt = pnt + degToVec(random(360))*random(random(100))*0.04
             rct = rect(pnt,pnt)+rect(-12,-12,13,13)--+rect(-random(3),-random(3), random(3), random(3))
             rct = rotateToQuad(rct,((random(4)-1)*90)+1)
-            gtRect = random(4)
-            gtRect = rect((gtRect-1)*25, 0, gtRect*25, 25)
+            gtRectSource = random(4)
+            gtRect = rect((gtRectSource-1)*25, 0, gtRectSource*25, 25)
             -- repeat with rep = 1 to 4 then
             --   if lr+rep-1 > 29 then
             --   exit repeat
@@ -974,7 +1014,12 @@ on applyStandardPlant me, q, c, eftc, tp
   end repeat
 end
 
-on giveGroundPos me, q, c,l
+on giveGroundPos me, q: number, c: number, l: number
+  type return: point
+  type q2: number
+  type c2: number
+  type mdpnt: point
+  type pnt: point
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
   
@@ -990,7 +1035,16 @@ on giveGroundPos me, q, c,l
   return pnt
 end
 
-on applyHugeFlower me, q, c, eftc
+on applyHugeFlower me, q: number, c: number, eftc
+  type q2: number
+  type c2: number
+  type d: number
+  type lr: number
+  type mdpnt: point
+  type headpos: point
+  type pnt: point
+  type h: number
+  type tlpos: point
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
   
@@ -1054,7 +1108,23 @@ on applyHugeFlower me, q, c, eftc
   end if
 end
 
-on ApplyArmGrower me, q, c, eftc
+on ApplyArmGrower me, q: number, c: number, eftc
+  type q2: number
+  type c2: number
+  type d: number
+  type lr: number
+  type mdpnt: point
+  type headpos: point
+  type pnt: point
+  type lastdir: number
+  type points: list
+  type dir: number
+  type lastpnt: point
+  type rct: rect
+  type qd: list
+  type var: number
+  type tlpos: point
+  type rctpoint: point
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
   
@@ -1092,8 +1162,8 @@ on ApplyArmGrower me, q, c, eftc
       pnt = pnt + degToVec(dir)*30.0
       lastDir = dir
       
-      rct = (lastPnt + pnt)/2.0
-      rct = rect(rct, rct)
+      rctpoint = (lastPnt + pnt)/2.0
+      rct = rect(rctpoint, rctpoint)
       rct = rct + rect(-10, -25, 10, 25)
       qd = rotateToQuad(rct, lookAtPoint(lastPnt, pnt))
       if(random(2)=1)then
@@ -1116,8 +1186,8 @@ on ApplyArmGrower me, q, c, eftc
     
     if(points.count > 2)then
       repeat with p = 1 to points.count-1 then
-        rct = (points[p] + points[p+1])/2.0
-        rct = rect(rct, rct)
+        rctpoint = (points[p] + points[p+1])/2.0
+        rct = rect(rctpoint, rctpoint)
         rct = rct + rect(-12, -36, 12, 36)
         qd = rotateToQuad(rct, lookAtPoint(points[p], points[p+1]))
         
@@ -1132,7 +1202,29 @@ on ApplyArmGrower me, q, c, eftc
 end
 
 
-on ApplyThornGrower me, q, c, eftc
+on ApplyThornGrower me, q: number, c: number, eftc
+  type q2: number
+  type c2: number
+  type d: number
+  type lr: number
+  type mdpnt: point
+  type headpos: point
+  type pnt: point
+  type lastdir: number
+  type blnd: number
+  type blnd2: number
+  type wdth: number
+  type searchbase: number
+  type dir: number
+  type lastpnt: point
+  type movedir: point
+  type tst: number
+  type tstpnt: point
+  type rct: rect
+  type qd: list
+  type var: number
+  type tlpos: point
+  type rctpoint: point  
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
   
@@ -1188,8 +1280,8 @@ on ApplyThornGrower me, q, c, eftc
       
       lastDir = dir
       
-      rct = (lastPnt + pnt)/2.0
-      rct = rect(rct, rct)
+      rctpoint = (lastPnt + pnt)/2.0
+      rct = rect(rctpoint, rctpoint)
       rct = rct + rect(-10*wdth, -25, 10*wdth, 25)
       qd = rotateToQuad(rct, lookAtPoint(lastPnt, pnt))
       if(random(2)=1)then
@@ -1208,8 +1300,8 @@ on ApplyThornGrower me, q, c, eftc
       blnd = blnd * 0.85
       
       if(blnd2 > 0)then
-        rct = (lastPnt + pnt)/2.0
-        rct = rect(rct, rct)
+        rctpoint = (lastPnt + pnt)/2.0
+        rct = rect(rctpoint, rctpoint)
         rct = rct + rect(-12, -36, 12, 36)
         qd = rotateToQuad(rct, lookAtPoint(lastPnt, pnt))
         
@@ -1234,7 +1326,30 @@ on ApplyThornGrower me, q, c, eftc
   end if
 end
 
-on ApplyGarbageSpiral me, q, c, eftc
+on ApplyGarbageSpiral me, q: number, c: number, eftc
+  type q2: number
+  type c2: number
+  type d: number
+  type lr: number
+  type mdpnt: point
+  type headpos: point
+  type pnt: point
+  type lastdir: number
+  type blnd: number
+  type blnd2: number
+  type wdth: number
+  type searchbase: number
+  type dir: point
+  type lastpnt: point
+  type movedir: point
+  type tst: number
+  type tstpnt: point
+  type rct: rect
+  type qd: list
+  type var: number
+  type tlpos: point
+  type rctpoint: point   
+  type dirnumber: number
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
   
@@ -1278,7 +1393,7 @@ on ApplyGarbageSpiral me, q, c, eftc
     headPos = mdPnt+point(-11+random(21), -11+random(21))
     pnt = point(headPos.locH, headPos.locV)
     
-    dir = random(360)
+    dirnumber = random(360)
     dirAdd = 40+random(20)
     if(random(2)=1)then
       dirAdd = -dirAdd
@@ -1302,7 +1417,7 @@ on ApplyGarbageSpiral me, q, c, eftc
     cntr = 0
     repeat while pnt.locV < 30000 then
       cntr = cntr + 1
-      dir = dir + dirAdd
+      dirnumber = dirnumber + dirAdd
       
       dirAdd = dirAdd * spiralFac
       spiralFac = spiralFac + 0.0013
@@ -1311,7 +1426,7 @@ on ApplyGarbageSpiral me, q, c, eftc
       end if
       
       lastPnt = pnt
-      pnt = pnt + degToVec(dir)*3.0*power(spiral, 0.5)
+      pnt = pnt + degToVec(dirnumber)*3.0*power(spiral, 0.5)
       
       spiralWait = spiralWait - 1
       if(spiralWait < 0)then
@@ -1390,8 +1505,8 @@ on ApplyGarbageSpiral me, q, c, eftc
     lastUseD = points[1][2]
     repeat with q = 1 to points.count then
       pnt = points[q][1]
-      rct = (lastPnt + pnt)/2.0
-      rct = rect(rct, rct)
+      rctpoint = (lastPnt + pnt)/2.0
+      rct = rect(rctpoint, rctpoint)
       rct = rct + rect(-1, -2, 1, 2)
       qd = rotateToQuad(rct, lookAtPoint(lastPnt, pnt))
       
@@ -1420,7 +1535,41 @@ end
 
 
 
-on ApplyRoller me, q, c, eftc
+on ApplyRoller me, q: number, c: number, eftc
+  type q2: number
+  type c2: number
+  type d: number
+  type lr: number
+  type mdpnt: point
+  type headpos: point
+  type pnt: point
+  type lastdir: number
+  type blnd: number
+  type blnd2: number
+  type wdth: number
+  type searchbase: number
+  type dir: point
+  type lastpnt: point
+  type movedir: point
+  type tst: number
+  type tstpnt: point
+  type rct: rect
+  type qd: list
+  type var: number
+  type tlpos: point
+  type rctpoint: point   
+  type dirnumber: number
+  type frontwall: number
+  type backwall: number
+  type diradd: number
+  type dspeed: number
+  type lastused: number
+  type grav: number
+  type points: list
+  type seedChance: number
+  type used: number
+  type seedpos: point
+  type seedlr: number
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
   
@@ -1466,7 +1615,7 @@ on ApplyRoller me, q, c, eftc
     headPos = mdPnt+point(-11+random(21), -11+random(21))
     pnt = point(headPos.locH, headPos.locV)
     
-    dir = random(360)
+    dirnumber = random(360)
     dirAdd = (10+random(30))*0.3
     if(random(2)=1)then
       dirAdd = -dirAdd
@@ -1483,7 +1632,7 @@ on ApplyRoller me, q, c, eftc
     seedChance = 1.0
     
     repeat while pnt.locV < 30000 then
-      dir = dir - 11 + random(21) + dirAdd
+      dirnumber = dirnumber - 11 + random(21) + dirAdd
       
       dspeed = restrict(dspeed + (-11+random(21))/1000.0, -0.1, 0.1)
       
@@ -1497,15 +1646,15 @@ on ApplyRoller me, q, c, eftc
       end if
       
       lastPnt = pnt
-      pnt = pnt + degToVec(dir)*5.0
+      pnt = pnt + degToVec(dirnumber)*5.0
       pnt.locV = pnt.locV + grav
       
       grav = grav + 0.001
       
       
       
-      rct = (lastPnt + pnt)/2.0
-      rct = rect(rct, rct)
+      rctpoint = (lastPnt + pnt)/2.0
+      rct = rect(rctpoint, rctpoint)
       rct = rct + rect(-1.5, -3.5, 1.5, 3.5)
       qd = rotateToQuad(rct, lookAtPoint(lastPnt, pnt))
       --      if(random(2)=1)then
@@ -1560,8 +1709,8 @@ on ApplyRoller me, q, c, eftc
     
     if(points.count > 2)then
       repeat with p = 1 to points.count-1 then
-        rct = (points[p][1] + points[p+1][1])/2.0
-        rct = rect(rct, rct)
+        rctpoint = (points[p][1] + points[p+1][1])/2.0
+        rct = rect(rctpoint, rctpoint)
         rct = rct + rect(-1.5, -3.5, 1.5, 3.5)
         qd = rotateToQuad(rct, lookAtPoint(points[p][1], points[p+1][1]))
         --  copyPixelsToEffectColor(gdLayer, useD, qd, "pxl", rect(0,0,1,1), 0.8)
@@ -1576,7 +1725,20 @@ end
 
 
 
-on applyHangRoots me, q, c, eftc
+on applyHangRoots me, q: number, c: number, eftc
+  type q2: number
+  type c2: number
+  type d: number
+  type lr: number
+  type mdpnt: point
+  type headpos: point
+  type pnt: point
+  type lftborder: number
+  type rgthborder: number
+  type lstpos: point
+  type dir: point
+  type crossdir: point
+  type qd: list
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
   
@@ -1629,7 +1791,33 @@ on applyHangRoots me, q, c, eftc
 end
 
 
-on applyThickRoots me, q, c, eftc
+on applyThickRoots me, q: number, c: number, eftc
+  type q2: number
+  type c2: number
+  type d: number
+  type lr: number
+  type mdpnt: point
+  type headpos: point
+  type pnt: point
+  type frontwall: number
+  type backwall: number
+  type health: number
+  type points: list
+  type dir: point
+  type floatdpth: number
+  type thickness: number
+  type lstpos: point
+  type lstGridPos: point
+  type gridpos: point
+  type tlt: number
+  type lastrad: number
+  type lastperp: point
+  type f: number
+  type perp: point
+  type rad: number
+  type qd: list
+  type carray: list
+  type dirnumber: number
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
   
@@ -1673,7 +1861,7 @@ on applyThickRoots me, q, c, eftc
     health = 6
     points = [[pnt, d, health]]
     
-    dir = 0
+    dirnumber = 0
     
     floatDpth = d
     
@@ -1691,8 +1879,8 @@ on applyThickRoots me, q, c, eftc
       d = restrict(floatDpth.integer, frontWall, backWall)
       
       lstPos = pnt
-      dir = lerp(dir, -45+random(90), 0.5)
-      pnt = pnt + degToVec(dir)*(2+random(6))
+      dirnumber = lerp(dirnumber, -45+random(90), 0.5)
+      pnt = pnt + degToVec(dirnumber)*(2+random(6))
       
       lstGridPos = giveGridPos(lstPos) + gRenderCameraTilePos
       gridPos = giveGridPos(pnt) + gRenderCameraTilePos
@@ -1741,10 +1929,10 @@ on applyThickRoots me, q, c, eftc
       perp = giveDirFor90degrToLine(-dir, dir)
       rad = 0.6 + f*8.0*(points[q][3].float/6.0)*lerp(0.8, 1.2, random(1000)/1000.0)*lerp(thickness, 0.5, 0.2)
       
-      repeat with c in [[0, 1.0], [1, 0.7], [2, 0.3]] then
-        if(d - c[1] >= 0)and((rad*c[2] > 0.8)or(c[1]=0))then
-          qd = [pnt-perp*rad*c[2], pnt+perp*rad*c[2], lstPos+dir+lastPerp*lastRad*c[2], lstPos+dir-lastPerp*lastRad*c[2]]
-          member("layer"&string(d - c[1])).image.copyPixels(member("pxl").image, qd, member("pxl").image.rect, {#color:color(0,255,0)})
+      repeat with carray in [[0, 1.0], [1, 0.7], [2, 0.3]] then
+        if(d - carray[1] >= 0)and((rad*carray[2] > 0.8)or(carray[1]=0))then
+          qd = [pnt-perp*rad*carray[2], pnt+perp*rad*carray[2], lstPos+dir+lastPerp*lastRad*carray[2], lstPos+dir-lastPerp*lastRad*carray[2]]
+          member("layer"&string(d - carray[1])).image.copyPixels(member("pxl").image, qd, member("pxl").image.rect, {#color:color(0,255,0)})
         end if
       end repeat
       
@@ -1761,6 +1949,37 @@ end
 
 
 on applyShadowPlants me, q, c, eftc
+  type q: number
+  type c: number
+  type q2: number
+  type c2: number
+  type frontwall: number
+  type backwall: number
+  type d: number
+  type mdpnt: point
+  type headpos: point
+  type pnt: point
+  type health: number
+  type points: list
+  type dir: point
+  type cycle: number
+  type dirnumber: number
+  type cntr: number
+  type tltfac: number
+  type lstpos: point
+  type lstgridpos: point
+  type gridpos: point
+  type tlt: number
+  type fuzzlength: number
+  type thickness: number
+  type lastrad: number
+  type lastperp: point
+  type f: number
+  type perp: point
+  type rad: number
+  type carray: list
+  type qd: list
+  type f2: number
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
   
@@ -1804,7 +2023,7 @@ on applyShadowPlants me, q, c, eftc
     health = 6
     points = [[pnt, d, health]]
     
-    dir = 180
+    dirnumber = 180
     
     -- floatDpth = d
     
@@ -1826,11 +2045,11 @@ on applyShadowPlants me, q, c, eftc
       --      d = restrict(floatDpth.integer, frontWall, backWall)
       
       lstPos = pnt
-      dir = lerp(dir, 180-45+random(90), 0.1)
-      dir = dir + sin((cntr/cycle)*PI*2.0)*8
+      dirnumber = lerp(dirnumber, 180-45+random(90), 0.1)
+      dirnumber = dirnumber + sin((cntr/cycle)*PI*2.0)*8
       cycle = cycle + 0.1
       if(cycle > 35) then cycle = 35
-      pnt = pnt + degToVec(dir)*3
+      pnt = pnt + degToVec(dirnumber)*3
       
       lstGridPos = giveGridPos(lstPos) + gRenderCameraTilePos
       gridPos = giveGridPos(pnt) + gRenderCameraTilePos
@@ -1894,18 +2113,18 @@ on applyShadowPlants me, q, c, eftc
       
       
       
-      repeat with c in [[0, 1.0], [1, 0.7], [2, 0.3]] then
-        if(d - c[1] >= 0)and((rad*c[2] > 0.8)or(c[1]=0))then
-          qd = [pnt-perp*rad*c[2], pnt+perp*rad*c[2], lstPos+dir+lastPerp*lastRad*c[2], lstPos+dir-lastPerp*lastRad*c[2]]
-          member("layer"&string(d - c[1])).image.copyPixels(member("pxl").image, qd, member("pxl").image.rect, {#color:color(0,0,255)})
+      repeat with carray in [[0, 1.0], [1, 0.7], [2, 0.3]] then
+        if(d - carray[1] >= 0)and((rad*carray[2] > 0.8)or(carray[1]=0))then
+          qd = [pnt-perp*rad*carray[2], pnt+perp*rad*carray[2], lstPos+dir+lastPerp*lastRad*carray[2], lstPos+dir-lastPerp*lastRad*carray[2]]
+          member("layer"&string(d - carray[1])).image.copyPixels(member("pxl").image, qd, member("pxl").image.rect, {#color:color(0,0,255)})
           
           if(random(30) = 1)then
-            me.sporeGrower(pnt + MoveToPoint(pnt, lstPos, diag(pnt, lstPos)*random(10000)/10000.0), 15 + random(50) * (1.0-f), d - c[1], color(0,0,255))
+            me.sporeGrower(pnt + MoveToPoint(pnt, lstPos, diag(pnt, lstPos)*random(10000)/10000.0), 15 + random(50) * (1.0-f), d - carray[1], color(0,0,255))
           end if
           
           if(q < fuzzLength) and(random(fuzzLength) > q)and(random(6)=1) then
             f2 = q.float / fuzzLength.float
-            me.sporeGrower(pnt + MoveToPoint(pnt, lstPos, diag(pnt, lstPos)*random(10000)/10000.0), 65 + random(50) * (1.0-f2), d - c[1], color(0,0,255))
+            me.sporeGrower(pnt + MoveToPoint(pnt, lstPos, diag(pnt, lstPos)*random(10000)/10000.0), 65 + random(50) * (1.0-f2), d - carray[1], color(0,0,255))
           end if
         end if
       end repeat
@@ -1920,7 +2139,9 @@ on applyShadowPlants me, q, c, eftc
   end if
 end
 
-on sporeGrower me, pos, lngth, layer, col
+on sporeGrower me, pos: point, lngth: number, layer: number, col: color
+  type dir: point
+  type othercol: color
   dir = point(0, -1)
   
   repeat with q = 1 to lngth then
@@ -1945,7 +2166,17 @@ on sporeGrower me, pos, lngth, layer, col
 end
 
 
-on applyDaddyCorruption me, q, c, amount
+on applyDaddyCorruption me, q: number, c: number, amount: number
+  type q2: number
+  type c2: number
+  type mdpnt: point
+  type extraholechance: number
+  type dp: number
+  type lr: number
+  type rad: number
+  type startpos: point
+  type solid: number
+  type dr: point
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
   
@@ -2024,7 +2255,17 @@ on applyDaddyCorruption me, q, c, amount
   end repeat  
 end
 
-on applySlag me, q, c, amount
+on applySlag me, q: number, c: number, amount: number
+  type q2: number
+  type c2: number
+  type mdpnt: point
+  type extraholechance: number
+  type dp: number
+  type lr: number
+  type rad: number
+  type startpos: point
+  type solid: number
+  type dr: point
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
  
@@ -2103,7 +2344,22 @@ on applySlag me, q, c, amount
   end repeat
 end
 
-on applyWire me, q, c, eftc
+on applyWire me, q: number, c: number, eftc
+  type q2: number
+  type c2: number
+  type d: number
+  type lr: number
+  type mdpnt: point
+  type startpos: point
+  type mycamera: number
+  type fatness: number
+  type a: number
+  type keepItFromToForty: number
+  type goodstops: number
+  type pnt: point
+  type lastpnt: point
+  type dr: point
+  type tlpos: point
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
   
@@ -2203,7 +2459,27 @@ on applyWire me, q, c, eftc
   end if
 end
 
-on applyChain me, q, c, eftc
+on applyChain me, q: number, c: number, eftc
+  type q2: number
+  type c2: number
+  type d: number
+  type lr: number
+  type big: number
+  type mdpnt: point
+  type startpos: point
+  type mycamera: number
+  type a: number
+  type keepitfromtoforty: number
+  type origornt: number
+  type goodstops: number
+  type pnt: point
+  type lastpnt: point
+  type ornt: number
+  type checkterrain: number
+  type pos: point
+  type rct: rect
+  type gtrect: rect
+  type tlpos: point
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
   
@@ -2340,7 +2616,20 @@ on applyChain me, q, c, eftc
   end if
 end
 
-on applyFungiFlower me, q, c
+on applyFungiFlower me, q: number, c: number
+  type q2: number
+  type c2: number
+  type lr: number
+  type layer: number
+  type rnd: number
+  type flp: number
+  type closestedge: number
+  type pnt: point
+  type rct: rect
+  type gtrect: rect
+  type l: list
+  type l2: list
+  type val: number
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
   
@@ -2413,7 +2702,19 @@ on applyFungiFlower me, q, c
 end 
 
 
-on applyLHFlower me, q, c
+on applyLHFlower me, q: number, c: number
+  type q2: number
+  type c2: number
+  type lr: number
+  type layer: number
+  type rnd: number
+  type flp: number
+  type pnt: point
+  type rct: rect
+  type gtrect: rect
+  type l: list
+  type l2: list
+  type val: number
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
   
@@ -2455,7 +2756,20 @@ on applyLHFlower me, q, c
   end if
 end 
 
-on applyBigPlant me, q, c
+on applyBigPlant me, q: number, c: number
+  type q2: number
+  type c2: number
+  type lr: number
+  type layer: number
+  type mem: string
+  type rnd: number
+  type flp: number
+  type pnt: point
+  type rct: rect
+  type gtrect: rect
+  type l: list
+  type l2: list
+  type val: number
   q2 = q + gRenderCameraTilePos.locH
   c2 = c + gRenderCameraTilePos.locV
   
@@ -2799,7 +3113,10 @@ on apply3Dsprawler me, q: number, c: number, effc: string
 end
 
 
-on applyBlackGoo me, q, c, eftc
+on applyBlackGoo me, q: number, c: number, eftc
+  type spnt: point
+  type rct: rect
+  type ps: point
   sPnt = giveMiddleOfTile(point(q,c))+point(-10,-10)
   rct = member("blob").image.rect
   repeat with d = 1 to 10 then
@@ -2813,7 +3130,14 @@ on applyBlackGoo me, q, c, eftc
   end repeat
 end
 
-on applyRestoreEffect me, q, c, q2, c2, eftc
+on applyRestoreEffect me, q: number, c: number, q2: number, c2: number, eftc
+  type layers: list
+  type layer: number
+  type mdpoint: point
+  type tlrct: rect
+  type a: number
+  type b: number
+  type u: number
   
   case gEEprops.effects[r].options[2][3] of--["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
     "All":
@@ -2882,7 +3206,9 @@ on applyRestoreEffect me, q, c, q2, c2, eftc
   end repeat
 end
 
-on draw3DBeams me, q2, c2, layer, tlRct, crnrs, U
+on draw3DBeams me, q2: number, c2: number, layer: number, tlRct: rect, crnrs: list, U: number
+  type crnr: number
+  type rct: rect
   if(layer > 1) then
     if(me.isTileSolidAndAffected(point(q2, c2), layer-1) = 1)then
       repeat with crnr in crnrs then
@@ -2906,7 +3232,8 @@ on draw3DBeams me, q2, c2, layer, tlRct, crnrs, U
 end
 
 
-on CornerRect(tlRct, crnr, U)
+on CornerRect(tlRct: rect, crnr: number, U: number)
+  type return: rect
   -- tlRct = tlRct+rect(1,1,-1,-1)
   case crnr of
     1:
@@ -2920,7 +3247,8 @@ on CornerRect(tlRct, crnr, U)
   end case
 end
 
-on isTileSolidAndAffected me, tl, layer
+on isTileSolidAndAffected me, tl: point, layer: number
+  type return: number
   if(afaMvLvlEdit(point(tl.locH, tl.locV), layer)<>1)or(tl.locH<1)or(tl.locV<1)or(tl.locH > gLOprops.size.locH)or(tl.locV > gLOprops.size.locV)then
     return 0
   else if (gEEprops.effects[r].mtrx[tl.locH][tl.locV] > 0)then
@@ -2932,7 +3260,9 @@ end
 
 
 
-on reDrawPoles(pos, layer, q, c, drawLayer)
+on reDrawPoles(pos: point, layer: number, q: number, c: number, drawLayer: number)
+  type t: number
+  type rct: rect
   global gLEProps, gLOprops
   if pos.inside(rect(1,1,gLOprops.size.loch+1,gLOprops.size.locv+1)) then
     repeat with t in gLEProps.matrix[pos.locH][pos.locV][layer][2] then
@@ -2950,7 +3280,10 @@ end
 
 
 
-on closestCamera me, pos
+on closestCamera me, pos: point
+  type return: number
+  type closest: number
+  type bestcam: number
   global gCameraProps
   closest = 1000
   bestCam = 0
@@ -2964,7 +3297,9 @@ on closestCamera me, pos
   return bestCam
 end
 
-on seenByCamera me, camNum, pos
+on seenByCamera me, camNum: number, pos: point
+  type return: number
+  type camerapos: point
   global gCameraProps
   
   cameraPos = gCameraProps.cameras[camNum]

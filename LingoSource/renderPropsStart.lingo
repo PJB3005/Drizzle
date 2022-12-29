@@ -2,6 +2,7 @@ global c, keepLooping, afterEffects, gLastImported, gRenderTrashProps, gCurrentl
 
 
 on exitFrame me
+  type val: number
   c = 1
   keepLooping = 1
   --Set by LevelRenderer.cs now.
