@@ -460,9 +460,9 @@ on resizeLevel(sze: point, addTilesLeft: number, addTilesTop: number)
       repeat with c = 1 to sze.locV + addTilesTop then
         if (q+addTilesLeft<=effect.mtrx.count)and(c+addTilesTop<=effect.mtrx[1].count)and(q-addTilesLeft>0)and(c-addTilesTop>0)then
           adder = effect.mtrx[q-addTilesLeft][c-addTilesTop]
-		  ql.add(adder)
+          ql.add(adder)
         else
-		  ql.add(0)
+          ql.add(0)
         end if
       end repeat
       newEffMtrx.add(ql)

@@ -1359,11 +1359,11 @@ on DoPropTags(prop, dp, qd)
         
         copyPixelsToEffectColor("A", dp, rect(mdPnt+point(-60,-60),mdPnt+point(60,60)), "circleSignGrad", rect(0, 1, 120, 121), 0.5, 1)
     end case
-	type img: image
-	type rnd: number
-	type mdpnt: point
-	type r: list
-	type qd: list
+  type img: image
+  type rnd: number
+  type mdpnt: point
+  type r: list
+  type qd: list
   end repeat
 end
 
