@@ -29,9 +29,9 @@ on newFrame me
   
   repeat with q = 1 to 1400 then
     
-    layer = 1
+    layer: number = 1
     
-    getColor = member("finalImage").image.getPixel(q-1, c-1)
+    getColor: color = member("finalImage").image.getPixel(q-1, c-1)
     
     if (getColor.green > 7) and (getColor.green < 11) then
       
@@ -49,21 +49,22 @@ on newFrame me
         --     end if
       end if
       
-      lowResDepth = dptsL.getPos(member("dpImage").image.getPixel(q-1, c-1))
-      fgDp = fogDptsL.getPos(member("fogImage").image.getPixel(q-1, c-1))
+      lowResDepth: number = dptsL.getPos(member("dpImage").image.getPixel(q-1, c-1))
+      fgDp: number = fogDptsL.getPos(member("fogImage").image.getPixel(q-1, c-1))
       --  whiteness = 0
       
       
       
-      fogFac = (255-member("fogImage").image.getPixel(q-1, c-1).red)/255.0
+      fogFac: number = (255-member("fogImage").image.getPixel(q-1, c-1).red)/255.0
       fogFac = (fogFac - 0.0275)*(1.0/0.9411)
-      rainBowFac = 0
+      rainBowFac: number = 0
       
       
       -- if member("blackOutImg2").image.getPixel(q-1, c-1) = 0 then
       if fogFac <= 0.2 then
         repeat with dsplc in [point(-2,0), point(0,-2), point(2, 0), point(0,2), point(-1,-1), point(1,-1), point(1, 1), point(-1,1)] then
-          otherFogFac = (255-member("fogImage").image.getPixel(restrict(q-1+dsplc.locH, 0, 1339), restrict(c-1+dsplc.locV, 0, 799)).red)/255.0
+		  type dsplc: point
+          otherFogFac: number = (255-member("fogImage").image.getPixel(restrict(q-1+dsplc.locH, 0, 1339), restrict(c-1+dsplc.locV, 0, 799)).red)/255.0
           otherFogFac = (otherFogFac - 0.0275)*(1.0/0.9411)
           rainBowFac = rainBowFac + (abs(fogFac-otherFogFac)>0.0333)*(restrict(fogFac - otherFogFac, 0, 1)+1)
           if rainBowFac > 5 then
@@ -75,13 +76,13 @@ on newFrame me
       end if
       -- end if
       
-      col = color(0, 0, 0)
+      col: color = color(0, 0, 0)
       
-      transp = false
+      transp: number = false
       
-      palCol = 2
-      effectColor = 0
-      dark = 0
+      palCol: number = 2
+      effectColor: number = 0
+      dark: number = 0
       
       case string(getColor) of
         "color( 255, 0, 0 )":
@@ -120,7 +121,7 @@ on newFrame me
         col.red = col.red + 90
       end if
       
-      greenCol = effectColor
+      greenCol: number = effectColor
       
       
       if rainBowFac then
@@ -139,9 +140,9 @@ on newFrame me
           col.blue = 255-member("flattenedGradient" & ["A", "B"][(effectColor mod 4)]).image.getPixel(q-1, c-1).red
         end if
       else
-        decalColor = 0
+        decalColor: number = 0
         if(gAnyDecals)then
-          dcGet = member("finalDecalImage").image.getPixel(q-1, c-1)
+          dcGet: color = member("finalDecalImage").image.getPixel(q-1, c-1)
           if (dcGet <> color(255, 255, 255))and(dcGet <> color(0, 0, 0))then
             if(dcGet = gPEcolors[1][2])then
               if(doesGreenValueMeanRainbow(greenCol) = 0)then--RAINBOW DECAL COLOR!
@@ -182,13 +183,13 @@ on newFrame me
   end if
 end 
 
-on rainbowifypixel me, pxl
+on rainbowifypixel me, pxl: point
   if(pxl.locH < 2)or(pxl.locV < 2)then
     return
   end if
   
   if IsPixelInFinalImageRainbowed(pxl+point(-1, 0)) = 0 then
-    currCol = member("finalImage").image.getPixel(pxl.locH-1-1, pxl.locV-1)
+    currCol: color = member("finalImage").image.getPixel(pxl.locH-1-1, pxl.locV-1)
     member("finalImage").image.setPixel(pxl.locH-1-1, pxl.locV-1, color(currCol.red, currCol.green+4, currCol.blue))
   end if
   
@@ -202,19 +203,19 @@ on rainbowifypixel me, pxl
   member("rainBowMask").image.setPixel(pxl.locH-1, pxl.locV-1+1, color(0, 0, 0))
 end if
 
-on IsPixelInFinalImageRainbowed(pxl)
+on IsPixelInFinalImageRainbowed(pxl: point)
 if(pxl.loch < 1)or(pxl.locv < 1)then
 return 0
 else if(member("finalImage").image.getPixel(pxl.locH-1, pxl.locV-1) = color(255, 255, 255))then
 return 0
 else
-grn = member("finalImage").image.getPixel(pxl.locH-1, pxl.locV-1).green
+grn: number = member("finalImage").image.getPixel(pxl.locH-1, pxl.locV-1).green
 return doesGreenValueMeanRainbow(grn)
 end if
 
 end
 
-on doesGreenValueMeanRainbow(grn)
+on doesGreenValueMeanRainbow(grn: number)
   if (grn > 3)and(grn < 8)then
     return 1
   else  if (grn > 11)and(grn < 16)then

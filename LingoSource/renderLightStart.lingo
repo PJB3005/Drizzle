@@ -15,7 +15,7 @@ on exitFrame me
           --   mdlFrntImg.copyPixels(member("hiveGrass").image, rct, member("hiveGrass").image.rect, {color:pltt[1]})
           repeat with tp = 1 to 2 then
             repeat with grss = 1 to 6 then
-              lr = ((layer-1)*10)+random(9)
+              lr: number = ((layer-1)*10)+random(9)
               pos = giveMiddleOfTile(point(q,c) - gRenderCameraTilePos)+point(-10+random(20), 0)
               if (tp = 2)and(layer = 1) then
                 member("layer"&string(lr)).image.copyPixels(member("hiveGrassGraf").image, rect(pos,pos)+rect(-2,random(5)-random(10)-random(random(14)),3,10), rect(0,0,5,29), {#ink:36})
@@ -29,11 +29,11 @@ on exitFrame me
     end repeat
   end repeat
   
-  cols = 100
-  rows = 60
+  cols: number = 100
+  rows: number = 60
   
   
-  marginPixels = 150
+  marginPixels: number = 150
   
   if(gAnyDecals)then
     repeat with l = 0 to 29 then
@@ -55,7 +55,7 @@ on exitFrame me
   member("activeLightImage").image.setPixel(member("activeLightImage").image.rect.right-1,member("activeLightImage").image.rect.bottom-1, color(0,0,0))
   
   
-  inversedLightImage = makeSilhoutteFromImg( member("lightImage").image, 1)
+  inversedLightImage: image = makeSilhoutteFromImg( member("lightImage").image, 1)
   
   global  gRenderCameraPixelPos
   
@@ -118,7 +118,9 @@ on quadifyMember me, mem: string, fac: number
   --  end repeat
   --  
   --  newImg = member(mem).image.duplicate()
+  type newImg: image
   --  qd = [point(0,0), point(newImg.width, 0), point(newImg.width, newImg.height), point(0,newImg.height)]
+  type qd: list
   --  qd = qd + qDirs*fac
   --  member(mem).image.copypixels(newImg, qd, newImg.rect)
   --  
