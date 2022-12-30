@@ -8,9 +8,7 @@ on exitFrame me
   type ad: number
   --type tl: number
   --type testmat: number
-  type tlps: point
-  type tlpsflag: number
-  tlpsflag = 0
+
   put "Start render"
   
   gLOprops.pal = 1
@@ -56,15 +54,14 @@ on exitFrame me
           else if (tl.tp = "tileHead")or(tl.tp = "tileBody") then
             tlPs = tl.data[1]
             if tl.tp = "tileBody" then
-              tlPsflag = 1
+              tlPs = void
               if ilk(gTEprops.tlMatrix[tl.data[1].locH][tl.data[1].locV][tl.data[2]].data) = #list then
                 tlPs = gTEprops.tlMatrix[tl.data[1].locH][tl.data[1].locV][tl.data[2]].data[1]
-				tlpsflag = 0
               end if
             end if
             ad = 1
             
-            if (tlPsflag < 1) then
+            if (tlPs <> void) then
               if (tlPs.locH > 2) and (tlPs.locH <= gTiles.count) then
                 if tlPs.locV <= gTiles[tlPs.locH].tls.count then
                   ad = (gTiles[tlPs.locH].tls[tlPs.locV].tags.getPos("nonSolid")=0)
