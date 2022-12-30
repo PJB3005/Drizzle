@@ -53,8 +53,8 @@
                 <DockPanel DockPanel.Dock="Bottom" LastChildFill="False">
                     <TextBlock DockPanel.Dock="Left">
                         <TextBlock.Text>
-                            <MultiBinding StringFormat="{}Depth: {0} Size: {1}x{2}">
-                                <Binding Path="SelectedCastMember.Depth" FallbackValue="0" />
+                            <MultiBinding StringFormat="{}Type: {0} Size: {1}x{2}">
+                                <Binding Path="SelectedCastMember.ImageType" FallbackValue="0" />
                                 <Binding Path="SelectedCastMember.Width" FallbackValue="0" />
                                 <Binding Path="SelectedCastMember.Height" FallbackValue="0" />
                             </MultiBinding>

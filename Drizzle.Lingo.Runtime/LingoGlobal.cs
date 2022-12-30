@@ -184,6 +184,13 @@ public sealed partial class LingoGlobal
     public LingoImage image(LingoNumber w, LingoNumber h, LingoNumber bitDepth) =>
         new LingoImage((int)w, (int)h, (int)bitDepth);
 
+    public LingoImage image(LingoNumber w, LingoNumber h, LingoSymbol type)
+    {
+        var typeEnum = Enum.Parse<ImageType>(type.Value);
+
+        return new LingoImage((int)w, (int)h, typeEnum);
+    }
+
     public string @string(object value) => value.ToString() ?? "";
     public string @string(LingoNumber value) => value.ToString();
 

@@ -83,7 +83,7 @@ public sealed class LingoCastViewerViewModel : ViewModelBase
                         bitmap,
                         cast.name,
                         member.name, member.Number,
-                        img.Width, img.Height, img.Depth);
+                        img.Width, img.Height, img.Type);
 
                     members.Add(entry);
                 }
@@ -158,7 +158,7 @@ public sealed class CastMemberViewModel
 
     public int Width { get; }
     public int Height { get; }
-    public int Depth { get; }
+    public ImageType ImageType { get; }
 
     public CastMemberViewModel(
         Bitmap thumbnail,
@@ -167,7 +167,7 @@ public sealed class CastMemberViewModel
         int number,
         int imgWidth,
         int imgHeight,
-        int imgDepth)
+        ImageType imgType)
     {
         Thumbnail = thumbnail;
         CastName = castName;
@@ -175,6 +175,6 @@ public sealed class CastMemberViewModel
         Number = number;
         Width = imgWidth;
         Height = imgHeight;
-        Depth = imgDepth;
+        ImageType = imgType;
     }
 }

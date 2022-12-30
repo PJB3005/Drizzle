@@ -12,9 +12,12 @@ namespace Drizzle.Lingo.Runtime;
 [DebuggerDisplay("Image {Width}x{Height} depth {Depth}")]
 public sealed partial class LingoImage
 {
+    // Image data is BGRA instead of RGBA because ImageSharp doesn't have an Rgba5551 type, only Bgra5551.
+
     public static readonly LingoImage Pxl = MakePxl();
 
-    public int Depth { get; }
+    public ImageType Type { get; }
+    public int Depth => (int)Type;
     public byte[] ImageBuffer { get; private set; }
     public bool ImageBufferShared { get; set; }
 
@@ -31,31 +34,30 @@ public sealed partial class LingoImage
     // Guess we're fast pathing this.
     public bool IsPxl { get; set; }
 
-    public LingoImage(int width, int height, int depth)
+    public LingoImage(int width, int height, int depth) : this(width, height, (ImageType)depth)
+    {
+    }
+
+    public LingoImage(int width, int height, ImageType type)
     {
         Width = width;
         Height = height;
-        Depth = depth;
+        Type = type;
 
-        ImageBuffer = NewImgBufferForDepth(width, height, depth);
+        ImageBuffer = NewImgBufferForType(width, height, type);
     }
 
-    public LingoImage(Image<Bgra32> image)
+    public LingoImage(Image<Bgra32> image) : this(image.Width, image.Height, ImageType.B8G8R8A8)
     {
-        Width = image.Width;
-        Height = image.Height;
-        Depth = 32;
-
-        ImageBuffer = NewImgBufferForDepth(image.Width, image.Height, 32);
         var span = image.GetSinglePixelSpan();
         span.CopyTo(MemoryMarshal.Cast<byte, Bgra32>(ImageBuffer));
     }
 
-    private LingoImage(byte[] buffer, int width, int height, int depth)
+    private LingoImage(byte[] buffer, int width, int height, ImageType type)
     {
         Width = width;
         Height = height;
-        Depth = depth;
+        Type = type;
 
         ImageBuffer = buffer;
     }
@@ -90,15 +92,15 @@ public sealed partial class LingoImage
             return LingoColor.White;
 
         var idx = y * Width + x;
-        switch (Depth)
+        switch (Type)
         {
-            case 32:
+            case ImageType.B8G8R8A8:
             {
                 var buf = MemoryMarshal.Cast<byte, Bgra32>(ImageBuffer);
                 ref var val = ref buf[idx];
                 return new LingoColor(val.R, val.G, val.B);
             }
-            case 16:
+            case ImageType.B5G5R5A1:
             {
                 var buf = MemoryMarshal.Cast<byte, Bgra5551>(ImageBuffer);
                 ref var val = ref buf[idx];
@@ -106,13 +108,13 @@ public sealed partial class LingoImage
                 val.ToRgba32(ref rgba);
                 return new LingoColor(rgba.R, rgba.G, rgba.B);
             }
-            case 1:
+            case ImageType.Palette1:
             {
                 var buf = MemoryMarshal.Cast<byte, int>(ImageBuffer);
                 return DoBitRead(buf, idx) ? new LingoColor(255, 255, 255) : default;
             }
             default:
-                Log.Warning("getpixel(): Unimplemented image depth: {Depth}", Depth);
+                Log.Warning("getpixel(): Unimplemented image type: {Type}", Type);
                 return default;
         }
     }
@@ -138,23 +140,23 @@ public sealed partial class LingoImage
         CopyIfShared();
 
         var idx = y * Width + x;
-        switch (Depth)
+        switch (Type)
         {
-            case 32:
+            case ImageType.B8G8R8A8:
             {
                 var buf = MemoryMarshal.Cast<byte, Bgra32>(ImageBuffer);
                 ref var val = ref buf[idx];
                 val = new Bgra32((byte)color.red, (byte)color.green, (byte)color.blue, 255);
                 return;
             }
-            case 16:
+            case ImageType.B5G5R5A1:
             {
                 var buf = MemoryMarshal.Cast<byte, Bgra5551>(ImageBuffer);
                 ref var val = ref buf[idx];
                 val.FromRgba32(new Rgba32((byte)color.red, (byte)color.green, (byte)color.blue, 255));
                 return;
             }
-            case 1:
+            case ImageType.Palette1:
             {
                 var buf = MemoryMarshal.Cast<byte, int>(ImageBuffer);
                 var white = color.red != 0;
@@ -173,13 +175,13 @@ public sealed partial class LingoImage
     {
         var newBuf = GC.AllocateUninitializedArray<byte>(ImageBuffer.Length);
         ImageBuffer.AsSpan().CopyTo(newBuf);
-        return new LingoImage(newBuf, Width, Height, Depth);
+        return new LingoImage(newBuf, Width, Height, Type);
     }
 
     public LingoImage DuplicateShared()
     {
         ImageBufferShared = true;
-        return new LingoImage(ImageBuffer, Width, Height, Depth) { IsPxl = IsPxl, ImageBufferShared = true };
+        return new LingoImage(ImageBuffer, Width, Height, Type) { IsPxl = IsPxl, ImageBufferShared = true };
     }
 
     public LingoMask createmask()
@@ -267,13 +269,13 @@ public sealed partial class LingoImage
         return imgSharp;
     }
 
-    private static byte[] NewImgBufferForDepth(int width, int height, int depth)
+    private static byte[] NewImgBufferForType(int width, int height, ImageType type)
     {
-        if (depth is 2 or 4)
+        if (type is ImageType.Palette2 or ImageType.Palette4)
             throw new NotSupportedException();
 
         int size;
-        if (depth == 1)
+        if (type == ImageType.Palette1)
         {
             var bits = width * height;
             size = (bits + 7) >> 3;
@@ -284,11 +286,20 @@ public sealed partial class LingoImage
         }
         else
         {
-            size = width * height * (depth >> 3);
+            var pxSize = type switch
+            {
+                ImageType.L8 => 1,
+                ImageType.Palette8 => 1,
+                ImageType.B5G5R5A1 => 2,
+                ImageType.B8G8R8A8 => 4,
+                _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+            };
+
+            size = width * height * pxSize;
         }
 
         // 8-bit palettized needs to be initialized to 0 (0 == white).
-        if (depth == 8)
+        if (type == ImageType.Palette8)
             return new byte[size];
 
         // all other formats initialize to all 1s (white).
@@ -342,4 +353,20 @@ public sealed partial class LingoImage
         img.setpixel(0, 0, LingoColor.Black);
         return img;
     }
+}
+
+public enum ImageType
+{
+    // Base Lingo image types.
+
+    Palette1 = 1,
+    Palette2 = 2, // Not supported by Drizzle.
+    Palette4 = 4, // Not supported by Drizzle.
+    Palette8 = 8,
+    B5G5R5A1 = 16,
+    B8G8R8A8 = 32,
+
+    // New image types to make rendering go NYOOOM.
+    // These depth values don't make sense, but they're to avoid conflicts with built-in Director stuff.
+    L8 = 33,
 }

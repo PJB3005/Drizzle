@@ -22,20 +22,25 @@ public sealed unsafe partial class LingoImage
     {
         CopyIfShared();
 
-        switch (Depth)
+        switch (Type)
         {
-            case 32:
+            case ImageType.B8G8R8A8:
                 FillCore<PixelOpsBgra32, Bgra32>(this, color);
                 break;
-            case 16:
+            case ImageType.B5G5R5A1:
                 FillCore<PixelOpsBgra5551, Bgra5551>(this, color);
                 break;
-            case 8:
+            case ImageType.Palette8:
                 FillCore<PixelOpsPalette8, L8>(this, color);
                 break;
-            case 1:
+            case ImageType.Palette1:
                 FillCore<PixelOpsBit, int>(this, color);
                 break;
+            case ImageType.L8:
+                FillCore<PixelOpsL8, L8>(this, color);
+                break;
+            default:
+                throw new NotSupportedException();
         }
     }
 
@@ -130,9 +135,9 @@ public sealed unsafe partial class LingoImage
         Vector4 srcBox,
         in CopyPixelsParameters parameters)
     {
-        switch (dst.Depth)
+        switch (dst.Type)
         {
-            case 32:
+            case ImageType.B8G8R8A8:
                 CopyPixelsQuadGenSampler<Bgra32, PixelOpsBgra32>(
                     src,
                     dst,
@@ -140,7 +145,7 @@ public sealed unsafe partial class LingoImage
                     srcBox,
                     parameters);
                 break;
-            case 16:
+            case ImageType.B5G5R5A1:
                 CopyPixelsQuadGenSampler<Bgra5551, PixelOpsBgra5551>(
                     src,
                     dst,
@@ -148,7 +153,7 @@ public sealed unsafe partial class LingoImage
                     srcBox,
                     parameters);
                 break;
-            case 8:
+            case ImageType.Palette8:
                 CopyPixelsQuadGenSampler<L8, PixelOpsPalette8>(
                     src,
                     dst,
@@ -156,7 +161,7 @@ public sealed unsafe partial class LingoImage
                     srcBox,
                     parameters);
                 break;
-            case 1:
+            case ImageType.Palette1:
                 CopyPixelsQuadGenSampler<int, PixelOpsBit>(
                     src,
                     dst,
@@ -164,9 +169,16 @@ public sealed unsafe partial class LingoImage
                     srcBox,
                     parameters);
                 break;
-            default:
-                // Not implemented.
+            case ImageType.L8:
+                CopyPixelsQuadGenSampler<L8, PixelOpsL8>(
+                    src,
+                    dst,
+                    destQuad,
+                    srcBox,
+                    parameters);
                 break;
+            default:
+                throw new NotSupportedException();
         }
     }
 
@@ -178,9 +190,9 @@ public sealed unsafe partial class LingoImage
         where TWriter : struct, IPixelOps<TDstData>
         where TDstData : unmanaged
     {
-        switch (src.Depth)
+        switch (src.Type)
         {
-            case 32:
+            case ImageType.B8G8R8A8:
                 CopyPixelsQuadCore<Bgra32, PixelOpsBgra32, TDstData, TWriter>(
                     src,
                     dst,
@@ -188,7 +200,7 @@ public sealed unsafe partial class LingoImage
                     srcBox,
                     parameters);
                 break;
-            case 16:
+            case ImageType.B5G5R5A1:
                 CopyPixelsQuadCore<Bgra5551, PixelOpsBgra5551, TDstData, TWriter>(
                     src,
                     dst,
@@ -196,7 +208,7 @@ public sealed unsafe partial class LingoImage
                     srcBox,
                     parameters);
                 break;
-            case 8:
+            case ImageType.Palette8:
                 CopyPixelsQuadCore<L8, PixelOpsPalette8, TDstData, TWriter>(
                     src,
                     dst,
@@ -204,7 +216,7 @@ public sealed unsafe partial class LingoImage
                     srcBox,
                     parameters);
                 break;
-            case 1:
+            case ImageType.Palette1:
                 CopyPixelsQuadCore<int, PixelOpsBit, TDstData, TWriter>(
                     src,
                     dst,
@@ -212,9 +224,16 @@ public sealed unsafe partial class LingoImage
                     srcBox,
                     parameters);
                 break;
-            default:
-                // Not implemented.
+            case ImageType.L8:
+                CopyPixelsQuadCore<L8, PixelOpsL8, TDstData, TWriter>(
+                    src,
+                    dst,
+                    destQuad,
+                    srcBox,
+                    parameters);
                 break;
+            default:
+                throw new NotSupportedException();
         }
     }
 
@@ -695,9 +714,9 @@ public sealed unsafe partial class LingoImage
         (int l, int t, int r, int b) dstBox,
         in CopyPixelsParameters parameters)
     {
-        switch (dst.Depth)
+        switch (dst.Type)
         {
-            case 32:
+            case ImageType.B8G8R8A8:
                 CopyPixelsRectGenSampler<Bgra32, PixelOpsBgra32>(
                     src,
                     dst,
@@ -705,7 +724,7 @@ public sealed unsafe partial class LingoImage
                     dstBox,
                     parameters);
                 break;
-            case 16:
+            case ImageType.B5G5R5A1:
                 CopyPixelsRectGenSampler<Bgra5551, PixelOpsBgra5551>(
                     src,
                     dst,
@@ -713,7 +732,7 @@ public sealed unsafe partial class LingoImage
                     dstBox,
                     parameters);
                 break;
-            case 8:
+            case ImageType.Palette8:
                 CopyPixelsRectGenSampler<L8, PixelOpsPalette8>(
                     src,
                     dst,
@@ -721,7 +740,7 @@ public sealed unsafe partial class LingoImage
                     dstBox,
                     parameters);
                 break;
-            case 1:
+            case ImageType.Palette1:
                 CopyPixelsRectGenSampler<int, PixelOpsBit>(
                     src,
                     dst,
@@ -729,9 +748,16 @@ public sealed unsafe partial class LingoImage
                     dstBox,
                     parameters);
                 break;
-            default:
-                // Not implemented.
+            case ImageType.L8:
+                CopyPixelsRectGenSampler<L8, PixelOpsL8>(
+                    src,
+                    dst,
+                    srcBox,
+                    dstBox,
+                    parameters);
                 break;
+            default:
+                throw new NotSupportedException();
         }
     }
 
@@ -743,9 +769,9 @@ public sealed unsafe partial class LingoImage
         where TWriter : struct, IPixelOps<TDstData>
         where TDstData : unmanaged
     {
-        switch (src.Depth)
+        switch (src.Type)
         {
-            case 32:
+            case ImageType.B8G8R8A8:
                 CopyPixelsRectCoreCopy<Bgra32, PixelOpsBgra32, TDstData, TWriter>(
                     src,
                     dst,
@@ -753,7 +779,7 @@ public sealed unsafe partial class LingoImage
                     dstBox,
                     parameters);
                 break;
-            case 16:
+            case ImageType.B5G5R5A1:
                 CopyPixelsRectCoreCopy<Bgra5551, PixelOpsBgra5551, TDstData, TWriter>(
                     src,
                     dst,
@@ -761,7 +787,7 @@ public sealed unsafe partial class LingoImage
                     dstBox,
                     parameters);
                 break;
-            case 8:
+            case ImageType.Palette8:
                 CopyPixelsRectCoreCopy<L8, PixelOpsPalette8, TDstData, TWriter>(
                     src,
                     dst,
@@ -769,7 +795,7 @@ public sealed unsafe partial class LingoImage
                     dstBox,
                     parameters);
                 break;
-            case 1:
+            case ImageType.Palette1:
                 CopyPixelsRectCoreCopy<int, PixelOpsBit, TDstData, TWriter>(
                     src,
                     dst,
@@ -777,9 +803,16 @@ public sealed unsafe partial class LingoImage
                     dstBox,
                     parameters);
                 break;
-            default:
-                // Not implemented.
+            case ImageType.L8:
+                CopyPixelsRectCoreCopy<L8, PixelOpsL8, TDstData, TWriter>(
+                    src,
+                    dst,
+                    srcBox,
+                    dstBox,
+                    parameters);
                 break;
+            default:
+                throw new NotSupportedException();
         }
     }
 
@@ -1221,29 +1254,40 @@ public sealed unsafe partial class LingoImage
         (int l, int t, int r, int b) dstBox,
         in CopyPixelsParameters parameters)
     {
-        switch (dst.Depth)
+        switch (dst.Type)
         {
-            case 32:
+            case ImageType.B8G8R8A8:
                 CopyPixelsPxlRectCore<Bgra32, PixelOpsBgra32>(
                     dst,
                     dstBox,
                     parameters);
                 break;
-            case 16:
+            case ImageType.B5G5R5A1:
                 CopyPixelsPxlRectCore<Bgra5551, PixelOpsBgra5551>(
                     dst,
                     dstBox,
                     parameters);
                 break;
-            case 1:
+            case ImageType.Palette8:
+                CopyPixelsPxlRectCore<L8, PixelOpsPalette8>(
+                    dst,
+                    dstBox,
+                    parameters);
+                break;
+            case ImageType.Palette1:
                 CopyPixelsPxlRectCore<int, PixelOpsBit>(
                     dst,
                     dstBox,
                     parameters);
                 break;
-            default:
-                // Not implemented.
+            case ImageType.L8:
+                CopyPixelsPxlRectCore<L8, PixelOpsPalette8>(
+                    dst,
+                    dstBox,
+                    parameters);
                 break;
+            default:
+                throw new NotSupportedException();
         }
     }
 
@@ -1457,6 +1501,50 @@ public sealed unsafe partial class LingoImage
 
             // White.
             return new L8(0);
+        }
+    }
+
+    private struct PixelOpsL8 : IPixelOps<L8>
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int Sample(ReadOnlySpan<L8> srcDat, int rowMajorPos)
+        {
+            var px = srcDat[rowMajorPos].PackedValue;
+            return new LingoColor(px, px, px).BitPack;
+        }
+
+        public static Vector256<int> Read8(ReadOnlySpan<L8> dstDat, int rowMajorPos0, Vector256<int> readMask)
+        {
+            throw new NotImplementedException();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Write(Span<L8> dstDat, int rowMajorPos, int value)
+        {
+            dstDat[rowMajorPos] = new L8((byte)(value & 0xFF));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Write8(Span<L8> dstDat, int rowMajorPos0, Vector256<int> pixelData, Vector256<int> writeMask)
+        {
+            // todo: make this fast.
+
+            dstDat = dstDat[rowMajorPos0..];
+            dstDat = dstDat[..Math.Min(8, dstDat.Length)];
+
+            for (var i = 0; i < dstDat.Length; i++)
+            {
+                if (writeMask.GetElement(i) == 0)
+                    continue;
+
+                var value = pixelData.GetElement(i);
+                dstDat[i] = new L8((byte)(value & 0xFF));
+            }
+        }
+
+        public static void Fill(Span<L8> dstDat, int value)
+        {
+            dstDat.Fill(new L8((byte)(value & 0xFF)));
         }
     }
 
