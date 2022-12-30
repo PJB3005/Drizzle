@@ -66,6 +66,8 @@ int DoCmdRender(CommandLineArgs.VerbRender options)
         checksums = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(chkFile);
     }
 
+    Shuffle(options.Levels, new Random());
+
     Parallel.ForEach(options.Levels, parallelOptions, s =>
     {
         var renderRuntime = zygote.Clone();
@@ -166,4 +168,16 @@ static LingoRuntime MakeZygoteRuntime()
     EditorRuntimeHelpers.RunStartup(runtime);
 
     return runtime;
+}
+
+static void Shuffle<T>(List<T> array, System.Random random)
+{
+    var n = array.Count;
+    while (n > 1)
+    {
+        n--;
+        var k = random.Next(n + 1);
+        (array[k], array[n]) =
+            (array[n], array[k]);
+    }
 }
