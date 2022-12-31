@@ -23,22 +23,22 @@ on exitFrame me
   
   gImgXtra = xtra("ImgXtra").new()
   
-  g = 21
+  g: number = 21
   if (g=2) then
     -- XC_ShowCursor(0)
     --  _player.cursor(200)
     
     gSaveProps = [baScreenInfo("width"), baScreenInfo("height"), baScreenInfo("depth")]
     
-    fac = gSaveProps[1].float/gSaveProps[2] .float
+    fac: number = gSaveProps[1].float/gSaveProps[2] .float
     
-    screenResolutionPoint = point(1024,768)
+    screenResolutionPoint: point = point(1024,768)
     baSetDisplay(screenResolutionPoint.locH,screenResolutionPoint.locV,32,"temp", false)
     
-    screenSize = point(1024,768)/2
+    screenSize: point = point(1024,768)/2
     
-    midPos = screenResolutionPoint/2
-    windowRect = rect(midPos-screenSize, midPos+screenSize)
+    midPos: point = screenResolutionPoint/2
+    windowRect: rect = rect(midPos-screenSize, midPos+screenSize)
     _movie.window.rect = windowRect
     _movie.stage.drawRect = rect(0,0,1024, 768)
     -- _movie.stage.drawRect = rect(0,0,180, 180)
@@ -49,8 +49,8 @@ on exitFrame me
   solidMtrx = []
   
   -- LEVELEDITOR!!!!!
-  cols = 72--gLOprops.size.loch
-  rows = 43--gLOprops.size.locv
+  cols: number = 72--gLOprops.size.loch
+  rows: number = 43--gLOprops.size.locv
   
   gLEProps = [#matrix:[] , #levelEditors:[] , #toolMatrix:[],#camPos:point(0,0)]
   
@@ -79,7 +79,7 @@ on exitFrame me
   --    end if
   --  else
   repeat with q = 1 to cols then
-    ql = []
+    ql: list = []
     repeat with c = 1 to rows then
       ql.add([[1, []], [1, []], [0, []]])
     end repeat
@@ -101,7 +101,7 @@ on exitFrame me
   -- member("levelEditImageShortCuts").image.copyPixels(img, img.rect, img.rect, {#color:0, #bgColor:255})
   
   repeat with q = 1 to cols then
-    l = []
+    l: list = []
     repeat with c = 1 to rows then
       l.add([[#tp:"default", #data:0], [#tp:"default", #data:0], [#tp:"default", #data:0]])
     end repeat
@@ -144,19 +144,19 @@ on exitFrame me
   gTiles[2].tls.add( [#nm:"SH pattern box", #sz:point(1,1), #specs:[0], #placeMethod:"rect", #color:color(210, 0, 255)]    )
   gTiles[2].tls.add( [#nm:"SH grate box", #sz:point(1,1), #specs:[0], #placeMethod:"rect", #color:color(160, 0, 255)]    )
   
-  sav = member("initImport")
+  sav: member = member("initImport")
   member("initImport").importFileInto("Graphics" & the dirSeparator & "Init.txt")
   sav.name = "initImport"
   
   member("previewTiles").image = image(60000, 500, 1)
-  ptPos = 1
+  ptPos: number = 1
   
   
   repeat with q = 1 to the number of lines in sav.text then
     if sav.text.line[q] <> "" then
       if sav.text.line[q].char[1] = "-" then
         
-        vl = value(sav.text.line[q].char[2..sav.text.line[q].length])
+        vl: list = value(sav.text.line[q].char[2..sav.text.line[q].length])
         
         gTiles.add( [#nm:vl[1], #clr:vl[2], #tls:[]]    )
         
@@ -165,18 +165,18 @@ on exitFrame me
         ad = value(sav.text.line[q])
         debugline = sav.text.line[q]
         
-        sav2 = member("previewImprt")
+        sav2: member = member("previewImprt")
         member("previewImprt").importFileInto("Graphics" & the dirSeparator &ad.nm&".png")
         sav2.name = "previewImprt"
         
-        calculatedHeight = sav2.image.rect.height
+        calculatedHeight: number = sav2.image.rect.height
         if ad.tp = "voxelStruct" then
           calculatedHeight = 1 + (16*ad.sz.locV) + (20*(ad.sz.locV+(ad.bfTiles*2))*ad.repeatL.count)
         end if
         
         -- if(sav2.image.rect.height <> calculatedHeight) then put ad.nm && sav2.image.rect.height && calculatedHeight && ad.repeatL.count && ad.bfTiles && ad.sz.locV
         
-        rct = rect(0, calculatedHeight - (16*ad.sz.locV), (16*ad.sz.locH), calculatedHeight)
+        rct: rect = rect(0, calculatedHeight - (16*ad.sz.locV), (16*ad.sz.locH), calculatedHeight)
         member("previewTiles").image.copyPixels(sav2.image, rect(ptPos, 0, ptPos + (16*ad.sz.locH), (16*ad.sz.locV)), rct)
         
         ad.ptPos = ptPos
@@ -225,10 +225,10 @@ on exitFrame me
         
       else 
         ad = value(sav.text.line[q])
-        strng = sav.text.line[q]
+        strng: string = sav.text.line[q]
         ad.addProp(#category, gProps.count)
         if(ad.tp = "standard")or(ad.tp = "variedStandard")then
-          dp = 0
+          dp: number = 0
           repeat with i = 1 to ad.repeatL.count then
             dp = dp + ad.repeatL[i]
           end repeat
@@ -241,8 +241,8 @@ on exitFrame me
     end if
   end repeat
   
-  gPageCount = 0
-  gPageTick = 0
+  gPageCount: number = 0
+  gPageTick: number = 0
   
   repeat with q = 3 to gTiles.count then
     repeat with c = 1 to gTiles[q].tls.count then
@@ -467,6 +467,7 @@ on exitFrame me
   
   
   repeat with mem in ["rainBowMask","blackOutImg1","blackOutImg2"] then
+    type mem: string
     member(mem).image = image(1, 1, 1)
   end repeat
   

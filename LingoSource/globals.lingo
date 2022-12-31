@@ -78,3 +78,5 @@ type tileSetIndex:                list
 type tm:                          number
 
 type wireBunchSav:                list
+
+type gSaveProps:                  list
