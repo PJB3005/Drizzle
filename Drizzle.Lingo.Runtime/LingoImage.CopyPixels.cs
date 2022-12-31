@@ -534,8 +534,6 @@ public sealed unsafe partial class LingoImage
 
         static Vector256<float> Lerp(Vector256<float> x, Vector256<float> y, Vector256<float> a) =>
             Avx.Add(x, Avx.Multiply(a, Avx.Subtract(y, x)));
-
-
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1037,6 +1035,7 @@ public sealed unsafe partial class LingoImage
 
                     var imgPos = Avx2.Add(imgRowVec, coord);
 
+                    // @formatter:off
                     var posL = imgPos.GetLower();
                     var maskL = readMask.GetLower();
                     var l0 = CoreAvx2DoMaskedSample<TSrcData, TSampler>(posL.GetElement(0), maskL.GetElement(0), srcSpan);
@@ -1052,6 +1051,7 @@ public sealed unsafe partial class LingoImage
                     var u2 = CoreAvx2DoMaskedSample<TSrcData, TSampler>(posU.GetElement(2), maskU.GetElement(2), srcSpan);
                     var u3 = CoreAvx2DoMaskedSample<TSrcData, TSampler>(posU.GetElement(3), maskU.GetElement(3), srcSpan);
                     var upperSample = Vector128.Create(u0, u1, u2, u3);
+                    // @formatter:on
 
                     color = Vector256.Create(lowerSample, upperSample);
                 }
@@ -1344,19 +1344,22 @@ public sealed unsafe partial class LingoImage
         Darkest = 39
     }
 
-    private interface IPixelOps<TPixel>
+    internal interface IPixelOps<TPixel>
     {
         static abstract int Sample(ReadOnlySpan<TPixel> srcDat, int rowMajorPos);
         static abstract Vector256<int> Read8(ReadOnlySpan<TPixel> dstDat, int rowMajorPos0, Vector256<int> readMask);
         static abstract void Write(Span<TPixel> dstDat, int rowMajorPos, int value);
 
-        static abstract void Write8(Span<TPixel> dstDat, int rowMajorPos0, Vector256<int> pixelData,
+        static abstract void Write8(
+            Span<TPixel> dstDat,
+            int rowMajorPos0,
+            Vector256<int> pixelData,
             Vector256<int> writeMask);
 
         static abstract void Fill(Span<TPixel> dstDat, int value);
     }
 
-    private struct PixelOpsBgra32 : IPixelOps<Bgra32>
+    internal struct PixelOpsBgra32 : IPixelOps<Bgra32>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Sample(ReadOnlySpan<Bgra32> srcDat, int rowMajorPos)
@@ -1397,7 +1400,7 @@ public sealed unsafe partial class LingoImage
         }
     }
 
-    private struct PixelOpsBgra5551 : IPixelOps<Bgra5551>
+    internal struct PixelOpsBgra5551 : IPixelOps<Bgra5551>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Sample(ReadOnlySpan<Bgra5551> srcDat, int rowMajorPos)
@@ -1445,7 +1448,7 @@ public sealed unsafe partial class LingoImage
         }
     }
 
-    private struct PixelOpsPalette8 : IPixelOps<L8>
+    internal struct PixelOpsPalette8 : IPixelOps<L8>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Sample(ReadOnlySpan<L8> srcDat, int rowMajorPos)
@@ -1504,7 +1507,7 @@ public sealed unsafe partial class LingoImage
         }
     }
 
-    private struct PixelOpsL8 : IPixelOps<L8>
+    internal struct PixelOpsL8 : IPixelOps<L8>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Sample(ReadOnlySpan<L8> srcDat, int rowMajorPos)
@@ -1513,9 +1516,41 @@ public sealed unsafe partial class LingoImage
             return new LingoColor(px, px, px).BitPack;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector256<int> Read8(ReadOnlySpan<L8> dstDat, int rowMajorPos0, Vector256<int> readMask)
         {
-            throw new NotImplementedException();
+            ref var baseData = ref Unsafe.As<L8, byte>(
+                ref Unsafe.Add(ref MemoryMarshal.GetReference(dstDat), rowMajorPos0));
+
+            // Safe to do because I pad the image buffers with +8 pixels lol.
+            var eight = Unsafe.ReadUnaligned<ulong>(ref baseData);
+            var vec = Vector256.CreateScalar(eight).AsByte();
+            var select = Vector256.Create(
+                (byte)
+                0, 0, 0, 0,
+                1, 1, 1, 0,
+                2, 2, 2, 0,
+                3, 3, 3, 0,
+                4, 4, 4, 0,
+                5, 5, 5, 0,
+                6, 6, 6, 0,
+                7, 7, 7, 0);
+
+            var shuffled = Vector256.Shuffle(vec, select);
+
+            var alphaMask = Vector256.Create(
+                0x00, 0x00, 0x00, 0xFF,
+                0x00, 0x00, 0x00, 0xFF,
+                0x00, 0x00, 0x00, 0xFF,
+                0x00, 0x00, 0x00, 0xFF,
+                0x00, 0x00, 0x00, 0xFF,
+                0x00, 0x00, 0x00, 0xFF,
+                0x00, 0x00, 0x00, 0xFF,
+                0x00, 0x00, 0x00, 0xFF);
+
+            var alphas = Vector256.BitwiseOr(shuffled, alphaMask);
+
+            return alphas.AsInt32();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1527,28 +1562,48 @@ public sealed unsafe partial class LingoImage
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Write8(Span<L8> dstDat, int rowMajorPos0, Vector256<int> pixelData, Vector256<int> writeMask)
         {
-            // todo: make this fast.
+            ref var baseData = ref Unsafe.As<L8, byte>(
+                ref Unsafe.Add(ref MemoryMarshal.GetReference(dstDat), rowMajorPos0));
 
-            dstDat = dstDat[rowMajorPos0..];
-            dstDat = dstDat[..Math.Min(8, dstDat.Length)];
+            var shuffledVec = Avx2.Shuffle(pixelData.AsByte(), Vector256.Create(
+                    0x00, 0x04, 0x08, 0x0C,
+                    0xFF, 0xFF, 0xFF, 0xFF,
+                    0xFF, 0xFF, 0xFF, 0xFF,
+                    0xFF, 0xFF, 0xFF, 0xFF,
+                    0xFF, 0xFF, 0xFF, 0xFF,
+                    0x00, 0x04, 0x08, 0x0C,
+                    0xFF, 0xFF, 0xFF, 0xFF,
+                    0xFF, 0xFF, 0xFF, 0xFF))
+                .AsUInt64();
 
-            for (var i = 0; i < dstDat.Length; i++)
-            {
-                if (writeMask.GetElement(i) == 0)
-                    continue;
+            var shuffled = shuffledVec.GetLower().ToScalar() | shuffledVec.GetUpper().ToScalar();
 
-                var value = pixelData.GetElement(i);
-                dstDat[i] = new L8((byte)(value & 0xFF));
-            }
+            var shuffledMaskVec = Avx2.Shuffle(writeMask.AsByte(), Vector256.Create(
+                    0x00, 0x04, 0x08, 0x0C,
+                    0xFF, 0xFF, 0xFF, 0xFF,
+                    0xFF, 0xFF, 0xFF, 0xFF,
+                    0xFF, 0xFF, 0xFF, 0xFF,
+                    0xFF, 0xFF, 0xFF, 0xFF,
+                    0x00, 0x04, 0x08, 0x0C,
+                    0xFF, 0xFF, 0xFF, 0xFF,
+                    0xFF, 0xFF, 0xFF, 0xFF))
+                .AsUInt64();
+
+            var shuffledMask = shuffledMaskVec.GetLower().ToScalar() | shuffledMaskVec.GetUpper().ToScalar();
+
+            var existingData = Unsafe.ReadUnaligned<ulong>(ref baseData);
+            var newData = (existingData & ~shuffledMask) | (shuffled & shuffledMask);
+            Unsafe.WriteUnaligned(ref baseData, newData);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Fill(Span<L8> dstDat, int value)
         {
             dstDat.Fill(new L8((byte)(value & 0xFF)));
         }
     }
 
-    private struct PixelOpsBit : IPixelOps<int>
+    internal struct PixelOpsBit : IPixelOps<int>
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Sample(ReadOnlySpan<int> srcDat, int rowMajorPos)

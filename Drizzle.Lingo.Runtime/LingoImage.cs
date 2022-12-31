@@ -18,6 +18,8 @@ public sealed partial class LingoImage
 
     public ImageType Type { get; }
     public int Depth => (int)Type;
+
+    // Note: image buffer may contain pad bytes at the end to make operations easier.
     public byte[] ImageBuffer { get; private set; }
     public bool ImageBufferShared { get; set; }
 
@@ -60,6 +62,18 @@ public sealed partial class LingoImage
         Type = type;
 
         ImageBuffer = buffer;
+    }
+
+    public Span<byte> ImageBufferNoPadding
+    {
+        get
+        {
+            if (Type == ImageType.Palette1)
+                return ImageBuffer;
+
+            var size = Width * Height * PixelTypeSize(Type);
+            return ImageBuffer.AsSpan(0, size);
+        }
     }
 
     public void SaveAsPng(Stream stream)
@@ -113,6 +127,11 @@ public sealed partial class LingoImage
                 var buf = MemoryMarshal.Cast<byte, int>(ImageBuffer);
                 return DoBitRead(buf, idx) ? new LingoColor(255, 255, 255) : default;
             }
+            case ImageType.L8:
+            {
+                var val = ImageBuffer[idx];
+                return new LingoColor(val, val, val);
+            }
             default:
                 Log.Warning("getpixel(): Unimplemented image type: {Type}", Type);
                 return default;
@@ -165,8 +184,14 @@ public sealed partial class LingoImage
 
                 return;
             }
+            case ImageType.L8:
+            {
+                ImageBuffer[idx] = color.RedByte;
+
+                return;
+            }
             default:
-                Log.Warning("setpixel(): Unimplemented image depth: {Depth}", Depth);
+                Log.Warning("setpixel(): Unimplemented image type: {Type}", Type);
                 break;
         }
     }
@@ -241,9 +266,9 @@ public sealed partial class LingoImage
     public Image GetImgSharpImage()
     {
         var img = this;
-        if (img.Depth is 8 or 1)
+        if (img.Type is not (ImageType.B5G5R5A1 or ImageType.B8G8R8A8))
         {
-            var copy = new LingoImage(Width, Height, 16);
+            var copy = new LingoImage(Width, Height, ImageType.B8G8R8A8);
             copy.copypixels(this, rect, rect);
             img = copy;
         }
@@ -264,7 +289,7 @@ public sealed partial class LingoImage
             imgSharpSpan = MemoryMarshal.Cast<Bgra32, byte>(bgra32.GetSinglePixelSpan());
         }
 
-        img.ImageBuffer.CopyTo(imgSharpSpan);
+        img.ImageBufferNoPadding.CopyTo(imgSharpSpan);
 
         return imgSharp;
     }
@@ -275,10 +300,10 @@ public sealed partial class LingoImage
             throw new NotSupportedException();
 
         int size;
+        var pixels = width * height;
         if (type == ImageType.Palette1)
         {
-            var bits = width * height;
-            size = (bits + 7) >> 3;
+            size = (pixels + 7) >> 3;
             // Round up to 4 bytes so we can do 32-bit wide operations safely.
             var rem = size & 3;
             if (rem != 0)
@@ -286,16 +311,11 @@ public sealed partial class LingoImage
         }
         else
         {
-            var pxSize = type switch
-            {
-                ImageType.L8 => 1,
-                ImageType.Palette8 => 1,
-                ImageType.B5G5R5A1 => 2,
-                ImageType.B8G8R8A8 => 4,
-                _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
-            };
+            // Add 8 elements to the end cuz I'm a hack fraud
+            // and it makes me not have to care about the end of the data in the pixel ops impls.
+            pixels += 8;
 
-            size = width * height * pxSize;
+            size = pixels * PixelTypeSize(type);
         }
 
         // 8-bit palettized needs to be initialized to 0 (0 == white).
@@ -307,6 +327,18 @@ public sealed partial class LingoImage
         var buf = GC.AllocateUninitializedArray<byte>(size);
         buf.AsSpan().Fill(255);
         return buf;
+    }
+
+    private static int PixelTypeSize(ImageType type)
+    {
+        return type switch
+        {
+            ImageType.Palette8 => 1,
+            ImageType.B5G5R5A1 => 2,
+            ImageType.B8G8R8A8 => 4,
+            ImageType.L8 => 1,
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
     }
 
     /// <summary>

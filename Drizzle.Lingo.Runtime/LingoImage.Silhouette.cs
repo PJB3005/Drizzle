@@ -19,22 +19,22 @@ public sealed partial class LingoImage
         if (Depth == 32)
         {
             if (Avx2.IsSupported)
-                MakeSilhouette32ImplAvx2(this, output, inverted);
+                MakeSilhouette32ImplAvx2(ImageBufferNoPadding, output.ImageBufferNoPadding, inverted);
             else
-                MakeSilhouette32ImplScalar(this, output, inverted);
+                MakeSilhouette32ImplScalar(ImageBufferNoPadding, output.ImageBufferNoPadding, inverted);
         }
         else if (Depth == 1)
         {
-            MakeSilhouette1Impl(this, output, inverted);
+            MakeSilhouette1Impl(ImageBufferNoPadding, output.ImageBufferNoPadding, inverted);
         }
 
         return output;
     }
 
-    private static void MakeSilhouette32ImplScalar(LingoImage src, LingoImage dst, bool inverted)
+    private static void MakeSilhouette32ImplScalar(ReadOnlySpan<byte> srcSpan, Span<byte> dstSpan, bool inverted)
     {
-        var srcBuf = MemoryMarshal.Cast<byte, uint>(src.ImageBuffer);
-        var dstBuf = MemoryMarshal.Cast<byte, uint>(dst.ImageBuffer);
+        var srcBuf = MemoryMarshal.Cast<byte, uint>(srcSpan);
+        var dstBuf = MemoryMarshal.Cast<byte, uint>(dstSpan);
 
         var xorMask = inverted ? 0xFF_FF_FF_FFu : 0u;
 
@@ -54,10 +54,10 @@ public sealed partial class LingoImage
         }
     }
 
-    private static unsafe void MakeSilhouette32ImplAvx2(LingoImage src, LingoImage dst, bool inverted)
+    private static unsafe void MakeSilhouette32ImplAvx2(ReadOnlySpan<byte> srcSpan, Span<byte> dstSpan, bool inverted)
     {
-        var srcBuf = MemoryMarshal.Cast<byte, int>(src.ImageBuffer);
-        var dstBuf = dst.ImageBuffer.AsSpan();
+        var srcBuf = MemoryMarshal.Cast<byte, int>(srcSpan);
+        var dstBuf = dstSpan;
 
         var xorMask = (byte)(inverted ? 0xFF : 0);
         var lengthVec = Vector256.Create(srcBuf.Length);
@@ -83,18 +83,18 @@ public sealed partial class LingoImage
         }
     }
 
-    private static void MakeSilhouette1Impl(LingoImage src, LingoImage dst, bool inverted)
+    private static void MakeSilhouette1Impl(ReadOnlySpan<byte> src, Span<byte> dst, bool inverted)
     {
         if (!inverted)
         {
             // There is literally no reason to do this because the result is the same.
             Log.Warning("MakeSilhouette called on 1-bit image without inversion");
-            src.ImageBuffer.AsSpan().CopyTo(dst.ImageBuffer);
+            src.CopyTo(dst);
             return;
         }
 
-        var srcBuf = MemoryMarshal.Cast<byte, uint>(src.ImageBuffer);
-        var dstBuf = MemoryMarshal.Cast<byte, uint>(dst.ImageBuffer);
+        var srcBuf = MemoryMarshal.Cast<byte, uint>(src);
+        var dstBuf = MemoryMarshal.Cast<byte, uint>(dst);
 
         for (var i = 0; i < srcBuf.Length; i++)
         {

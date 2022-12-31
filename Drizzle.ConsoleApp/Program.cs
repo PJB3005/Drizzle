@@ -156,7 +156,7 @@ static void CalcChecksum(LingoImage img, Span<byte> outData)
         throw new NotSupportedException();
     }
 
-    var hash = MeowHash.Hash(MeowHash.MeowDefaultSeed, img.ImageBuffer);
+    var hash = MeowHash.Hash(MeowHash.MeowDefaultSeed, img.ImageBufferNoPadding);
     Unsafe.WriteUnaligned(ref outData[0], hash);
 }
 

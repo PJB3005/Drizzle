@@ -51,7 +51,7 @@ public static class LingoImageAvaloniaHelper
 
         // Wow I can't believe that worked.
         var dstSpan = new Span<byte>((void*)locked.Address, locked.RowBytes * locked.Size.Height);
-        image.ImageBuffer.CopyTo(dstSpan);
+        image.ImageBufferNoPadding.CopyTo(dstSpan);
     }
 
 }

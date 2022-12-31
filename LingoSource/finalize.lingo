@@ -53,9 +53,9 @@ on exitFrame me
   
   
   
-  member("fogImage").image = image(1400,800,32)
+  member("fogImage").image = image(1400,800,#L8)
   
-  member("dpImage").image = image(1400,800,32)
+  member("dpImage").image = image(1400,800,#L8)
   member("dpImage").image.copyPixels(member("pxl").image, rect(0,0,1400,800), rect(0,0,1,1), {#color:255})
   
   smpl = image(4,1,32)
