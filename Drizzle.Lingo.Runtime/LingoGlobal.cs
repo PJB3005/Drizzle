@@ -186,7 +186,7 @@ public sealed partial class LingoGlobal
 
     public LingoImage image(LingoNumber w, LingoNumber h, LingoSymbol type)
     {
-        var typeEnum = Enum.Parse<ImageType>(type.Value);
+        var typeEnum = Enum.Parse<ImageType>(type.Value, ignoreCase: true);
 
         return new LingoImage((int)w, (int)h, typeEnum);
     }
