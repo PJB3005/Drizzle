@@ -49,6 +49,8 @@ type gESoftProp:                  number
 
 type gLastImported:               string
 
+type gLastImportedImage:          image
+
 type glgtimgQuad:                 list
 
 type gProps:                      list

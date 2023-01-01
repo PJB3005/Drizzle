@@ -247,6 +247,9 @@ public sealed partial class LevelRenderer
             RenderStartFrame(RenderStage.RenderPropsPostEffects);
             script.newframe();
         }
+
+        // Can clear prop/tile LRU cache now since we won't use it from here on.
+        Movie.ImageCacheClear();
     }
 
     private void RenderLight()

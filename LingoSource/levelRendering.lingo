@@ -593,18 +593,8 @@ end
 
 
 on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
-  
-  
-  sav2: member = member("previewImprt")
-  if gLastImported <> tl.nm then
-    member("previewImprt").importFileInto("Graphics" & the dirSeparator &tl.nm&".png")
-    --"
-    sav2.name = "previewImprt"
-    gLastImported = tl.nm
-  end if
-  
-  
-  
+  tileImage = cacheLoadImage("Graphics" & the dirSeparator & tl.nm & ".png")
+
   q = q - gRenderCameraTilePos.locH
   c = c - gRenderCameraTilePos.locV
   
@@ -638,9 +628,9 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
           type h: number
           rct = rect((g-1)*20, (h-1)*20, (g*20), (h*20)) 
           getrct = rect(20, (n-1)*20, 40, n*20)
-          member("vertImg").image.copyPixels(sav2.image, rct, getrct, {#ink:36})
+          member("vertImg").image.copyPixels(tileImage, rct, getrct, {#ink:36})
           getrct = rect(0, (n-1)*20, 20, n*20)
-          member("horiImg").image.copyPixels(sav2.image, rct, getrct, {#ink:36})
+          member("horiImg").image.copyPixels(tileImage, rct, getrct, {#ink:36})
           n = n + 1  
         end repeat
       end repeat
@@ -648,7 +638,7 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
       getRect = rect(0,0,tl.sz.locH*20, tl.sz.locV*20)+rect(0,0,40*tl.bfTiles, 40*tl.bfTiles)+rect(0,nmOfTiles*20,0,nmOfTiles*20)
       rnd = random(tl.rnd)
       getRect = getRect + rect(getRect.width*(rnd-1), 0, getRect.width*(rnd-1), 0)
-      frntImg.copyPixels(sav2.image, rct, getRect, {#ink:36})
+      frntImg.copyPixels(tileImage, rct, getRect, {#ink:36})
       
       
     "voxelStruct":
@@ -687,7 +677,7 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
         end if
       end if
       
-      frntImg.copyPixels(sav2.image, rct, gtRect + rect(gtRect.width*(rnd-1), 0, gtRect.width*(rnd-1), 0)+rect(0,1,0,1), {#ink:36})
+      frntImg.copyPixels(tileImage, rct, gtRect + rect(gtRect.width*(rnd-1), 0, gtRect.width*(rnd-1), 0)+rect(0,1,0,1), {#ink:36})
       
       
       d = -1
@@ -699,7 +689,7 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
           if d+dp > 29 then
             exit repeat
           else
-            member("layer"&string(d+dp)).image.copyPixels(sav2.image, rct, gtRect + rect(gtRect.width*(rnd-1),gtRect.height*(ps-1), gtRect.width*(rnd-1), gtRect.height*(ps-1))+rect(0,1,0,1), {#ink:36})
+            member("layer"&string(d+dp)).image.copyPixels(tileImage, rct, gtRect + rect(gtRect.width*(rnd-1),gtRect.height*(ps-1), gtRect.width*(rnd-1), gtRect.height*(ps-1))+rect(0,1,0,1), {#ink:36})
           end if
         end repeat
       end repeat
@@ -745,8 +735,8 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
       end if
       the randomSeed = seed
       
-      frntImg.copyPixels(sav2.image, rct1, gtRect1 +rect(0,1,0,1), {#ink:36})
-      frntImg.copyPixels(sav2.image, rct2, gtRect2 +rect(0,1,0,1), {#ink:36})
+      frntImg.copyPixels(tileImage, rct1, gtRect1 +rect(0,1,0,1), {#ink:36})
+      frntImg.copyPixels(tileImage, rct2, gtRect2 +rect(0,1,0,1), {#ink:36})
       
       
       d = -1
@@ -756,8 +746,8 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
           if d+dp > 29 then
             exit repeat
           else
-            member("layer"&string(d+dp)).image.copyPixels(sav2.image, rct1, gtRect1 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1), {#ink:36})
-            member("layer"&string(d+dp)).image.copyPixels(sav2.image, rct2, gtRect2 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1), {#ink:36})
+            member("layer"&string(d+dp)).image.copyPixels(tileImage, rct1, gtRect1 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1), {#ink:36})
+            member("layer"&string(d+dp)).image.copyPixels(tileImage, rct2, gtRect2 + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1), {#ink:36})
           end if
         end repeat
       end repeat
@@ -780,7 +770,7 @@ on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
         if [12, 8, 4].getPos(d) then
           rnd = random(tl.rnd)
         end if
-        member("layer"&string(d)).image.copyPixels(sav2.image, rct, gtRect + rect(gtRect.width*(rnd-1), 0, gtRect.width*(rnd-1), 0)+rect(0,1,0,1), {#ink:36})
+        member("layer"&string(d)).image.copyPixels(tileImage, rct, gtRect + rect(gtRect.width*(rnd-1), 0, gtRect.width*(rnd-1), 0)+rect(0,1,0,1), {#ink:36})
         
       end repeat
       
@@ -1139,7 +1129,7 @@ end
 --  repeat with ps = 1 to tl.repeatL.count then
 --    repeat with ps2 = 1 to tl.repeatL[ps] then
 --      -- gtRect =  + rect(0, (((tl.sz.locV*20)+(40*tl.bfTiles))-1)*d, 0, ((tl.sz.locV*20)+(40*tl.bfTiles))*d) 
---      member("layer"&string(d+dp)).image.copyPixels(sav2.image, rct, gtRect + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1), {#ink:36})
+--      member("layer"&string(d+dp)).image.copyPixels(tileImage, rct, gtRect + rect(0,gtRect.height*(ps-1), 0, gtRect.height*(ps-1))+rect(0,1,0,1), {#ink:36})
 --      d = d + 1  
 --    end repeat
 --  end repeat

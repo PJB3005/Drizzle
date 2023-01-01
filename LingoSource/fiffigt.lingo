@@ -749,7 +749,9 @@ on Bezier(A, cA, B, cB, f)
 end
 
 
-
+on CacheLoadImage(fileName: string)
+  -- implemented in C#
+end
 
 
 

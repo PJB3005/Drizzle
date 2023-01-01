@@ -39,7 +39,7 @@ internal static class Program
     {
         ["fiffigt"] = new ScriptQuirks
         {
-            BlackListHandlers = { "giveHitSurf" }
+            BlackListHandlers = { "giveHitSurf", "cacheloadimage" }
         },
         ["PNG_encode"] = new ScriptQuirks
         {
