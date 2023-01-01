@@ -184,7 +184,7 @@ on renderProp(prop, dp: number, qd: list, mdPoint: point, data: object)
       renderVoxelProp(prop, dp, qd, mdPoint, data, propImage)
     "simpleDecal", "variedDecal":
       gAnyDecals = 1
-      renderDecal(prop, dp, qd, mdPoint, data)
+      renderDecal(prop, dp, qd, mdPoint, data, propImage)
     "rope":
       renderRope(prop, propsToRender[c][5], dp)
     "soft", "variedSoft", "antimatter":
