@@ -24,19 +24,4 @@
         <ProjectReference Include="..\Drizzle.Ported\Drizzle.Ported.csproj" />
         <ProjectReference Include="..\Drizzle.Logic\Drizzle.Logic.csproj" />
     </ItemGroup>
-    <ItemGroup>
-      <Compile Update="Views\EditorContentView.axaml.cs">
-        <DependentUpon>EditorContentView.axaml</DependentUpon>
-      </Compile>
-      <Compile Update="Views\Render\RenderWindow.axaml.cs">
-        <DependentUpon>RenderWindow.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Views\Render\RenderStageErrorView.axaml.cs">
-        <DependentUpon>RenderStageErrorView.axaml</DependentUpon>
-      </Compile>
-    </ItemGroup>
-    <ItemGroup>
-      <UpToDateCheckInput Remove="Styles\Rendering.axaml" />
-    </ItemGroup>
 </Project>
