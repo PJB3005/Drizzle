@@ -33,9 +33,9 @@ Write-Host "Starting build $Configuration"
 
 # Build projects.
 dotnet publish $(Join-Path "Drizzle.Editor" "Drizzle.Editor.csproj") -c $Configuration -r $Rid `
- --self-contained /p:FullRelease=true /p:BuiltInComInteropSupport=true /p:PublishTrimmed=true /p:TrimMode=CopyUsed /p:NoWarn=IL2026
+ --self-contained /p:FullRelease=true /p:BuiltInComInteropSupport=true /p:NoWarn=IL2026
 dotnet publish $(Join-Path "Drizzle.ConsoleApp" "Drizzle.ConsoleApp.csproj") -c $Configuration -r $Rid `
- --self-contained /p:FullRelease=true /p:PublishTrimmed=true /p:TrimMode=CopyUsed /p:NoWarn=IL2026
+ --self-contained /p:FullRelease=true /p:NoWarn=IL2026
 
 # Copy to intermediate build directory.
 Copy-Item $(Join-Path $publishDirConsole "*") $releaseBuildPath
